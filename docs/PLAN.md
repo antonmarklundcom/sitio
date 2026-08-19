@@ -64,6 +64,14 @@ sparas som vanliga fält, redigerbara efteråt. Kostnad ~noll per sajt, körs en
 gång. Detta löser också doorway-/duplicate-content-risken: 200 sajter med
 identisk mallprosa och bara namnet utbytt rankar sämre och ser billigt ut.
 
+**Kundens val (beslut D7):** intake-formuläret har EN kryssruta —
+*"¿Querés que mejoremos la redacción de tus textos?"* (förkryssad) — som sätter
+`aiPolishOptIn`. Ja ⇒ AI-putsen körs och du granskar diffen (original vs putsad,
+sida vid sida, en godkänn-knapp) före publicering. Nej ⇒ kundens råtext används
+rakt av. Inget fråga-svar-flöde mot kunden; hela granskningen sker i din admin.
+`seoTitle`/`seoDescription` genereras alltid (även vid nej) eftersom de aldrig
+syns i kundens brödtext men skyddar SEO:n.
+
 ### 1.5 Teman (6 st, branschanpassade)
 
 Ett tema = en komponentuppsättning + en design-token-fil + 3–4 palettvarianter.
@@ -152,10 +160,12 @@ tabeller — att slå på en modul är en flagga, aldrig en migrering.
   `HomeAndConstructionBusiness`), `openingHoursSpecification` från hours-json,
   `telephone`, `address` (PostalAddress med `addressLocality`/`addressRegion`),
   `geo` när lat/lng finns, `sameAs` = sociala länkar, `image`, `priceRange`.
-- **Ingen korslänkning:** roten `sitio.com.py/` är SaaS:ens egen säljsida och
-  listar INTE kunder. Ingen katalog, inga "andra företag i din zon"-widgets,
-  ingen synlig "powered by"-länk på kundsajter (öppet beslut D4 — default av).
-  Varje sajt har egen title/description/schema och delar inget synligt chrome.
+- **Ingen korslänkning mellan kundsajter:** roten `sitio.com.py/` är SaaS:ens
+  egen säljsida och listar ALDRIG kunder (beslut D5). Ingen katalog, inga
+  "andra företag i din zon"-widgets. Enda undantaget är den diskreta
+  "Hecho con sitio.com.py"-footerlänken, som är PÅ som default men kan stängas
+  av per kund (`showAttribution`, beslut D4). Varje sajt har egen
+  title/description/schema och delar inget annat synligt chrome.
 - **Sitemap:** `sitemap.xml` listar alla `published` slugs (+ modulsidor).
   Draft/paused ⇒ 404 + utanför sitemap; pausad som varit publicerad behåller
   raden i `slug_redirects`-logiken (se 2.x) så en återaktivering inte tappar allt.
@@ -255,6 +265,8 @@ export const businesses = mysqlTable("businesses", {
   socialsJson: json("socials_json").$type<{ instagram?: string; facebook?: string; tiktok?: string }>(),
   hoursJson: json("hours_json").$type<Record<string, { open: string; close: string }[] | null>>(), // "mon".."sun", null = cerrado
   ruc: varchar("ruc", { length: 20 }),                 // valfritt, för faktura till kunden
+  showAttribution: boolean("show_attribution").notNull().default(true), // "Hecho con sitio.com.py"-footer (D4)
+  aiPolishOptIn: boolean("ai_polish_opt_in").notNull().default(true),   // kundens val i intake (D7)
   themeKey: mysqlEnum("theme_key",
     ["comercio","servicios","gastronomia","salud","belleza","taller"]).notNull(),
   paletteVariant: tinyint("palette_variant", { unsigned: true }).notNull().default(1), // 1..4
@@ -531,20 +543,20 @@ Import Git Repository → `main`. Env: `DATABASE_URL` (localhost-varianten),
 
 ---
 
-## 4. Öppna beslut du måste ta själv
+## 4. Beslut — TAGNA 2026-08-19 (Opus kodar efter dessa)
 
-| # | Beslut | Min rekommendation |
+| # | Beslut | Utfall |
 |---|---|---|
-| D1 | **Owner-login: WhatsApp-OTP eller lösenord?** OTP är friktionsfritt och numret är redan verifierat, men kräver att du skickar koder manuellt tills Cloud API (PR-17) finns. | OTP; i fas 2 innan PR-17 innebär det att owner-logins går genom dig — acceptabelt vid <30 kunder |
-| D2 | **Prisplaner:** vad ingår i 200k vs 600k? Moduler per styck eller paketerade i basico/plus/pro? Schemat stödjer båda. | Tre paket: basico (one-page) / plus (en modul + galleri) / pro (allt + extra pages). Enklare att sälja än à la carte |
-| D3 | **Grace-period efter förfall:** 15 dagar föreslaget. Kortare = kassaflöde, längre = mindre churn-friktion. | 15 dagar + påminnelse dag 45/15/3 före förfall |
-| D4 | **"Hecho con sitio.com.py"-länk i footern?** Gratis marknadsföring och interna länkar, men bryter "fristående"-känslan och avslöjar mall. | Av som default; ev. på som rabattmorot ("₲50.000 billigare med länk") |
-| D5 | **Ska roten sitio.com.py någonsin lista kunder (katalog)?** Katalog hjälper din SEO men gör kundsajterna till "profiler i en katalog". | Nej — roten är endast säljsida för SaaS:en |
-| D6 | **WhatsApp Cloud API-leverantör och timing:** direkt mot Meta eller via BSP (360dialog/Twilio)? Kräver Meta Business-verifiering + godkända templates + kostnad per konversation. | Manuellt tills ~25 kunder, sedan 360dialog (billigast per meddelande, minst lock-in) |
-| D7 | **AI-puts: alltid, eller opt-in per sajt?** Alltid ger unikt innehåll överallt (SEO-skydd) men du förlorar kundens röst. | Alltid köra, men du granskar diffen före publicering (den vyn ingår i AI-puts-steget) |
-| D8 | **Trial/demo-läge:** bygga sajten gratis och visa preview-länk innan betalning (starkt säljverktyg), eller betala först? Schemat stödjer trial-status. | Bygg-först-visa-sen: preview-token kostar dig inget och stänger affärer |
-| D9 | **Hostinger-konto/slot:** vilket av de tre kontona (LATAM rimligast) och bekräfta att en slot är ledig. | — (bara du vet slot-läget) |
-| D10 | **Priser på moduler i efterhand** (kund köper meny-modul år 2): pro-rata eller helår? | Helår vid aktivering, förenklar bokföringen |
+| D1 | Owner-login | **WhatsApp-OTP.** Manuell kodsändning tills PR-17; acceptabelt vid <30 kunder |
+| D2 | Prispaketering | **Tre paket:** básico ~200k (one-page) / plus ~400k (en modul + galleri) / pro ~600k (alla moduler + extra pages) |
+| D3 | Grace-period | **15 dagar** efter förfall, påminnelser 45/15/3 dagar före |
+| D4 | Footer-länk | **"Hecho con sitio.com.py" PÅ som default, avstängningsbar per kund** (`businesses.showAttribution`, toggle i superadmin) |
+| D5 | Katalog på roten | **Nej, aldrig.** Roten är endast SaaS-säljsida |
+| D6 | WhatsApp Cloud API | **Direkt mot Meta** (ingen BSP). Manuell kodsändning tills PR-17; Meta Business-verifiering + template-godkännande startas i god tid — processen tar veckor |
+| D7 | AI-puts | **Kundens val via EN kryssruta i intake** (`aiPolishOptIn`, förkryssad). Ja ⇒ puts + din diff-granskning före publicering; Nej ⇒ råtext. `seoTitle`/`seoDescription` genereras alltid. Inget fråga-svar-flöde mot kunden |
+| D8 | Säljflöde | **Bygg först, visa sen.** Preview-token via WhatsApp; publicering först efter bekräftad betalning |
+| D9 | Hosting | **LATAM-kontot.** Slot-ledighet verifieras strax före första deployen (efter PR-06) |
+| D10 | Moduldebitering mitt i året | **Helår vid aktivering** — kunden uppgraderas till nästa paket och betalar mellanskillnaden som helt år framåt |
 
 ---
 
