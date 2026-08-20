@@ -2,8 +2,11 @@
 
 > Plan skriven för att kodas efter, PR för PR. Stack är låst: Next.js 15 App Router,
 > Drizzle ORM, MySQL (Hostinger), Hostinger managed Node.js, deploy via GitHub-webhook
-> (zero-runner-policy: inga filer under `.github/workflows/`, någonsin).
+> (budgeted-runner-policy, se `docs/RUNNER-POLICY.md`: inga filer under
+> `.github/workflows/` utan Antons uttryckliga ja — default är noll).
 > Kundsajter ligger på `sitio.com.py/[slug]` — folder-baserat, inte subdomäner.
+> Domänen är ännu inte registrerad: bygg och deploya på Hostingers temp-domän,
+> byt till `sitio.com.py` via `NEXT_PUBLIC_BASE_URL` + A-record (se §3, Deploy).
 
 ---
 
@@ -473,8 +476,9 @@ export const activityLog = mysqlTable("activity_log", {
 ## 3. Fasindelad byggplan (PR-storlekar för Opus)
 
 Regler för alla PR: en PR = ett körbart, testbart inkrement. `npm run build`
-grönt lokalt före push (husky pre-push per zero-runner-skillen; pre-commit
-blockerar `.github/workflows/`). Inga GitHub Actions. Spanska (voseo) i all
+grönt lokalt före push (husky pre-push per budgeted-runner-skillen; pre-commit
+blockerar `.github/workflows/`). Inga GitHub Actions utan uttryckligt godkännande
+— se `docs/RUNNER-POLICY.md`. Spanska (voseo) i all
 kund-/owner-UI, svenska/engelska kvittar i superadmin. Alla mutationer
 server-side-skyddade med `requireRole` + tenant-filter.
 
@@ -482,7 +486,7 @@ server-side-skyddade med `requireRole` + tenant-filter.
 
 | PR | Innehåll | Storlek |
 |---|---|---|
-| **PR-01 Scaffold** | create-next-app (TS, Tailwind), drizzle-orm/mysql2/drizzle-kit/tsx, `drizzle.config.ts`, `src/db/index.ts` (pool, connectionLimit 8, timezone Z), `.env.example`, husky pre-commit (workflow-blockare) + pre-push (typecheck+build), README med deploysteg | S (~15 filer) |
+| **PR-01 Scaffold** | create-next-app (TS, Tailwind), drizzle-orm/mysql2/drizzle-kit/tsx, `drizzle.config.ts`, `src/db/index.ts` (pool, connectionLimit 8, timezone Z), `.env.example` (inkl. `NEXT_PUBLIC_BASE_URL`), husky pre-commit (workflow-blockare) + pre-push (typecheck+build), README med deploysteg. **Regel från dag 1: noll hårdkodade absolut-URL:er — allt via `NEXT_PUBLIC_BASE_URL`, så domänbytet blir en env-ändring** | S (~15 filer) |
 | **PR-02 Schema + seed** | Hela schemat från §2 exakt, första migrering, `scripts/seed-dev.ts` (superadmin + 3 demo-businesses med realistisk PY-data, giltiga telefonformat, Gs-priser) | M (~6 filer, schema är stort men mekaniskt) |
 | **PR-03 Auth (superadmin)** | iron-session + bcrypt, `/admin/login`, `requireRole`-helper, middleware-skydd av `/admin/*`, activity_log på login | S–M |
 | **PR-04 Superadmin: businesses CRUD** | `/admin`-layout, lista (status, betalstatus-badge, verifieringsbadge, sök/filter), skapa/redigera-formulär (alla fält inkl. hours-widget, socials), statusövergångar draft→pending→published→paused med slug-validering mot reservlistan, slug_redirects vid byte, preview-token | **L — dela i 4a (lista+skapa/redigera) och 4b (statusflöde+preview)** |
@@ -520,14 +524,39 @@ tidigare PR verifieras lokalt.)
 | **PR-21 (vid behov) R2-migrering** | Flytta media till Cloudflare R2, `fileKey` pekar på R2, migreringsscript | M |
 | **PR-22 (option) VenderCRM-koppling** | Hot leads pushas som deals via vendercrm-lead-capture-mönstret | S |
 
-### Deploy (en gång, efter PR-06)
+### Deploy — tvåstegs, temp-domän först
 
-Per nextjs-deploy-hostinger + zero-runner-skillen: hPanel → Node.js App →
-Import Git Repository → `main`. Env: `DATABASE_URL` (localhost-varianten),
-`SESSION_SECRET`, `CRON_SECRET`, `UPLOADS_DIR`, `NEXT_PUBLIC_BASE_URL`,
-`ANTHROPIC_API_KEY` (AI-puts), trösklar. DB-init körs lokalt via Remote MySQL
-(kom ihåg: tsx laddar inte .env själv; drizzle-kit gör det). Domän
-`sitio.com.py` via NIC.py → A-record. Slot bokförs i kontokartan.
+**Steg A — temp-domän (första deploy, efter PR-06).** Per nextjs-deploy-hostinger
++ budgeted-runner-skillen: hPanel → Node.js App → Import Git Repository → `main`.
+Appen körs på Hostingers `*.hostingersite.com`-adress. Env: `DATABASE_URL`
+(localhost-varianten), `SESSION_SECRET`, `CRON_SECRET`, `UPLOADS_DIR`,
+`NEXT_PUBLIC_BASE_URL` (= temp-adressen till att börja med), `ANTHROPIC_API_KEY`
+(AI-puts), trösklar. DB-init körs lokalt via Remote MySQL (kom ihåg: tsx laddar
+inte .env själv; drizzle-kit gör det). Slot bokförs i kontokartan.
+
+Temp-domänen är för **din** validering — PR-05:s uploads-test, PR-06:s
+rendering och QA-gate, hela MVP-flödet end-to-end. Ingen kund får någonsin en
+temp-URL.
+
+**Steg B — riktig domän (före första betalande kund).** `sitio.com.py`
+registreras via NIC.py (~25 USD). Köp den **nu**, oberoende av byggtakten:
+namnet är generiskt och attraktivt, och NIC.py-registreringen ska inte ligga i
+kritiska vägen när första kunden ska gå live.
+
+Bytet är billigt just för att sajterna ligger på **sökväg** (`/[slug]`), inte
+subdomäner. Checklista:
+
+1. A-record `sitio.com.py` + `www` → Hostinger-slottens IP
+2. Peka Node.js-appens domän till `sitio.com.py` i hPanel, SSL utfärdat
+3. `NEXT_PUBLIC_BASE_URL` = `https://sitio.com.py`, appen omstartad
+4. Verifiera att allt som bakat in absolut-URL följer med: `generateMetadata`
+   (canonical, og:url), JSON-LD `LocalBusiness.url`, `sitemap.xml`, `robots.txt`,
+   preview-token-länkar, wa.me-pitchlänkar i admin
+5. 301 från temp-adressen om den hunnit indexeras
+
+**Kod-krav som följer av detta:** ingen absolut URL får hårdkodas någonstans —
+allt går via `NEXT_PUBLIC_BASE_URL`. Gäller från PR-01. Domänbytet ska vara en
+env-ändring, aldrig en refaktorering.
 
 ---
 
@@ -610,4 +639,4 @@ Import Git Repository → `main`. Env: `DATABASE_URL` (localhost-varianten),
 auth-mönster, roller), `nextjs-deploy-hostinger` (deploy, Remote MySQL, env-fällor),
 `web-design-system` (tokens, mönster, QA-gate — läses per tema-PR),
 `paraguay-business-apps` (Gs, RUC, WhatsApp-normalisering, voseo),
-`zero-runner-deploy` (inga workflows, husky-guards).*
+`budgeted-runner-deploy` (workflow-policy, husky-guards, minutbudget).*
