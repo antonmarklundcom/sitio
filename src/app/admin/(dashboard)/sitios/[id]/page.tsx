@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBusinessById } from "@/db/queries";
 import { getBusinessAnalytics } from "@/db/analytics-queries";
+import { getCurrentSubscription, getPaymentsWithReceipts, getYearStats } from "@/db/billing-queries";
 import { requireRole } from "@/lib/auth";
 import { previewToken } from "@/lib/preview";
 import { absoluteUrl } from "@/lib/env";
@@ -14,8 +15,16 @@ import {
 } from "@/lib/business";
 import { BusinessForm } from "@/components/admin/business-form";
 import { AnalyticsPanel } from "@/components/admin/analytics-panel";
+import { BillingPanel } from "@/components/admin/billing-panel";
 import { Badge, Card, Notice, SectionTitle, StatusBadge } from "@/components/admin/ui";
 import { changeStatusAction, updateBusinessAction, verifyWhatsappManuallyAction } from "../actions";
+import {
+  confirmPaymentAction,
+  registerPaymentAction,
+  rejectPaymentAction,
+  saveSubscriptionAction,
+} from "../../pagos/actions";
+import { addYear, renewalMessage, toDayString } from "@/lib/billing";
 import {
   deleteMediaAction,
   listMediaForBusiness,
@@ -49,9 +58,12 @@ export default async function EditBusinessPage({
   const business = await getBusinessById(businessId);
   if (!business) notFound();
 
-  const [mediaRows, analytics] = await Promise.all([
+  const [mediaRows, analytics, subscription, paymentRows, yearStats] = await Promise.all([
     listMediaForBusiness(businessId),
     getBusinessAnalytics(businessId),
+    getCurrentSubscription(businessId),
+    getPaymentsWithReceipts(businessId),
+    getYearStats(businessId),
   ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
@@ -186,6 +198,52 @@ export default async function EditBusinessPage({
       </Card>
 
       <AnalyticsPanel analytics={analytics} />
+
+      <BillingPanel
+        businessId={business.id}
+        businessName={business.name}
+        today={toDayString(new Date())}
+        defaultExpiry={toDayString(addYear(new Date()))}
+        yearStats={yearStats}
+        renewalHref={waLink(
+          business.whatsappPhone,
+          renewalMessage({
+            businessName: business.name,
+            priceGs: subscription?.priceGs ?? 0,
+            views365: yearStats.views365,
+            waClicks365: yearStats.waClicks365,
+            siteUrl: liveUrl,
+          }),
+        )}
+        subscription={
+          subscription
+            ? {
+                id: subscription.id,
+                plan: subscription.plan,
+                priceGs: Number(subscription.priceGs),
+                startsAt: toDayString(subscription.startsAt),
+                expiresAt: toDayString(subscription.expiresAt),
+                status: subscription.status,
+              }
+            : null
+        }
+        payments={paymentRows.map((p) => ({
+          id: p.id,
+          amountGs: Number(p.amountGs),
+          method: p.method,
+          reference: p.reference,
+          periodStart: toDayString(p.periodStart),
+          periodEnd: toDayString(p.periodEnd),
+          status: p.status,
+          confirmedAt: p.confirmedAt ? toDayString(p.confirmedAt) : null,
+          notes: p.notes,
+          receiptUrl: p.receiptFile ? `/media/${business.id}/${p.receiptFile}` : null,
+        }))}
+        saveSubscription={saveSubscriptionAction.bind(null, business.id)}
+        registerPayment={registerPaymentAction.bind(null, business.id)}
+        confirmPayment={confirmPaymentAction}
+        rejectPayment={rejectPaymentAction}
+      />
 
       <Card>
         <SectionTitle hint="Bilderna processas vid uppladdning: EXIF strippas, orienteringen bakas in och varianterna 400/800/1600 px sparas som webp. Originalet sparas aldrig.">
