@@ -61,7 +61,7 @@ export default async function EditBusinessPage({
   });
 
   const status = business.status as BusinessStatus;
-  const blockers = publishBlockers(business);
+  const blockers = publishBlockers(business, photos.length);
   const preview = absoluteUrl(`/${business.slug}?preview=${previewToken(business.id)}`);
   const liveUrl = absoluteUrl(`/${business.slug}`);
 

@@ -1,0 +1,187 @@
+/*
+ * Design-floor för kundsajterna. Bygger på web-design-system-skillens
+ * tokens.css. Färgerna sätts per sajt via inline-variabler på .site-root
+ * (se palettes.ts) — den här filen innehåller ingen färg, bara struktur,
+ * skala, material och rörelse.
+ *
+ * Scopat till .site-root så att adminets tokens och kundsajternas aldrig
+ * blandas. Kundsajten ska upplevas som en fristående sajt.
+ */
+
+.site-root {
+  /* typskala, ratio 1.30, bas 17px */
+  --t--1: 0.812rem;
+  --t-0: 1.0625rem;
+  --t-1: 1.383rem;
+  --t-2: 1.797rem;
+  --t-3: 2.336rem;
+  --t-4: 3.037rem;
+  --t-5: 3.948rem;
+  --t-6: 5.133rem;
+  --measure: 65ch;
+
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-24: 6rem;
+  --s-32: 8rem;
+
+  --r-sm: 6px;
+  --r-md: 14px;
+  --r-lg: 28px;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.28), 0 4px 12px rgb(0 0 0 / 0.34);
+  --shadow-2: 0 2px 4px rgb(0 0 0 / 0.32), 0 16px 40px rgb(0 0 0 / 0.46);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 180ms;
+  --dur: 280ms;
+
+  --container: 1200px;
+  --gutter: clamp(1rem, 5vw, 3rem);
+
+  background: var(--base);
+  color: var(--ink);
+  font-family: var(--font-text, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-size: var(--t-0);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.site-root h1,
+.site-root h2,
+.site-root h3 {
+  font-family: var(--font-display, var(--font-text));
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin: 0 0 var(--s-6);
+  text-wrap: balance;
+}
+.site-root h1 { font-size: clamp(var(--t-4), 6vw, var(--t-6)); }
+.site-root h2 { font-size: clamp(var(--t-3), 4.5vw, var(--t-5)); }
+.site-root h3 { font-size: var(--t-2); line-height: 1.15; margin-bottom: var(--s-3); }
+.site-root p { max-width: var(--measure); color: var(--ink-muted); margin: 0 0 var(--s-4); }
+
+.site-root .eyebrow {
+  font-size: var(--t--1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0 0 var(--s-4);
+  display: block;
+}
+
+.site-root .statement {
+  font-family: var(--font-display, var(--font-text));
+  font-size: clamp(var(--t-5), 9vw, var(--t-6));
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+
+.site-root .wrap {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.site-root section { padding-block: clamp(var(--s-16), 9vw, var(--s-32)); position: relative; }
+.site-root img { max-width: 100%; height: auto; display: block; }
+
+/* grain — på varje mörk sektion. Hela sajten är mörk, så den ligger på roten. */
+.site-root .grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* scrim — all text över bild */
+.site-root .scrim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.25) 0%, rgb(0 0 0 / 0.6) 60%, rgb(0 0 0 / 0.85) 100%);
+}
+
+/* kortvarianter */
+.site-root .card { padding: var(--s-8); border-radius: var(--r-md); }
+.site-root .card--hair { border: 1px solid var(--hairline); }
+.site-root .card--raised { background: var(--surface-raised); box-shadow: var(--shadow-2); border-radius: var(--r-lg); }
+.site-root .card--ink { background: var(--accent); color: var(--on-accent); }
+.site-root .card--ink p { color: color-mix(in srgb, var(--on-accent) 78%, transparent); }
+.site-root .card--accent { background: var(--surface); border: 1px solid var(--hairline); border-top: 3px solid var(--accent); }
+
+/* knappar */
+.site-root .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 52px;
+  padding: 0 var(--s-6);
+  border-radius: var(--r-sm);
+  font-weight: 600;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-io), box-shadow var(--dur-fast) var(--ease-io);
+}
+.site-root .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.site-root .btn--primary { background: var(--accent); color: var(--on-accent); }
+.site-root .btn--ghost { background: transparent; color: var(--ink); border: 1px solid var(--hairline); }
+/* WhatsApp-grönt lever ENDAST i knappens glyf — aldrig som yta */
+.site-root .btn--wa { background: var(--ink); color: var(--base); }
+.site-root .btn--wa svg { fill: #25d366; flex: none; }
+
+/* sticky WhatsApp-CTA, mobil */
+.site-root .wa-dock {
+  position: fixed;
+  inset-inline: var(--s-4);
+  bottom: var(--s-4);
+  z-index: 40;
+  box-shadow: var(--shadow-2);
+}
+@media (min-width: 1024px) {
+  .site-root .wa-dock { inset-inline: auto; right: var(--s-8); bottom: var(--s-8); }
+}
+
+/*
+ * Motion — reveal. Max 15 % av elementen bär .reveal.
+ *
+ * Progressiv förbättring: innehållet är synligt som default och göms bara när
+ * JS faktiskt kör (.js sätts av ett inline-script före paint). Annars hade en
+ * misslyckad scriptladdning — eller en crawler utan JS — gjort halva sajten
+ * osynlig.
+ */
+.site-root .reveal { opacity: 1; transform: none; }
+.js .site-root .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+}
+.js .site-root .reveal.is-in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .js .site-root .reveal { opacity: 1; transform: none; transition: none; }
+  .site-root .btn:hover { transform: none; }
+}
+
+/* preview-banner — ligger utanför .site-root eftersom den inte är kundens design */
+.preview-banner {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: #f2545b;
+  color: #fff;
+  font: 500 0.8125rem/1.4 system-ui, sans-serif;
+  text-align: center;
+}

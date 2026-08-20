@@ -1,0 +1,123 @@
+/*
+ * Sektionsmönster för tema `servicios`. Färgerna kommer från palettvarianten
+ * (CSS-variabler på .site-root); här finns bara layout, mått och material.
+ * Brytpunkter: 640 / 1024 / 1280.
+ */
+
+.site-root .site-logo { max-height: 44px; width: auto; border-radius: var(--r-sm); }
+
+/* --- 01 hero: P1 asymmetrisk split 7/5 --- */
+.site-root .hero-grid { display: grid; gap: var(--s-8); }
+/* 7/5, aldrig 6/6 — lika halvor läser som en mall. Utan hero-bild blir det
+   en kolumn i stället för en tom högerhalva. */
+@media (min-width: 1024px) {
+  .site-root .hero-grid--split { grid-template-columns: 7fr 5fr; gap: var(--s-12); align-items: center; }
+  .site-root .hero-grid--solo .hero-copy { max-width: 46rem; }
+}
+.site-root .hero-copy p { font-size: var(--t-1); line-height: 1.5; }
+.site-root .hero-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-block: var(--s-6) var(--s-4); }
+.site-root .hero-actions .btn { flex: 1 1 auto; }
+@media (min-width: 640px) { .site-root .hero-actions .btn { flex: 0 0 auto; } }
+
+.site-root .hero-status { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t--1); color: var(--ink-muted); margin: 0; }
+.site-root .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-muted); flex: none; }
+.site-root .dot--open { background: #25d366; }
+
+.site-root .hero-figure { position: relative; margin: 0; border-radius: var(--r-lg); overflow: hidden; }
+.site-root .hero-figure img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+@media (min-width: 1024px) { .site-root .hero-figure img { aspect-ratio: 3 / 4; } }
+
+/* --- 02 trust-ribbon: P8 full-bleed --- */
+.site-root .ribbon { position: relative; background: var(--surface); border-block: 1px solid var(--hairline); }
+.site-root .ribbon-inner {
+  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6);
+  padding-block: var(--s-4); font-size: var(--t--1);
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted);
+}
+.site-root .ribbon-inner strong { color: var(--ink); font-weight: 600; }
+
+/* --- 03 servicios: P3 staggered-weight grid --- */
+.site-root .services-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
+@media (min-width: 640px) { .site-root .services-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .site-root .services-grid { grid-template-columns: repeat(3, 1fr); } }
+/* Första tjänsten bär huvudbudskapet och spänner två kolumner. */
+@media (min-width: 640px) { .site-root .services-lead { grid-column: span 2; } }
+.site-root .services-ask-link,
+.site-root .services-lead-link {
+  display: inline-block; margin-top: var(--s-4); font-weight: 600;
+  color: var(--on-accent); text-decoration: underline; text-underline-offset: 4px;
+}
+.site-root .services-ask-link { color: var(--accent); }
+
+/* --- 04 proceso: P5 numbered rail --- */
+.site-root .process-rail { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-8); position: relative; }
+@media (min-width: 1024px) { .site-root .process-rail { grid-template-columns: repeat(3, 1fr); gap: var(--s-12); } }
+.site-root .process-step { position: relative; padding-top: var(--s-12); border-top: 1px solid var(--hairline); }
+/* Siffran är en vattenstämpel bakom rubriken, inte en etikett bredvid den —
+   den ligger med negativ z-index så den aldrig konkurrerar med texten. */
+.site-root .process-num {
+  position: absolute; top: calc(var(--s-2) * -1); left: -0.06em;
+  font-size: var(--t-6); font-weight: 700; line-height: 1;
+  color: var(--accent); opacity: 0.16; letter-spacing: -0.05em;
+  z-index: 0; pointer-events: none;
+}
+.site-root .process-step h3,
+.site-root .process-step p { position: relative; z-index: 1; }
+
+/* --- 05 zonas/horario: P4 editorial two-column --- */
+.site-root .editorial { display: grid; gap: var(--s-6); }
+@media (min-width: 1024px) { .site-root .editorial { grid-template-columns: 4fr 7fr; gap: var(--s-16); } }
+.site-root .editorial-body p { max-width: var(--measure); }
+.site-root .hours-list { margin: var(--s-6) 0; display: grid; gap: 0; max-width: 32rem; }
+.site-root .hours-row {
+  display: flex; justify-content: space-between; gap: var(--s-4);
+  padding-block: var(--s-3); border-bottom: 1px solid var(--hairline);
+}
+.site-root .hours-row dt { color: var(--ink-muted); margin: 0; }
+.site-root .hours-row dd { margin: 0; font-variant-numeric: tabular-nums; }
+.site-root .address { font-size: var(--t--1); color: var(--ink-muted); }
+.site-root .address a { color: var(--accent); }
+
+/* --- 06 galería: P6 full-bleed band --- */
+.site-root .gallery-band {
+  margin-top: var(--s-6);
+  display: grid; grid-auto-flow: column; grid-auto-columns: 80%;
+  gap: var(--s-3); overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-inline: var(--gutter); padding-bottom: var(--s-4);
+  scrollbar-width: thin;
+}
+@media (min-width: 1024px) {
+  .site-root .gallery-band { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); overflow: visible; grid-auto-columns: auto; }
+}
+.site-root .gallery-item { margin: 0; scroll-snap-align: start; border-radius: var(--r-md); overflow: hidden; }
+.site-root .gallery-item img { aspect-ratio: 4 / 3; object-fit: cover; width: 100%; }
+
+/* --- 07 statement + överlappande kontaktpanel: P9 --- */
+.site-root .closing { padding-block-end: 0; }
+.site-root .closing .statement { color: var(--ink); margin-bottom: var(--s-8); }
+.site-root .contact-panel {
+  display: flex; flex-direction: column; gap: var(--s-6);
+  /* Överlappet: panelen korsar gränsen ner i footern. */
+  transform: translateY(clamp(var(--s-8), 6vw, var(--s-12)));
+  position: relative; z-index: 2;
+}
+@media (min-width: 768px) {
+  .site-root .contact-panel { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+.site-root .contact-panel .btn { white-space: nowrap; }
+
+/* --- footer --- */
+.site-root .site-footer {
+  background: var(--surface); border-top: 1px solid var(--hairline);
+  padding-block: calc(var(--s-16) + var(--s-8)) var(--s-16);
+  /* extra utrymme längst ner så den fasta WhatsApp-knappen inte täcker text */
+  padding-bottom: calc(var(--s-16) + 72px);
+}
+@media (min-width: 1024px) { .site-root .site-footer { padding-bottom: var(--s-16); } }
+.site-root .footer-inner {
+  display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: space-between;
+  font-size: var(--t--1); color: var(--ink-muted);
+}
+.site-root .footer-socials { display: flex; gap: var(--s-4); }
+.site-root .footer-socials a { color: var(--ink-muted); }
+.site-root .site-footer a:hover { color: var(--accent); }

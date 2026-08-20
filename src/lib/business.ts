@@ -192,14 +192,17 @@ export type BusinessFormValues = z.infer<typeof businessFormSchema>;
  * Vad som måste finnas innan en sajt får gå live. Publicerar man en tom sajt
  * hamnar den i Googles index som tunn sida — den kontrollen är inte kosmetisk.
  */
-export function publishBlockers(b: {
-  description: string | null;
-  servicesJson: unknown;
-  whatsappPhone: string | null;
-  whatsappVerifiedAt: Date | null;
-  city: string | null;
-  seoDescription: string | null;
-}): string[] {
+export function publishBlockers(
+  b: {
+    description: string | null;
+    servicesJson: unknown;
+    whatsappPhone: string | null;
+    whatsappVerifiedAt: Date | null;
+    city: string | null;
+    seoDescription: string | null;
+  },
+  photoCount = 1,
+): string[] {
   const blockers: string[] = [];
   const services = Array.isArray(b.servicesJson) ? b.servicesJson : [];
 
@@ -210,6 +213,8 @@ export function publishBlockers(b: {
   if (!b.whatsappVerifiedAt) blockers.push("WhatsApp-numret är inte verifierat.");
   if (!b.city) blockers.push("Stad saknas (behövs för LocalBusiness-schema).");
   if (!b.seoDescription) blockers.push("SEO-beskrivning saknas.");
+  // Utan bild står hero-ytan tom och sajten ser billigare ut än den är.
+  if (photoCount < 1) blockers.push("Minst ett foto krävs (hero-ytan står annars tom).");
 
   return blockers;
 }
