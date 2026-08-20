@@ -1,0 +1,6 @@
+# Ersätter CI (docs/RUNNER-POLICY.md §5): snabbare än en runner tack vare
+# varm node_modules och varm .next/cache — och kostar noll Actions-minuter.
+npm run typecheck && npm run lint && npm run build || {
+  echo "Build failed — push blocked."
+  exit 1
+}

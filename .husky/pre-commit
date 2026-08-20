@@ -1,0 +1,6 @@
+# Spärr enligt docs/RUNNER-POLICY.md: en agent får aldrig smyga in CI-workflows.
+if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
+  echo "BLOCKED: workflows kräver Antons uttryckliga godkännande (budgeted-runner policy)."
+  echo "Se docs/RUNNER-POLICY.md §6 för den godkända formen."
+  exit 1
+fi
