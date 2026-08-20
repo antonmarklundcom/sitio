@@ -40,6 +40,15 @@ export const env = {
   get anthropicApiKey() {
     return process.env.ANTHROPIC_API_KEY ?? "";
   },
+  /**
+   * Timförskjutning från databasens klocka till Asunción-dygnet i rollupen.
+   * Default -3 förutsätter att MySQL står på UTC — verifieras vid deploy.
+   */
+  get analyticsTzOffsetHours() {
+    // Klampad: värdet interpoleras in i SQL (sql.raw), så det får aldrig kunna
+    // bli något annat än ett litet heltal.
+    return Math.max(-14, Math.min(14, Math.trunc(int("ANALYTICS_TZ_OFFSET_HOURS", -3))));
+  },
   get hotLeadWaClicks30d() {
     return int("HOT_LEAD_WA_CLICKS_30D", 15);
   },

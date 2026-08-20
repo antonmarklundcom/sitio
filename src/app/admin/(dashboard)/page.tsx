@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { countByStatus, listBusinesses } from "@/db/queries";
+import { ensureRollupFresh } from "@/lib/rollup";
 import { BUSINESS_STATUSES, CATEGORY_LABELS, STATUS_LABELS, type BusinessStatus } from "@/lib/business";
 import { Badge, ButtonLink, EmptyState, StatusBadge } from "@/components/admin/ui";
 
@@ -41,6 +42,9 @@ export default async function AdminSitesPage({
   const q = sp.q?.trim() ?? "";
   const status = sp.status && isStatus(sp.status) ? sp.status : "all";
 
+  // Lazy rollup före listan: kolumnerna läser analytics_daily, och den ska
+  // vara färsk även om hPanel-cron aldrig sattes upp.
+  await ensureRollupFresh();
   const [rows, counts] = await Promise.all([listBusinesses({ q, status }), countByStatus()]);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -93,13 +97,19 @@ export default async function AdminSitesPage({
         </EmptyState>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-admin-line">
-          <table className="w-full min-w-[52rem] border-collapse text-sm">
+          <table className="w-full min-w-[60rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-admin-line bg-admin-surface text-left text-xs tracking-wide text-admin-muted uppercase">
                 <th className="px-4 py-3 font-medium">Sajt</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Betalning</th>
                 <th className="px-4 py-3 font-medium">WhatsApp</th>
+                <th className="px-4 py-3 text-right font-medium" title="Besök senaste 30 dygnen">
+                  Besök 30d
+                </th>
+                <th className="px-4 py-3 text-right font-medium" title="WhatsApp-klick senaste 30 dygnen">
+                  WA 30d
+                </th>
                 <th className="px-4 py-3 text-right font-medium">Score</th>
               </tr>
             </thead>
@@ -138,6 +148,8 @@ export default async function AdminSitesPage({
                       <Badge tone="warn">Overifierad</Badge>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-right font-mono tabular-nums">{Number(row.views30d)}</td>
+                  <td className="px-4 py-3 text-right font-mono tabular-nums">{Number(row.waClicks30d)}</td>
                   <td className="px-4 py-3 text-right">
                     <span className="font-mono">{row.upsellScore}</span>
                     {row.hotLead ? <span className="ml-1.5 text-admin-danger">●</span> : null}

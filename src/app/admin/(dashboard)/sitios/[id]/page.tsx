@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBusinessById } from "@/db/queries";
+import { getBusinessAnalytics } from "@/db/analytics-queries";
 import { requireRole } from "@/lib/auth";
 import { previewToken } from "@/lib/preview";
 import { absoluteUrl } from "@/lib/env";
@@ -12,6 +13,7 @@ import {
   type BusinessStatus,
 } from "@/lib/business";
 import { BusinessForm } from "@/components/admin/business-form";
+import { AnalyticsPanel } from "@/components/admin/analytics-panel";
 import { Badge, Card, Notice, SectionTitle, StatusBadge } from "@/components/admin/ui";
 import { changeStatusAction, updateBusinessAction, verifyWhatsappManuallyAction } from "../actions";
 import {
@@ -47,7 +49,10 @@ export default async function EditBusinessPage({
   const business = await getBusinessById(businessId);
   if (!business) notFound();
 
-  const mediaRows = await listMediaForBusiness(businessId);
+  const [mediaRows, analytics] = await Promise.all([
+    listMediaForBusiness(businessId),
+    getBusinessAnalytics(businessId),
+  ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
   const toItem = (m: (typeof mediaRows)[number]): MediaItem => ({
@@ -179,6 +184,8 @@ export default async function EditBusinessPage({
           </dl>
         </div>
       </Card>
+
+      <AnalyticsPanel analytics={analytics} />
 
       <Card>
         <SectionTitle hint="Bilderna processas vid uppladdning: EXIF strippas, orienteringen bakas in och varianterna 400/800/1600 px sparas som webp. Originalet sparas aldrig.">

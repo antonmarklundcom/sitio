@@ -1,6 +1,11 @@
+import { config as loadDotenv } from "dotenv";
 import type { Config } from "drizzle-kit";
 
-// drizzle-kit laddar .env själv. tsx gör det INTE — scripts/*.ts läser via src/lib/env.ts.
+// drizzle-kit laddar .env själv men INTE .env.local, som är filen README säger
+// åt dig att skapa. Utan de här två raderna svarar `npm run db:migrate`
+// "url: undefined" på en helt korrekt uppsatt utvecklingsmiljö.
+loadDotenv({ path: ".env.local", quiet: true });
+loadDotenv({ path: ".env", quiet: true });
 export default {
   schema: "./src/db/schema.ts",
   out: "./drizzle",

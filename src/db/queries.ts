@@ -20,6 +20,8 @@ export type BusinessListRow = {
   subscriptionStatus: string | null;
   subscriptionExpiresAt: Date | string | null;
   pendingPayments: number;
+  views30d: number;
+  waClicks30d: number;
 };
 
 export async function listBusinesses(params: {
@@ -36,6 +38,13 @@ export async function listBusinesses(params: {
   if (params.status && params.status !== "all") {
     filters.push(eq(businesses.status, params.status));
   }
+
+  // OBS: `${businesses.id}` renderas av drizzle som en OKVALIFICERAD `id` när
+  // fragmentet står i select-listan. I en subfråga mot en tabell som också har
+  // en id-kolumn blir korrelationen då `d.business_id = d.id` — subfrågan ser
+  // rätt ut men ger fel rader (alla sajter fick samma statistik). Därför är
+  // korrelationen skriven med tabellnamnet utskrivet.
+  const bizId = sql`\`businesses\`.\`id\``;
 
   // Senaste prenumerationen per business samt antal obekräftade betalningar.
   const rows = await db
@@ -54,17 +63,28 @@ export async function listBusinesses(params: {
       publishedAt: businesses.publishedAt,
       subscriptionStatus: sql<string | null>`(
         select s.status from subscriptions s
-        where s.business_id = ${businesses.id}
+        where s.business_id = ${bizId}
         order by s.expires_at desc limit 1
       )`,
       subscriptionExpiresAt: sql<string | null>`(
         select s.expires_at from subscriptions s
-        where s.business_id = ${businesses.id}
+        where s.business_id = ${bizId}
         order by s.expires_at desc limit 1
       )`,
       pendingPayments: sql<number>`(
         select count(*) from payments p
-        where p.business_id = ${businesses.id} and p.status = 'reported'
+        where p.business_id = ${bizId} and p.status = 'reported'
+      )`,
+      // Trafiken senaste 30 dygnen, ur rollup-tabellen — aldrig ur råeventen.
+      // Listan får inte skanna analytics_events; den tabellen är den enda som
+      // växer obegränsat.
+      views30d: sql<number>`(
+        select coalesce(sum(d.views), 0) from analytics_daily d
+        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+      )`,
+      waClicks30d: sql<number>`(
+        select coalesce(sum(d.wa_clicks), 0) from analytics_daily d
+        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
       )`,
     })
     .from(businesses)
