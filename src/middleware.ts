@@ -2,15 +2,29 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getIronSession } from "iron-session";
 import type { SessionData } from "@/lib/session";
 
-/**
- * Första lagret, inte skyddet i sig. Varje sida och mutation kallar ändå
- * requireRole() server-side — middleware finns för att slippa rendera
- * adminskalet åt en utloggad besökare.
- */
 const SESSION_COOKIE = "sitio_session";
 
+/**
+ * Två uppgifter:
+ *
+ * 1. Skydda /admin/* som första lager. Varje sida och mutation kallar ändå
+ *    requireRole() server-side — middleware finns för att slippa rendera
+ *    adminskalet åt en utloggad besökare.
+ * 2. Skriva om /{slug}?preview=<token> till /preview/{slug}. Kunden och du
+ *    ser samma URL som planen anger, men den publika /[slug] slipper läsa
+ *    searchParams och kan därmed ligga kvar på ISR.
+ */
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, searchParams } = req.nextUrl;
+
+  if (!pathname.startsWith("/admin")) {
+    if (searchParams.has("preview") && /^\/[^/]+$/.test(pathname)) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/preview${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+    return NextResponse.next();
+  }
 
   if (pathname === "/admin/login") return NextResponse.next();
 
@@ -36,5 +50,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  // Statiska filer, bilder och API-routes går aldrig genom middleware.
+  matcher: ["/((?!api|_next/static|_next/image|media|favicon.ico|robots.txt|sitemap.xml).*)"],
 };

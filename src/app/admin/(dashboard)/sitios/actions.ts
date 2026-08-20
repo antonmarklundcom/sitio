@@ -2,9 +2,9 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, slugRedirects } from "@/db/schema";
+import { businesses, media, slugRedirects } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import {
@@ -177,7 +177,11 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
   }
 
   if (to === "published") {
-    const blockers = publishBlockers(business);
+    const [{ photoCount }] = await db
+      .select({ photoCount: sql<number>`count(*)` })
+      .from(media)
+      .where(and(eq(media.businessId, businessId), eq(media.kind, "photo")));
+    const blockers = publishBlockers(business, Number(photoCount));
     if (blockers.length > 0) {
       redirect(`/admin/sitios/${businessId}?error=${encodeURIComponent(`Kan inte publicera: ${blockers.join(" ")}`)}`);
     }
