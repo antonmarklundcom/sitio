@@ -1,0 +1,116 @@
+# sitio.com.py
+
+Foot-in-the-door-SaaS för paraguayanska småföretag: en WhatsApp-first one-page-sajt
+på `sitio.com.py/[slug]`. Se [`docs/PLAN.md`](docs/PLAN.md) för produkt- och byggplan,
+[`docs/RUNNER-POLICY.md`](docs/RUNNER-POLICY.md) för CI-/minutpolicyn.
+
+## Stack
+
+| Lager | Val |
+|---|---|
+| App | Next.js 15 (App Router, TypeScript) |
+| Styling | Tailwind CSS 4 |
+| DB | MySQL (Hostinger) via Drizzle ORM + `mysql2` |
+| Sessioner | `iron-session` (cookie-baserad, ingen extern session-store) |
+| Bilder | `sharp` → webp-varianter, lagrade i `UPLOADS_DIR` **utanför** repot |
+| Deploy | Hostinger managed Node.js, GitHub-import + webhook. **Inga GitHub Actions.** |
+
+## Kom igång lokalt
+
+```bash
+npm install
+cp .env.example .env.local          # fyll i DATABASE_URL m.m.
+npm run db:push                     # eller: npm run db:migrate
+npm run db:seed                     # superadmin + 3 demo-företag
+npm run dev
+```
+
+Seedens inloggning styrs av `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`
+(default `anton@sitio.com.py` / `sitio-dev-1234`). Byt lösenordet innan produktion.
+
+## Miljövariabler
+
+Alla finns dokumenterade i [`.env.example`](.env.example). De kritiska:
+
+| Variabel | Roll |
+|---|---|
+| `DATABASE_URL` | MySQL. Lokalt: Remote MySQL-värden. På Hostinger: **localhost**-varianten. |
+| `NEXT_PUBLIC_BASE_URL` | **Enda** stället där domänen finns. Domänbyte = env-ändring, aldrig refaktorering. |
+| `SESSION_SECRET` | ≥32 tecken. `openssl rand -base64 48` |
+| `CRON_SECRET` | Skyddar rollup-/livscykel-routen mot publika anrop. |
+| `UPLOADS_DIR` | Absolut sökväg **utanför** deploy-trädet, t.ex. `/home/<user>/uploads/sitio`. |
+
+### Regeln som gäller från PR-01
+
+**Noll hårdkodade absolut-URL:er.** Allt går via `baseUrl()` / `absoluteUrl()` i
+`src/lib/env.ts`. Det gäller `generateMetadata` (canonical, og:url), JSON-LD
+`LocalBusiness.url`, `sitemap.xml`, `robots.txt`, preview-token-länkar och
+wa.me-pitchlänkar i admin.
+
+## Databas
+
+```bash
+npm run db:generate   # skapa migrering från src/db/schema.ts
+npm run db:migrate    # applicera migreringar
+npm run db:push       # snabbsynk under utveckling
+npm run db:studio     # drizzle studio
+```
+
+`drizzle-kit` laddar `.env` själv. **`tsx` gör det inte** — därför importerar
+`scripts/*.ts` `src/lib/env.ts` först av allt, som laddar `.env.local` + `.env`.
+
+DB-init mot Hostinger körs **lokalt** via Remote MySQL (IP måste vitlistas i
+hPanel), inte på noden.
+
+## CI och git-hooks
+
+Repot har **inga** `.github/workflows/`, medvetet — se `docs/RUNNER-POLICY.md`.
+Kontrollerna körs som git-hooks istället:
+
+- `.husky/pre-commit` — blockerar commits som lägger till filer under `.github/workflows/`.
+- `.husky/pre-push` — `typecheck && lint && build`. Röd build = blockerad push.
+
+Hookarna går att kringgå med `--no-verify`; de är en ledstång, inte en mur.
+
+## Deploy till Hostinger
+
+### Steg A — temp-domän (första deploy, efter PR-06)
+
+1. hPanel → **Node.js App** → Import Git Repository → branch `main`.
+2. Build: `npm ci && npm run build`. Start: `npm run start`. Node 20+.
+3. Sätt env-varsen ovan i hPanel. `NEXT_PUBLIC_BASE_URL` = Hostingers
+   `*.hostingersite.com`-adress till att börja med.
+4. Skapa `UPLOADS_DIR` via SSH: `mkdir -p /home/<user>/uploads/sitio`.
+   Katalogen **måste** ligga utanför appkatalogen — git-deployen skriver om den.
+5. Kör migreringarna lokalt mot Remote MySQL, inte på noden.
+
+Temp-domänen är för intern validering. **Ingen kund får någonsin en temp-URL.**
+
+### Steg B — riktig domän (före första betalande kund)
+
+1. A-record `sitio.com.py` + `www` → slottens IP.
+2. Peka appens domän till `sitio.com.py` i hPanel, låt SSL utfärdas.
+3. `NEXT_PUBLIC_BASE_URL=https://sitio.com.py`, starta om appen.
+4. Verifiera canonical, og:url, JSON-LD `url`, `sitemap.xml`, `robots.txt`,
+   preview-länkar och wa.me-länkar i admin.
+5. 301 från temp-adressen om den hunnit indexeras.
+
+### Uploads-persistens
+
+Frågan "överlever `UPLOADS_DIR` en redeploy?" besvaras och dokumenteras här i
+PR-05, efter test mot faktisk Hostinger-miljö. Svaret avgör om R2-flytten
+(PR-21) måste tidigareläggas.
+
+**Status:** ⬜ inte testat ännu (PR-05).
+
+## Katalogstruktur
+
+```
+src/
+  app/            # App Router: /[slug] (kundsajter), /admin, /alta, /api
+  db/             # schema.ts (auktoritativt), index.ts (pool)
+  lib/            # env, slug-validering, formatering (Gs, telefon, wa.me)
+drizzle/          # genererade migreringar
+scripts/          # tsx-scripts (seed, rollup)
+docs/             # PLAN.md, RUNNER-POLICY.md
+```
