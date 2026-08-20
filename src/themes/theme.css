@@ -81,7 +81,9 @@
 
 .site-root .statement {
   font-family: var(--font-display, var(--font-text));
-  font-size: clamp(var(--t-5), 9vw, var(--t-6));
+  /* 9vw gjorde att clamp-golvet (--t-5) vann under 700 px och rubriken sköt
+     ut ur skärmen på 360 — statementet är alltid den längsta raden på sidan. */
+  font-size: clamp(2.75rem, 12vw, var(--t-6));
   line-height: 0.95;
   letter-spacing: -0.04em;
   margin: 0;
@@ -95,7 +97,8 @@
 .site-root section { padding-block: clamp(var(--s-16), 9vw, var(--s-32)); position: relative; }
 .site-root img { max-width: 100%; height: auto; display: block; }
 
-/* grain — på varje mörk sektion. Hela sajten är mörk, så den ligger på roten. */
+/* grain — på varje mörk sektion. På `servicios` är hela sajten mörk, så
+   klassen ligger på roten; på ljusa teman bara på de mörka banden. */
 .site-root .grain::after {
   content: "";
   position: absolute;
@@ -104,6 +107,24 @@
   opacity: 0.055;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+
+/*
+ * Ljusa teman (WARM CRAFT, EDITORIAL) bär `.t-light` på roten. Mörka temans
+ * skuggvärden läser som smuts på kräm, och grain i 5,5 % blir synligt brus på
+ * en ljus yta — därför tonas båda ner här i stället för i varje temafil.
+ */
+.site-root.t-light {
+  --shadow-1: 0 1px 2px rgb(28 20 14 / 0.06), 0 4px 12px rgb(28 20 14 / 0.08);
+  --shadow-2: 0 2px 4px rgb(28 20 14 / 0.07), 0 18px 44px rgb(28 20 14 / 0.14);
+}
+.site-root.t-light .grain::after { opacity: 0.03; }
+
+/* Mörkt band i ett ljust tema: ink blir yta, base blir text. */
+.site-root .band-dark { position: relative; background: var(--ink); color: var(--base); }
+.site-root .band-dark .grain::after,
+.site-root .band-dark.grain::after { opacity: 0.07; }
+.site-root .band-dark strong { color: var(--base); }
+.site-root .band-dark a { color: var(--base); }
 
 /* scrim — all text över bild */
 .site-root .scrim::before {
@@ -175,6 +196,49 @@
   .js .site-root .reveal { opacity: 1; transform: none; transition: none; }
   .site-root .btn:hover { transform: none; }
 }
+
+
+/* ---------- delade sektionsprimitiv (alla teman) ---------- */
+
+.site-root .site-logo { max-height: 44px; width: auto; border-radius: var(--r-sm); }
+
+.site-root .hero-status { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t--1); color: var(--ink-muted); margin: 0; }
+.site-root .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-muted); flex: none; }
+/* Grön statusprick, men INTE #25D366 — WhatsApp-grönt får bara leva i
+   knappens glyf (web-design-system, Step 1). */
+.site-root .dot--open { background: #1fa855; }
+
+.site-root .editorial { display: grid; gap: var(--s-6); }
+/* Grid-barn har min-width:auto som default — en horisontell karusell i en
+   kolumn tvingar då hela sidan bredare i stället för att scrolla i sig själv. */
+.site-root .editorial > * { min-width: 0; }
+@media (min-width: 1024px) { .site-root .editorial { grid-template-columns: 4fr 7fr; gap: var(--s-16); } }
+.site-root .editorial-body p { max-width: var(--measure); }
+.site-root .hours-list { margin: var(--s-6) 0; display: grid; gap: 0; max-width: 32rem; }
+.site-root .hours-row {
+  display: flex; justify-content: space-between; gap: var(--s-4);
+  padding-block: var(--s-3); border-bottom: 1px solid var(--hairline);
+}
+.site-root .hours-row dt { color: var(--ink-muted); margin: 0; }
+.site-root .hours-row dd { margin: 0; font-variant-numeric: tabular-nums; }
+.site-root .address { font-size: var(--t--1); color: var(--ink-muted); }
+.site-root .address a { color: var(--accent); }
+
+/* --- footer --- */
+.site-root .site-footer {
+  background: var(--surface); border-top: 1px solid var(--hairline);
+  padding-block: calc(var(--s-16) + var(--s-8)) var(--s-16);
+  /* extra utrymme längst ner så den fasta WhatsApp-knappen inte täcker text */
+  padding-bottom: calc(var(--s-16) + 72px);
+}
+@media (min-width: 1024px) { .site-root .site-footer { padding-bottom: var(--s-16); } }
+.site-root .footer-inner {
+  display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: space-between;
+  font-size: var(--t--1); color: var(--ink-muted);
+}
+.site-root .footer-socials { display: flex; gap: var(--s-4); }
+.site-root .footer-socials a { color: var(--ink-muted); }
+.site-root .site-footer a:hover { color: var(--accent); }
 
 /* preview-banner — ligger utanför .site-root eftersom den inte är kundens design */
 .preview-banner {

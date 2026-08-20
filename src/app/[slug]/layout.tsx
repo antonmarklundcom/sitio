@@ -2,6 +2,8 @@ import { displayFont, textFont } from "@/themes/fonts";
 import { JS_FLAG } from "@/components/site/site-scripts";
 import "@/themes/theme.css";
 import "@/themes/servicios/servicios.css";
+import "@/themes/gastronomia/gastronomia.css";
+import "@/themes/comercio/comercio.css";
 
 /**
  * Kundsajterna delar inget synligt chrome med varandra eller med adminet —

@@ -72,6 +72,32 @@ Kontrollerna körs som git-hooks istället:
 
 Hookarna går att kringgå med `--no-verify`; de är en ledstång, inte en mur.
 
+## Teman
+
+Ett tema = en komponent (`src/themes/<key>/<key>-theme.tsx`), en CSS-fil med
+sektionsmönstren, och fyra palettvarianter i `src/themes/palettes.ts`. Byggda:
+`servicios` (INDUSTRIAL), `gastronomia` (WARM CRAFT), `comercio` (EDITORIAL).
+Övriga tre faller tillbaka på `servicios` tills PR-15 — admin visar det i
+temaväljaren i stället för att låtsas att valet gäller.
+
+Delade sektionsprimitiv (öppettidslista, adressrad, footer, statusprick) ligger
+i `src/themes/theme.css`; temafilen innehåller bara temats egna mönster.
+Ljusa teman bär `.t-light` på roten — den tonar ner skuggor och grain, som
+annars är satta för mörkdominant design.
+
+QA-gaten före varje temaändring:
+
+```bash
+npm run theme:preview     # .preview/<tema>-v<1..4>.html med demodata
+npm run theme:shots       # skärmdumpar i 360/768/1280 + överflödeskontroll
+```
+
+`theme:shots` serverar `.preview/` över HTTP (bild-src är rotrelativa), väntar
+in reveal-animationen och felrapporterar horisontell scroll per bredd. Den
+fångade fyra riktiga buggar i PR-07: statement-rubriken sprängde 360 px,
+karusellerna sköt ut hela sidan via `min-width: auto`, hero-texten hamnade
+ovanpå kontaktpanelen på desktop, och galleriet renderade tomt.
+
 ## Deploy till Hostinger
 
 ### Steg A — temp-domän (första deploy, efter PR-06)
@@ -136,7 +162,8 @@ src/
   db/             # schema.ts (auktoritativt), index.ts (pool)
   lib/            # env, auth/session, slug, formatering, media
   components/     # admin-UI (formulär, mediahanterare, primitiver)
+  themes/         # ett tema per katalog + delad theme.css och palettregister
 drizzle/          # genererade migreringar
-scripts/          # tsx-scripts (seed, rollup)
+scripts/          # tsx-scripts (seed, temaförhandsvisning, QA-skärmdumpar)
 docs/             # PLAN.md, RUNNER-POLICY.md
 ```

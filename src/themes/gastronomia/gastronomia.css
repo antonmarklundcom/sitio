@@ -1,0 +1,146 @@
+/*
+ * Sektionsmönster för tema `gastronomia` (WARM CRAFT). Färgerna kommer från
+ * palettvarianten (CSS-variabler på .site-root); här finns bara layout, mått
+ * och material. Brytpunkter: 640 / 1024 / 1280.
+ */
+
+.site-root.t-gastronomia {
+  /* Rundare än INDUSTRIAL-spåret — WARM CRAFT bär mjuka kanter. */
+  --r-sm: 10px;
+  --r-md: 20px;
+  --r-lg: 34px;
+}
+.site-root.t-gastronomia h1,
+.site-root.t-gastronomia h2 { font-weight: 600; }
+
+/* --- 01 hero: P6 full-bleed bild + överlappande panel --- */
+.site-root .gast-topbar {
+  display: flex; align-items: center; gap: var(--s-4); flex-wrap: wrap;
+  padding-block: var(--s-6);
+}
+.site-root .gast-wordmark { font-weight: 600; letter-spacing: -0.02em; font-size: var(--t-1); }
+.site-root .gast-topbar-call { margin-inline-start: auto; min-height: 44px; }
+
+.site-root .gast-hero { padding-block: 0 0; }
+.site-root .gast-hero-figure {
+  position: relative; margin: 0;
+  /* Full-bleed: bryter ut ur .wrap utan att skapa horisontell scroll. */
+  width: 100%;
+}
+.site-root .gast-hero-figure img {
+  width: 100%; height: clamp(340px, 62vh, 620px); object-fit: cover;
+}
+.site-root .gast-hero-figure--plain {
+  height: clamp(200px, 26vh, 320px); background: var(--surface);
+  border-block: 1px solid var(--hairline);
+}
+
+/* Rubriken ligger PÅ bilden från 768 px och under den på mobil, där en
+   62vh-bild annars äter hela skärmen innan ett enda ord syns. Utan text över
+   bilden behövs heller ingen scrim på mobil — den gör bara bilden mörkare. */
+@media (max-width: 767.98px) {
+  .site-root .gast-hero-figure.scrim::before { content: none; }
+  .site-root .gast-hero-figure img { height: clamp(240px, 42vh, 380px); }
+}
+.site-root .gast-hero-copy { padding-block: var(--s-8) var(--s-6); }
+.site-root .gast-hero-copy h1 { margin-bottom: var(--s-4); }
+.site-root .gast-lede { font-size: var(--t-1); line-height: 1.5; color: var(--ink-muted); }
+@media (min-width: 768px) {
+  .site-root .gast-hero-media { position: relative; }
+  .site-root .gast-hero-copy {
+    position: absolute; inset-inline: 0; bottom: clamp(var(--s-8), 5vh, var(--s-12));
+    color: #fff; padding-block: 0;
+  }
+  .site-root .gast-hero-copy h1 { color: #fff; }
+  .site-root .gast-hero-copy .eyebrow { color: #fff; opacity: 0.85; }
+  .site-root .gast-hero-copy .gast-lede {
+    color: rgb(255 255 255 / 0.88); max-width: 46ch; margin-bottom: 0;
+    /* Beskrivningen är kundens fritext och kan vara lång — över bilden får den
+       två rader, resten står i sin helhet i sektion 03. */
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
+}
+
+.site-root .gast-order-panel {
+  display: flex; flex-direction: column; gap: var(--s-4);
+  /* Överlappet: panelen korsar gränsen ner i nästa sektion. */
+  position: relative; z-index: 2;
+  margin-top: var(--s-8);
+  /* Korsar gränsen ner i det mörka bandet — sidans ena avsiktliga överlapp.
+     Negativ marginal i stället för transform: bandet ska flytta upp UNDER
+     panelen, inte bara få panelen målad ovanför sig. */
+  margin-bottom: clamp(calc(var(--s-16) * -1), -7vw, calc(var(--s-8) * -1));
+}
+.site-root .gast-order-title { font-size: var(--t-2); margin-bottom: var(--s-2); }
+@media (min-width: 768px) {
+  .site-root .gast-order-panel {
+    flex-direction: row; align-items: center; justify-content: space-between; gap: var(--s-8);
+  }
+  .site-root .gast-order-panel p { margin-bottom: 0; }
+}
+.site-root .gast-order-panel .btn { white-space: nowrap; }
+
+/* --- 02 trust-ribbon: P8 full-bleed, mörkt band --- */
+.site-root .gast-ribbon {
+  position: relative; background: var(--ink); color: var(--base);
+}
+/* Grain på ett mörkt band ska synas — .t-light tonar ner den för ljusa ytor. */
+.site-root .gast-ribbon.grain::after { opacity: 0.075; }
+.site-root .gast-ribbon-inner {
+  display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-6);
+  /* Extra topputrymme: den överlappande panelen landar här. */
+  padding-block: clamp(var(--s-16), 11vw, var(--s-24)) var(--s-4);
+  font-size: var(--t--1); letter-spacing: 0.06em; text-transform: uppercase;
+  color: rgb(255 255 255 / 0.78); align-items: center;
+}
+.site-root .gast-ribbon-inner strong { color: var(--base); font-weight: 600; }
+.site-root .gast-ribbon-inner .dot { background: rgb(255 255 255 / 0.6); margin-inline-end: var(--s-2); }
+.site-root .gast-ribbon-inner .dot--open { background: #35c47a; }
+.site-root .gast-ribbon-inner > span { display: inline-flex; align-items: center; }
+
+/* --- 03 nuestra cocina: P4 editorial two-column --- */
+.site-root .gast-body-lead { font-size: var(--t-1); line-height: 1.55; color: var(--ink); }
+
+/* --- 04 especialidades: P3 staggered-weight grid --- */
+.site-root .gast-dishes { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
+@media (min-width: 640px) { .site-root .gast-dishes { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .site-root .gast-dishes { grid-template-columns: repeat(3, 1fr); } }
+/* Första rätten bär huvudbudskapet och spänner två kolumner. */
+@media (min-width: 640px) { .site-root .gast-dish-lead { grid-column: span 2; } }
+.site-root .gast-dish-link {
+  display: inline-block; margin-top: var(--s-4); font-weight: 600;
+  color: var(--on-accent); text-decoration: underline; text-underline-offset: 4px;
+}
+
+/* --- 05 galería: P7 sticky-side scroll --- */
+.site-root .gast-gallery { display: grid; gap: var(--s-8); }
+.site-root .gast-gallery > * { min-width: 0; }
+@media (min-width: 1024px) {
+  .site-root .gast-gallery { grid-template-columns: 4fr 7fr; gap: var(--s-16); align-items: start; }
+  .site-root .gast-gallery-side { position: sticky; top: 12vh; }
+}
+.site-root .gast-gallery-list { display: grid; gap: var(--s-4); }
+.site-root .gast-gallery-item { margin: 0; border-radius: var(--r-md); overflow: hidden; }
+.site-root .gast-gallery-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+/* Var tredje bild går över hela bredden — en rytm i stället för ett rutnät. */
+@media (min-width: 640px) {
+  .site-root .gast-gallery-list { grid-template-columns: repeat(2, 1fr); }
+  .site-root .gast-gallery-item:nth-child(3n + 1) { grid-column: 1 / -1; }
+  /* En ensam sista bild får hela bredden i stället för att lämna ett hål. */
+  .site-root .gast-gallery-item:last-child:nth-child(3n + 2) { grid-column: 1 / -1; }
+  .site-root .gast-gallery-item:nth-child(3n + 1) img,
+  .site-root .gast-gallery-item:last-child:nth-child(3n + 2) img { aspect-ratio: 16 / 9; }
+}
+
+/* --- 06 horario y lugar: P1 asymmetrisk split 5/7 --- */
+.site-root .gast-hours-split { display: grid; gap: var(--s-8); }
+.site-root .gast-hours-split > * { min-width: 0; }
+@media (min-width: 1024px) {
+  .site-root .gast-hours-split { grid-template-columns: 5fr 7fr; gap: var(--s-16); align-items: start; }
+}
+
+/* --- 07 statement: P9 --- */
+.site-root .gast-closing { background: var(--surface); border-top: 1px solid var(--hairline); }
+.site-root .gast-closing .statement { color: var(--ink); margin-bottom: var(--s-6); }
+.site-root .gast-closing-sub { font-size: var(--t-1); max-width: 40ch; }
+.site-root .gast-closing-cta { margin-top: var(--s-4); }

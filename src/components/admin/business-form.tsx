@@ -2,16 +2,11 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  THEME_KEYS,
-  THEME_LABELS,
-  type HoursMap,
-} from "@/lib/business";
+import { CATEGORIES, CATEGORY_LABELS, type HoursMap } from "@/lib/business";
 import type { BusinessFormState } from "@/app/admin/(dashboard)/sitios/actions";
 import { Card, Notice, SectionTitle } from "./ui";
 import { Field, HoursEditor, Select, ServicesEditor, TextArea, TextInput } from "./fields";
+import { ThemePicker } from "./theme-picker";
 
 export type BusinessFormDefaults = {
   name: string;
@@ -101,22 +96,12 @@ export function BusinessForm({
             />
           </Field>
 
-          <div className="grid grid-cols-[1fr_auto] gap-3">
-            <Field label="Tema" name="themeKey" required error={err("themeKey")}>
-              <Select
-                name="themeKey"
-                defaultValue={defaults.themeKey}
-                options={THEME_KEYS.map((t) => ({ value: t, label: THEME_LABELS[t] }))}
-              />
-            </Field>
-            <Field label="Palett" name="paletteVariant" error={err("paletteVariant")}>
-              <Select
-                name="paletteVariant"
-                defaultValue={String(defaults.paletteVariant)}
-                options={[1, 2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
-              />
-            </Field>
-          </div>
+          <ThemePicker
+            defaultThemeKey={defaults.themeKey}
+            defaultVariant={defaults.paletteVariant}
+            themeError={err("themeKey")}
+            variantError={err("paletteVariant")}
+          />
         </div>
       </Card>
 
