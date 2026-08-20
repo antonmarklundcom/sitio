@@ -21,6 +21,41 @@ samma display-snitt är exakt den sameness registret finns för att stoppa.
 Minsta avstånd mellan varianternas hue: **42°** (29 → 71). Alla kontraster
 ligger långt över WCAG AA för brödtext (4,5:1).
 
+### Tema `gastronomia` (WARM CRAFT, ljus-varm)
+
+| Variant | Accent | Hue | Bas | Ink/bas | Accent/bas | Muted/bas |
+|---|---|---|---|---|---|---|
+| 1 | `#B23A20` | 11° | `#FBF5EE` | 15,73:1 | 5,51:1 | 6,08:1 |
+| 2 | `#7A6B10` | 52° | `#FAF7EC` | 15,34:1 | 4,97:1 | 5,90:1 |
+| 3 | `#1C7A4A` | 149° | `#F4F8F3` | 15,58:1 | 4,98:1 | 6,01:1 |
+| 4 | `#96177A` | 313° | `#FCF4F8` | 16,03:1 | 6,84:1 | 6,37:1 |
+
+Minsta avstånd mellan varianternas hue: **41°** (11 → 52). Lägsta uppmätta
+kontrast i temat är accent mot `--surface` (4,46:1 i variant 2) — över AA för
+brödtext.
+
+### Tema `comercio` (EDITORIAL, ljusdominant)
+
+| Variant | Accent | Hue | Bas | Ink/bas | Accent/bas | Muted/bas |
+|---|---|---|---|---|---|---|
+| 1 | `#0E4E96` | 212° | `#F7F8FA` | 16,77:1 | 7,75:1 | 5,93:1 |
+| 2 | `#0A6E52` | 163° | `#F5F9F7` | 16,74:1 | 5,88:1 | 6,34:1 |
+| 3 | `#7A2FBF` | 271° | `#F8F6FB` | 16,77:1 | 6,34:1 | 6,62:1 |
+| 4 | `#8C5304` | 35° | `#FAF7F2` | 16,24:1 | 5,54:1 | 6,42:1 |
+
+Minsta avstånd mellan varianternas hue: **49°** (163 → 212).
+
+### Sektion → mönster per tema (portföljregeln)
+
+Två sajter i registret får inte dela sektion→mönster-karta. Teman är därför
+kartlagda var för sig:
+
+| Tema | 01 | 02 | 03 | 04 | 05 | 06 | 07 |
+|---|---|---|---|---|---|---|---|
+| `servicios` | P1 | P8 | P3 | P5 | P4 | P6 | P9 |
+| `gastronomia` | P6 | P8 | P4 | P3 | P7 | P1 | P9 |
+| `comercio` | P2 | P8 | P3 | P4 | P6 | P7 | P9 |
+
 ### Kända avvikelser
 
 **40°-regeln kan inte hålla över hela produkten.** Sex teman × fyra varianter
@@ -28,6 +63,13 @@ ligger långt över WCAG AA för brödtext (4,5:1).
 avvikelse, dokumenterad i `PLAN.md` §1.5: regeln upprätthålls **inom** ett
 tema, och kollisioner mellan teman syns bara om två grannar i samma bransch
 får samma tema och variant — variant väljs manuellt vid publicering.
+
+Efter PR-07 är de tätaste paren **mellan** teman `servicios` v1 (29°, `#FF8A1F`)
+och `comercio` v4 (35°, `#8C5304`), samt `servicios` v4 (254°) och `comercio` v3
+(271°). Båda paren skiljer sig i spår (mörkdominant INDUSTRIAL mot ljus
+EDITORIAL) och i ljushet — accenterna delar hue-region men aldrig utseende.
+Det är avsiktligt och inte en miss; tvinga inte isär dem utan att först mäta
+kontrasterna om igen.
 
 ## Att fylla i
 

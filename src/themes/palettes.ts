@@ -74,11 +74,115 @@ const servicios: ThemePalettes = [
 ];
 
 /**
+ * WARM CRAFT: ljus-varm, texturerad, generös luft. Basen är kräm/varmvit och
+ * bär grain i låg opacitet; accenten är mättad men mörk nog att bära text.
+ */
+const gastronomia: ThemePalettes = [
+  {
+    hue: 11,
+    base: "#FBF5EE",
+    surface: "#F3E9DC",
+    surfaceRaised: "#FFFFFF",
+    ink: "#241A14",
+    inkMuted: "#6B5A4C",
+    accent: "#B23A20",
+    onAccent: "#FFF7F2",
+    hairline: "rgba(36,26,20,0.14)",
+  },
+  {
+    hue: 52,
+    base: "#FAF7EC",
+    surface: "#F0EBD7",
+    surfaceRaised: "#FFFDF6",
+    ink: "#1F2016",
+    inkMuted: "#5F6152",
+    accent: "#7A6B10",
+    onAccent: "#FFFDF0",
+    hairline: "rgba(31,32,22,0.14)",
+  },
+  {
+    hue: 149,
+    base: "#F4F8F3",
+    surface: "#E6EFE5",
+    surfaceRaised: "#FFFFFF",
+    ink: "#16201A",
+    inkMuted: "#4F6357",
+    accent: "#1C7A4A",
+    onAccent: "#F2FBF5",
+    hairline: "rgba(22,32,26,0.14)",
+  },
+  {
+    hue: 313,
+    base: "#FCF4F8",
+    surface: "#F6E6EF",
+    surfaceRaised: "#FFFFFF",
+    ink: "#231627",
+    inkMuted: "#685467",
+    accent: "#96177A",
+    onAccent: "#FFF2FB",
+    hairline: "rgba(35,22,39,0.14)",
+  },
+];
+
+/**
+ * EDITORIAL: ljusdominant, platta ytor och hårstrecksramar, en accent.
+ * Nästan neutral bas — kundens produktbilder ska bära färgen, inte temat.
+ */
+const comercio: ThemePalettes = [
+  {
+    hue: 212,
+    base: "#F7F8FA",
+    surface: "#EDF0F5",
+    surfaceRaised: "#FFFFFF",
+    ink: "#14181D",
+    inkMuted: "#56616F",
+    accent: "#0E4E96",
+    onAccent: "#F4F8FF",
+    hairline: "rgba(20,24,29,0.13)",
+  },
+  {
+    hue: 163,
+    base: "#F5F9F7",
+    surface: "#E8F1EC",
+    surfaceRaised: "#FFFFFF",
+    ink: "#101A16",
+    inkMuted: "#4C6058",
+    accent: "#0A6E52",
+    onAccent: "#F2FBF7",
+    hairline: "rgba(16,26,22,0.13)",
+  },
+  {
+    hue: 271,
+    base: "#F8F6FB",
+    surface: "#EEEAF6",
+    surfaceRaised: "#FFFFFF",
+    ink: "#191424",
+    inkMuted: "#5C5470",
+    accent: "#7A2FBF",
+    onAccent: "#F9F5FF",
+    hairline: "rgba(25,20,36,0.13)",
+  },
+  {
+    hue: 35,
+    base: "#FAF7F2",
+    surface: "#F1EBE1",
+    surfaceRaised: "#FFFFFF",
+    ink: "#1D1A14",
+    inkMuted: "#63594B",
+    accent: "#8C5304",
+    onAccent: "#FFFBF2",
+    hairline: "rgba(29,26,20,0.13)",
+  },
+];
+
+/**
  * Teman utan egen palett faller tillbaka på servicios tills de byggs
- * (PR-07: gastronomia + comercio, PR-15: salud + belleza + taller).
+ * (PR-15: salud + belleza + taller).
  */
 export const PALETTES: Record<string, ThemePalettes> = {
   servicios,
+  gastronomia,
+  comercio,
 };
 
 export function paletteFor(themeKey: string, variant: number): Palette {

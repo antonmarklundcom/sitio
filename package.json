@@ -14,7 +14,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed-dev.ts",
     "prepare": "husky",
-    "theme:preview": "tsx --tsconfig tsconfig.scripts.json scripts/theme-preview.tsx"
+    "theme:preview": "tsx --tsconfig tsconfig.scripts.json scripts/theme-preview.tsx",
+    "theme:shots": "tsx --tsconfig tsconfig.scripts.json scripts/theme-shots.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

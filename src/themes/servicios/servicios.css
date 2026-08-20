@@ -4,8 +4,6 @@
  * Brytpunkter: 640 / 1024 / 1280.
  */
 
-.site-root .site-logo { max-height: 44px; width: auto; border-radius: var(--r-sm); }
-
 /* --- 01 hero: P1 asymmetrisk split 7/5 --- */
 .site-root .hero-grid { display: grid; gap: var(--s-8); }
 /* 7/5, aldrig 6/6 — lika halvor läser som en mall. Utan hero-bild blir det
@@ -18,10 +16,6 @@
 .site-root .hero-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-block: var(--s-6) var(--s-4); }
 .site-root .hero-actions .btn { flex: 1 1 auto; }
 @media (min-width: 640px) { .site-root .hero-actions .btn { flex: 0 0 auto; } }
-
-.site-root .hero-status { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t--1); color: var(--ink-muted); margin: 0; }
-.site-root .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-muted); flex: none; }
-.site-root .dot--open { background: #25d366; }
 
 .site-root .hero-figure { position: relative; margin: 0; border-radius: var(--r-lg); overflow: hidden; }
 .site-root .hero-figure img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
@@ -64,19 +58,7 @@
 .site-root .process-step h3,
 .site-root .process-step p { position: relative; z-index: 1; }
 
-/* --- 05 zonas/horario: P4 editorial two-column --- */
-.site-root .editorial { display: grid; gap: var(--s-6); }
-@media (min-width: 1024px) { .site-root .editorial { grid-template-columns: 4fr 7fr; gap: var(--s-16); } }
-.site-root .editorial-body p { max-width: var(--measure); }
-.site-root .hours-list { margin: var(--s-6) 0; display: grid; gap: 0; max-width: 32rem; }
-.site-root .hours-row {
-  display: flex; justify-content: space-between; gap: var(--s-4);
-  padding-block: var(--s-3); border-bottom: 1px solid var(--hairline);
-}
-.site-root .hours-row dt { color: var(--ink-muted); margin: 0; }
-.site-root .hours-row dd { margin: 0; font-variant-numeric: tabular-nums; }
-.site-root .address { font-size: var(--t--1); color: var(--ink-muted); }
-.site-root .address a { color: var(--accent); }
+/* --- 05 zonas/horario: P4 editorial two-column — se theme.css (delad) --- */
 
 /* --- 06 galería: P6 full-bleed band --- */
 .site-root .gallery-band {
@@ -105,19 +87,3 @@
   .site-root .contact-panel { flex-direction: row; align-items: center; justify-content: space-between; }
 }
 .site-root .contact-panel .btn { white-space: nowrap; }
-
-/* --- footer --- */
-.site-root .site-footer {
-  background: var(--surface); border-top: 1px solid var(--hairline);
-  padding-block: calc(var(--s-16) + var(--s-8)) var(--s-16);
-  /* extra utrymme längst ner så den fasta WhatsApp-knappen inte täcker text */
-  padding-bottom: calc(var(--s-16) + 72px);
-}
-@media (min-width: 1024px) { .site-root .site-footer { padding-bottom: var(--s-16); } }
-.site-root .footer-inner {
-  display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: space-between;
-  font-size: var(--t--1); color: var(--ink-muted);
-}
-.site-root .footer-socials { display: flex; gap: var(--s-4); }
-.site-root .footer-socials a { color: var(--ink-muted); }
-.site-root .site-footer a:hover { color: var(--accent); }
