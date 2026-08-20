@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
+/**
+ * Globala tokens gäller ENDAST admin/systemytor (/admin, /mi-sitio, /alta).
+ * Kundsajterna under /[slug] bär sina egna tema-tokens och ärver inget
+ * härifrån utom typsnittsvariablerna — de ska upplevas som fristående sajter.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --admin-bg: #0f1115;
+  --admin-surface: #171a21;
+  --admin-surface-2: #1e222b;
+  --admin-line: #2a2f3a;
+  --admin-text: #e8eaee;
+  --admin-muted: #98a0b0;
+  --admin-accent: #4f7cff;
+  --admin-accent-ink: #ffffff;
+  --admin-ok: #35c184;
+  --admin-warn: #e8b33a;
+  --admin-danger: #f2545b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-admin-bg: var(--admin-bg);
+  --color-admin-surface: var(--admin-surface);
+  --color-admin-surface-2: var(--admin-surface-2);
+  --color-admin-line: var(--admin-line);
+  --color-admin-text: var(--admin-text);
+  --color-admin-muted: var(--admin-muted);
+  --color-admin-accent: var(--admin-accent);
+  --color-admin-ok: var(--admin-ok);
+  --color-admin-warn: var(--admin-warn);
+  --color-admin-danger: var(--admin-danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
