@@ -9,8 +9,25 @@
 
 ## 1. Målet
 
-Minska förbrukade Actions-minuter med **~80 %** mot senaste veckan, utan att
-förlora vare sig Claude-assisterad utveckling eller deploy-automation.
+**Hålla sig inom 2000 Actions-minuter per månad** utan att förlora vare sig
+Claude-assisterad utveckling eller deploy-automation. Mot senaste veckans takt
+kräver det ~80–85 % minskning.
+
+Vad 2000 min/mån betyder i praktiken:
+
+| Period | Budget |
+|---|---|
+| Månad | 2000 min |
+| Vecka | ~460 min |
+| Dag | ~65 min |
+
+**Mät innan du optimerar.** Settings → Billing → Actions bryter ner förbrukningen
+**per repo**. Notera senaste veckans siffra här innan något ändras — annars går
+det inte att veta om 80 % faktiskt uppnåddes:
+
+- Senaste veckan, totalt: `___ min`
+- Värsta repot: `___` med `___ min`
+- Mål efter åtgärd: `≤ 460 min/vecka`
 
 Minuter debiteras **per konto**, inte per repo, och **fria minuter gäller bara
 privata repon** — publika repon kör obegränsat gratis på standardrunners.
@@ -23,7 +40,7 @@ Rangordnat efter förväntad besparing.
 
 | # | Källa | Varför det kostar | Åtgärd |
 |---|---|---|---|
-| 1 | **`@claude` i PR/issue** (claude-code-action) | Kör i ditt eget repo på `ubuntu-latest`. Hela kodningssessionen debiteras dig — 5–20 min per anrop — och varje uppföljningskommentar startar en ny körning | Använd Claude Code på **webben/desktop** istället. De sessionerna kör i Anthropics moln = **0 GitHub-minuter** |
+| 1 | **`@claude` i PR/issue** (claude-code-action) | Kör i ditt eget repo på `ubuntu-latest`. Hela kodningssessionen debiteras dig — 5–20 min per anrop — och varje uppföljningskommentar startar en ny körning | Använd Claude Code på **webben/desktop** istället (0 GitHub-minuter — kör i Anthropics moln). Ta bort `.github/workflows/claude.yml` i repon som har den |
 | 2 | **Copilot code review** på privata repon | Konsumerar Actions-minuter per PR | Stäng av på privata repon |
 | 3 | **Scaffold-workflows i gamla repon** | 3 min × varje push × antal repon | Settings → Actions → General → **Disable actions** per repo som inte behöver CI |
 | 4 | **`on: push` + `on: pull_request` samtidigt** | Dubbelbetalar varje commit på en PR-branch | Ta bort `push` |
@@ -32,6 +49,13 @@ Rangordnat efter förväntad besparing.
 
 Punkt 1 ensam står sannolikt för merparten av förbrukningen. Den är också
 gratis att åtgärda — samma arbete, annan körplats.
+
+**Ingen skill kan upprätthålla punkt 1.** En `@claude`-körning startar när
+kommentaren postas, alltså *innan* någon Claude-session finns som kan läsa en
+policy — minuterna är redan igång. Skillen `budgeted-runner-deploy` styr vad
+Claude föreslår; spärren är att **ta bort `.github/workflows/claude.yml`** i de
+repon som har den, eller inaktivera Actions på repot. Utan den raderingen ändras
+ingenting.
 
 ## 3. Alternativ till GitHub-hostade runners
 
@@ -52,10 +76,15 @@ Rangordnat efter avkastning. Stanna vid det första som räcker.
 ## 4. Engångsåtgärder (klickas en gång, av dig)
 
 - [ ] Ta bort skillen `zero-runner-deploy` på claude.ai (annars dubbel-triggning)
-- [ ] Billing → **spending limit `$0`** — hård vägg, kan aldrig debiteras en cent.
-      Körningar blockeras resten av månaden istället. (`$10` bara om CI måste
-      överleva en överdragning.)
+- [ ] Billing → **spending limit `$10`** — inte `$0`. Skillnaden: `$0` är en hård
+      vägg som dödar varje körning resten av månaden så fort de 2000 fria
+      minuterna är slut, mitt i en deploy om det vill sig illa. `$10` ≈ 1250 extra
+      Linux-minuter (~$0.008/min) som säkerhetsventil. 2000 är målet du **styr
+      mot** via listan nedan; $10 är bara till för att en kritisk körning inte ska
+      dö i månadens sista vecka. Sätt `$0` bara om du hellre tar stoppet än kronan.
 - [ ] Sluta använda `@claude` i PR-kommentarer; kör web-sessioner
+- [ ] Gå igenom alla repon och **ta bort `.github/workflows/claude.yml`** där den
+      finns — detta är den enskilt största åtgärden på hela listan
 - [ ] Stäng av Copilot code review på privata repon
 - [ ] Gå igenom alla repon: Settings → Actions → General → Disable actions på varje
       repo utan CI-behov
