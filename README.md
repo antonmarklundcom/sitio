@@ -95,13 +95,38 @@ Temp-domänen är för intern validering. **Ingen kund får någonsin en temp-UR
    preview-länkar och wa.me-länkar i admin.
 5. 301 från temp-adressen om den hunnit indexeras.
 
+### Bildpipelinen
+
+Uppladdning sker via `POST /api/upload` (auth + tenant-check + max 10 MB +
+mime-whitelist). `sharp` bakar in EXIF-orienteringen, **strippar EXIF**, och
+skriver varianterna 400 / 800 / 1600 px som webp (kvalitet 78). Loggan blir i
+stället 256 px PNG med bevarad transparens. Originalet sparas aldrig.
+
+Filnamnet innehåller en hash av innehållet, så en utbytt bild får en ny URL —
+det är därför serverings-routen `/media/[businessId]/[file]` kan skicka
+`Cache-Control: public, max-age=31536000, immutable` utan risk.
+
+`next/image` används **inte** för kundbilder. Vi servar färdiga varianter med
+`<img srcset>`; Hostinger-managed har ingen bra cache-story för image-optimizern.
+
+Verifierat lokalt: orienteringen roteras rätt, EXIF försvinner, varianterna får
+rätt dimensioner, loggan behåller alfakanalen, och `resolveMediaPath()` blockerar
+`../`, snedstreck i filnamn och manipulerat `businessId`.
+
 ### Uploads-persistens
 
-Frågan "överlever `UPLOADS_DIR` en redeploy?" besvaras och dokumenteras här i
-PR-05, efter test mot faktisk Hostinger-miljö. Svaret avgör om R2-flytten
-(PR-21) måste tidigareläggas.
+Frågan "överlever `UPLOADS_DIR` en redeploy?" kan bara besvaras mot faktisk
+Hostinger-miljö. Testet körs vid deploy-steg A:
 
-**Status:** ⬜ inte testat ännu (PR-05).
+1. Ladda upp en bild via `/admin`, verifiera att den serveras på `/media/…`.
+2. Trigga en redeploy via GitHub-webhooken.
+3. Anropa samma `/media/…`-URL igen.
+
+**Status:** ⬜ inte testat ännu — kräver deploy-steg A.
+
+Svaret avgör om R2-flytten (PR-21) måste tidigareläggas till fas 1. Ligger
+`UPLOADS_DIR` utanför appkatalogen bör den överleva, men det är en antagelse
+tills den är mätt.
 
 ## Katalogstruktur
 
@@ -109,7 +134,8 @@ PR-05, efter test mot faktisk Hostinger-miljö. Svaret avgör om R2-flytten
 src/
   app/            # App Router: /[slug] (kundsajter), /admin, /alta, /api
   db/             # schema.ts (auktoritativt), index.ts (pool)
-  lib/            # env, slug-validering, formatering (Gs, telefon, wa.me)
+  lib/            # env, auth/session, slug, formatering, media
+  components/     # admin-UI (formulär, mediahanterare, primitiver)
 drizzle/          # genererade migreringar
 scripts/          # tsx-scripts (seed, rollup)
 docs/             # PLAN.md, RUNNER-POLICY.md

@@ -14,6 +14,14 @@ import {
 import { BusinessForm } from "@/components/admin/business-form";
 import { Badge, Card, Notice, SectionTitle, StatusBadge } from "@/components/admin/ui";
 import { changeStatusAction, updateBusinessAction, verifyWhatsappManuallyAction } from "../actions";
+import {
+  deleteMediaAction,
+  listMediaForBusiness,
+  moveMediaAction,
+  setHeroAction,
+  updateAltTextAction,
+} from "../media-actions";
+import { MediaGrid, MediaUploader, type MediaItem } from "@/components/admin/media-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +46,19 @@ export default async function EditBusinessPage({
 
   const business = await getBusinessById(businessId);
   if (!business) notFound();
+
+  const mediaRows = await listMediaForBusiness(businessId);
+  const logo = mediaRows.filter((m) => m.kind === "logo");
+  const photos = mediaRows.filter((m) => m.kind === "photo");
+  const toItem = (m: (typeof mediaRows)[number]): MediaItem => ({
+    id: m.id,
+    kind: m.kind,
+    variants: m.variantsJson ?? {},
+    altText: m.altText,
+    bytes: m.bytes,
+    width: m.width,
+    height: m.height,
+  });
 
   const status = business.status as BusinessStatus;
   const blockers = publishBlockers(business);
@@ -156,6 +177,48 @@ export default async function EditBusinessPage({
               </dd>
             </div>
           </dl>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionTitle hint="Bilderna processas vid uppladdning: EXIF strippas, orienteringen bakas in och varianterna 400/800/1600 px sparas som webp. Originalet sparas aldrig.">
+          Bilder
+        </SectionTitle>
+
+        <div className="space-y-6">
+          <div>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-sm font-medium">Logga</h3>
+              <MediaUploader businessId={business.id} kind="logo" label="Ladda upp logga" />
+            </div>
+            <MediaGrid
+              businessId={business.id}
+              items={logo.map(toItem)}
+              heroMediaId={business.heroMediaId}
+              onDelete={deleteMediaAction}
+              onMove={moveMediaAction}
+              onSetHero={setHeroAction}
+              onAltText={updateAltTextAction}
+            />
+          </div>
+
+          <div>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-sm font-medium">
+                Foton <span className="text-admin-muted">({photos.length})</span>
+              </h3>
+              <MediaUploader businessId={business.id} kind="photo" label="Ladda upp foton" />
+            </div>
+            <MediaGrid
+              businessId={business.id}
+              items={photos.map(toItem)}
+              heroMediaId={business.heroMediaId}
+              onDelete={deleteMediaAction}
+              onMove={moveMediaAction}
+              onSetHero={setHeroAction}
+              onAltText={updateAltTextAction}
+            />
+          </div>
         </div>
       </Card>
 
