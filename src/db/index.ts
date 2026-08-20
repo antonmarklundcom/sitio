@@ -34,7 +34,13 @@ export function getPool(): mysql.Pool {
 
 function getDb(): MySql2Database<typeof schema> {
   if (!globalForDb.__sitioDb) {
-    globalForDb.__sitioDb = drizzle(getPool(), { schema, mode: "default" });
+    // DRIZZLE_LOG=1 loggar varje fråga till stdout. Ovärderligt när en
+    // korrelerad subfråga ser rätt ut i koden men fel i utfallet.
+    globalForDb.__sitioDb = drizzle(getPool(), {
+      schema,
+      mode: "default",
+      logger: process.env.DRIZZLE_LOG === "1",
+    });
   }
   return globalForDb.__sitioDb;
 }

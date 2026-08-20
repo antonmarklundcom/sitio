@@ -37,8 +37,13 @@ export default async function SitePage({ params }: Params) {
   const site = await publishedSite(slug);
 
   if (!site) {
-    // Har slugen bytts pekar vi vidare med 301 i stället för att tappa
+    // Har slugen bytts pekar vi vidare permanent i stället för att tappa
     // besökaren och den ranking som byggts upp.
+    //
+    // Statuskoden blir 308, inte 301: App Router kan inte sätta status på en
+    // sidrespons, och permanentRedirect() svarar 308. Google behandlar 308
+    // som 301 för indexering — skillnaden är att 308 inte får byta metod på
+    // en POST. Verifierat mot en riktig databas: /gammal-slug → 308 → /ny-slug.
     const target = await getRedirectTarget(slug.toLowerCase());
     if (target && target !== slug.toLowerCase()) permanentRedirect(`/${target}`);
     notFound();

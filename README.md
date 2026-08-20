@@ -38,6 +38,7 @@ Alla finns dokumenterade i [`.env.example`](.env.example). De kritiska:
 | `NEXT_PUBLIC_BASE_URL` | **Enda** stället där domänen finns. Domänbyte = env-ändring, aldrig refaktorering. |
 | `SESSION_SECRET` | ≥32 tecken. `openssl rand -base64 48` |
 | `CRON_SECRET` | Skyddar rollup-/livscykel-routen mot publika anrop. |
+| `ANALYTICS_TZ_OFFSET_HOURS` | Valfri. Databasklocka → Asunción-dygn i rollupen. Default −3 (förutsätter UTC). |
 | `UPLOADS_DIR` | Absolut sökväg **utanför** deploy-trädet, t.ex. `/home/<user>/uploads/sitio`. |
 
 ### Regeln som gäller från PR-01
@@ -72,6 +73,34 @@ Kontrollerna körs som git-hooks istället:
 
 Hookarna går att kringgå med `--no-verify`; de är en ledstång, inte en mur.
 
+## Analytics
+
+Beaconen i kundsajternas layout postar till `POST /api/ev` (bara på publicerade
+sajter — förhandsvisningar räknas aldrig). Ingesten:
+
+- klassar user agent som `mobile` / `desktop` / `bot` / `unknown`. Bots lagras
+  men räknas aldrig in i siffrorna — att kasta dem vid ingest hade gjort det
+  omöjligt att se om en sajt bara får bottrafik.
+- lagrar `visitorHash = sha256(ip + ua + dagsalt)` trunkerad till 32 tecken.
+  Saltet härleds ur `SESSION_SECRET` + dagens datum, lagras aldrig och roterar
+  vid midnatt: hashen går inte att koppla mellan två dygn och databasen går
+  inte att baklängesräkna till IP-adresser.
+- rate-limitar 120 event per IP och minut, svarar alltid `204` (en
+  differentierad statuskod hade gjort endpointen till en id-uppräknare).
+
+`analytics_events` rullas upp till `analytics_daily` av
+`GET /api/cron/rollup` (hPanel-cron, `Authorization: Bearer $CRON_SECRET`).
+Sätts cron aldrig upp gör lazy-fallbacken samma jobb vid första adminläsningen
+per dygn — routen är en optimering, inte en förutsättning. Råevent prunas efter
+13 månader. Aggregatet är idempotent: samma dygn kan rullas upp hur många
+gånger som helst.
+
+Dygnsgränsen räknas som databasens klocka + `ANALYTICS_TZ_OFFSET_HOURS`
+(default −3). `CONVERT_TZ` med namngivna zoner kräver MySQL:s tz-tabeller, som
+sällan är laddade på delad hosting. **Verifiera vid deploy-steg A:**
+`select now(), utc_timestamp();` — skiljer de sig är databasen inte i UTC och
+offseten måste justeras.
+
 ## Teman
 
 Ett tema = en komponent (`src/themes/<key>/<key>-theme.tsx`), en CSS-fil med
@@ -97,6 +126,32 @@ in reveal-animationen och felrapporterar horisontell scroll per bredd. Den
 fångade fyra riktiga buggar i PR-07: statement-rubriken sprängde 360 px,
 karusellerna sköt ut hela sidan via `min-width: auto`, hero-texten hamnade
 ovanpå kontaktpanelen på desktop, och galleriet renderade tomt.
+
+## Röktest mot riktig databas
+
+`npm run smoke` kör en riktig genomgång med Playwright mot en byggd app och en
+riktig MySQL: inloggning, sajtlistan, statistikpanelen, CRUD med
+ISR-invalidering, slug-byte med permanent redirect, preview-token (giltig och
+ogiltig), bilduppladdning genom sharp och ut via `/media`, samt beaconen.
+
+```bash
+npm run db:migrate && npm run db:seed
+npm run build && PORT=3100 npm run start &
+SMOKE_BASE_URL=http://127.0.0.1:3100 npm run smoke
+```
+
+**Testet skriver i databasen** (byter namn och slug på business 1, laddar upp
+en bild). Kör det aldrig mot produktion.
+
+Kört mot MySQL 8.0.46 i PR-08 — första gången något i repot testats mot en
+faktisk databas. Det fångade två riktiga fel: en korrelerad subfråga i
+sajtlistan där drizzle renderade `${businesses.id}` okvalificerat, så att varje
+subfråga jämförde med sin EGEN id-kolumn (alla sajter fick samma statistik och
+fel betalstatus), och att `drizzle-kit` inte läser `.env.local` — den fil
+README säger åt dig att skapa.
+
+Kvar att verifiera mot Hostinger (kan inte testas här): uploads-persistens över
+redeploy, databasens tidszon, och att hPanel-cron faktiskt når rollup-routen.
 
 ## Deploy till Hostinger
 
@@ -148,7 +203,9 @@ Hostinger-miljö. Testet körs vid deploy-steg A:
 2. Trigga en redeploy via GitHub-webhooken.
 3. Anropa samma `/media/…`-URL igen.
 
-**Status:** ⬜ inte testat ännu — kräver deploy-steg A.
+**Status:** ⬜ inte testat ännu — kräver deploy-steg A. Själva pipelinen
+(upload → sharp → disk → `/media`-servering med immutable-cache) är däremot
+verifierad mot en riktig databas och ett riktigt filsystem, se röktestet ovan.
 
 Svaret avgör om R2-flytten (PR-21) måste tidigareläggas till fas 1. Ligger
 `UPLOADS_DIR` utanför appkatalogen bör den överleva, men det är en antagelse
