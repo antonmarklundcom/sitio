@@ -2,9 +2,12 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { logoutAction } from "../login/actions";
 
-// Betalningar (PR-09) och Hot leads (PR-16) läggs till när vyerna finns —
-// en meny som pekar på 404 är värre än en kort meny.
-const NAV = [{ href: "/admin", label: "Sajter" }];
+// Hot leads (PR-16) läggs till när vyn finns — en meny som pekar på 404 är
+// värre än en kort meny.
+const NAV = [
+  { href: "/admin", label: "Sajter" },
+  { href: "/admin/pagos", label: "Cobros" },
+];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireRole("superadmin");

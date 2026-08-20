@@ -104,7 +104,56 @@ if (imgSrc) {
   ok('media serveras med immutable-cache', media.status === 200 && (media.headers.get('cache-control') ?? '').includes('immutable'), `${media.status} ${media.headers.get('cache-control')}`);
 }
 
-// 8. analytics: beacon på publicerad sajt, avvisad på opublicerad
+// 8. betalningar: prenumeration → betalning → bekräftelse → förnyelsevy
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1200);
+const subForm = p.locator('form').filter({ has: p.locator('select[name=plan]') });
+const day = (offsetDays) => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+};
+// Perioden läggs medvetet strax före förfall så att sajten hamnar i
+// "Vencen pronto" — det är vyn testet ska verifiera.
+await subForm.locator('select[name=plan]').selectOption('plus');
+await subForm.locator('input[name=priceGs]').fill('450000');
+await subForm.locator('input[name=startsAt]').fill(day(-355));
+await subForm.locator('input[name=expiresAt]').fill(day(10));
+await subForm.getByRole('button', { name: /Spara prenumeration/ }).click();
+await p.waitForTimeout(2500);
+ok('prenumeration sparad', (await p.locator('body').innerText()).includes('450.000'));
+
+const payForm = p.locator('form').filter({ has: p.locator('select[name=method]') });
+const ref = 'OP-' + Date.now().toString().slice(-6);
+await payForm.locator('input[name=amountGs]').fill('450000');
+await payForm.locator('select[name=method]').selectOption('transferencia');
+await payForm.locator('input[name=reference]').fill(ref);
+await payForm.locator('input[name=periodStart]').fill(day(10));
+await payForm.locator('input[name=periodEnd]').fill(day(375));
+await payForm.locator('input[name=receipt]').setInputFiles({ name: 'comprobante.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+await payForm.getByRole('button', { name: /Registrera betalning/ }).click();
+await p.waitForTimeout(3500);
+const afterPay = await p.locator('body').innerText();
+ok('betalning registrerad som rapporterad', afterPay.includes(ref) && afterPay.includes('Rapporterad'));
+
+await p.goto(B + '/admin/pagos', { waitUntil: 'domcontentloaded' });
+const cobros = await p.locator('body').innerText();
+ok('betalningen syns i Cobros-kön', cobros.includes(ref));
+// Rubriken renderas versaliserad av CSS, så innerText ger "VENCEN PRONTO".
+ok('sajten syns i Vencen pronto', /vencen pronto/i.test(cobros) && /om \d+ dgr/.test(cobros));
+
+await p.locator('form').filter({ has: p.locator(`input[value="/admin/pagos"]`) }).first()
+  .getByRole('button', { name: 'Bekräfta' }).click();
+await p.waitForTimeout(3000);
+const confirmed = await p.locator('body').innerText();
+ok('bekräftelse kvitteras', confirmed.includes('Betalningen är bekräftad'));
+
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+const afterConfirm = await p.locator('body').innerText();
+ok('prenumerationen förlängd till betalningens periodslut', afterConfirm.includes(day(375)));
+ok('betalningen står som bekräftad', afterConfirm.includes('Bekräftad'));
+
+// 9. analytics: beacon på publicerad sajt, avvisad på opublicerad
 const send = (bid, ua) => fetch(B+'/api/ev', {method:'POST', headers:{'content-type':'application/json','user-agent':ua}, body: JSON.stringify({b:bid,t:'whatsapp_click',p:'/smoke'})});
 ok('beacon svarar 204', (await send(1,'Mozilla/5.0 (iPhone)')).status === 204);
 

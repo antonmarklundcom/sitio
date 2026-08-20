@@ -127,12 +127,42 @@ fångade fyra riktiga buggar i PR-07: statement-rubriken sprängde 360 px,
 karusellerna sköt ut hela sidan via `min-width: auto`, hero-texten hamnade
 ovanpå kontaktpanelen på desktop, och galleriet renderade tomt.
 
+## Prenumerationer och betalningar
+
+Manuellt bekräftade, ingen Stripe (PLAN.md §1.7). Du säljer på WhatsApp, skapar
+prenumerationen i `/admin/sitios/<id>`, registrerar betalningen när kunden
+skickar comprobante, och bekräftar den när pengarna syns.
+
+Registrering och bekräftelse är **två steg med flit**: det första skriver ner
+vad kunden säger, det andra förlänger perioden. Slås de ihop förlänger ett
+slarvigt klick ett år.
+
+Livscykeln räknas ut, aldrig gissas:
+
+| Läge | Vad som händer |
+|---|---|
+| `active` | Betald. Sajten uppe. |
+| `grace` | Förfallodatum passerat. **15 dagar**, sajten står kvar uppe. |
+| `expired` | Respiten slut ⇒ sajten sätts till `paused`: 404 + noindex, datat kvar. |
+| bekräftad betalning | Perioden förlängs till betalningens periodslut. En sajt som pausats för utebliven betalning publiceras igen. |
+
+Steget körs av `/api/cron/rollup` i samma nattliga anrop som analytics-rollupen.
+Det har medvetet **ingen** lazy fallback — det ändrar status på sajter och får
+inte hända som sidoeffekt av en läsning. Saknas cron kör du det manuellt med
+knappen "Kör förfallokontroll nu" i `/admin/pagos`.
+
+`/admin/pagos` är arbetsvyn: kön av betalningar att bekräfta, och "Vencen
+pronto" (≤45 dagar) med en wa.me-länk per kund vars meddelande innehåller
+årets siffror — *"Tu página tuvo 340 visitas y 52 contactos por WhatsApp este
+año 📈"*. Saknas trafik utelämnas siffrorna hellre än att skönmålas.
+
 ## Röktest mot riktig databas
 
 `npm run smoke` kör en riktig genomgång med Playwright mot en byggd app och en
 riktig MySQL: inloggning, sajtlistan, statistikpanelen, CRUD med
 ISR-invalidering, slug-byte med permanent redirect, preview-token (giltig och
-ogiltig), bilduppladdning genom sharp och ut via `/media`, samt beaconen.
+ogiltig), bilduppladdning genom sharp och ut via `/media`, prenumeration →
+betalning → bekräftelse → förlängd period, samt beaconen.
 
 ```bash
 npm run db:migrate && npm run db:seed
@@ -149,6 +179,10 @@ sajtlistan där drizzle renderade `${businesses.id}` okvalificerat, så att varj
 subfråga jämförde med sin EGEN id-kolumn (alla sajter fick samma statistik och
 fel betalstatus), och att `drizzle-kit` inte läser `.env.local` — den fil
 README säger åt dig att skapa.
+
+Utöver röktestet är betalningarnas livscykel verifierad mot databasen i PR-09:
+respit håller sajten uppe, förfall pausar den (404 + ur sitemap), en andra
+körning är en no-op, och en bekräftad betalning publicerar den igen.
 
 Kvar att verifiera mot Hostinger (kan inte testas här): uploads-persistens över
 redeploy, databasens tidszon, och att hPanel-cron faktiskt når rollup-routen.
