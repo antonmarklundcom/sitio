@@ -69,6 +69,10 @@ export function MediaUploader({
         {busy ? "Laddar upp…" : label}
         <input
           ref={inputRef}
+          // Namnet postas aldrig (uppladdningen går via fetch) men gör kontrollen
+          // adresserbar: röktestet laddade upp foton i kvittofältet så länge det
+          // enda urskiljande draget var "första input[type=file] på sidan".
+          name={kind}
           type="file"
           accept={ACCEPT_ATTR}
           multiple={kind === "photo"}

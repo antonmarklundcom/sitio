@@ -8,6 +8,7 @@ import { getBusinessById } from "@/db/queries";
 import { assertBusinessAccess, logActivity, requireRole } from "@/lib/auth";
 import { currentUser } from "@/lib/session";
 import { deleteMediaFiles } from "@/lib/media";
+import { moveMediaWithinKind } from "@/lib/media-order";
 import { ownerFormSchema, ownerHoursFromForm, ownerServicesFromForm } from "@/lib/owner-form";
 
 export type OwnerFormState = { error?: string; fieldErrors?: Record<string, string>; ok?: string };
@@ -172,6 +173,39 @@ export async function ownerDeletePhotoAction(formData: FormData): Promise<void> 
     businessId: ctx.business.id,
     action: "owner_media_deleted",
     meta: { mediaId, kind: row.kind },
+  });
+
+  revalidateTag(`biz:${ctx.business.slug}`);
+  revalidatePath("/mi-sitio");
+  revalidatePath(`/admin/sitios/${ctx.business.id}`);
+}
+
+/**
+ * Sorterar om owners egna foton. Ordningen är inte en gallerifunktion utan en
+ * grundfunktion: temana visar de tre till sex första bilderna när galleriet är
+ * av, så ordningen avgör VILKA bilder kunden visar upp. Att låsa den bakom
+ * modulen hade gjort basplanen sämre än den behöver vara — modulen höjer taket
+ * och visar hela serien, den äger inte ordningen.
+ *
+ * businessId kommer ur sessionen: ett mediaId från en annan kund matchar
+ * ingenting i WHERE-satsen och blir en no-op.
+ */
+export async function ownerMoveMediaAction(formData: FormData): Promise<void> {
+  const ctx = await ownerContext();
+  if (!ctx) return;
+
+  const mediaId = Number(formData.get("mediaId"));
+  const direction = String(formData.get("direction")) === "up" ? "up" : "down";
+  if (!Number.isInteger(mediaId)) return;
+
+  const moved = await moveMediaWithinKind({ businessId: ctx.business.id, mediaId, direction });
+  if (!moved) return;
+
+  await logActivity({
+    actorUserId: ctx.userId,
+    businessId: ctx.business.id,
+    action: "owner_media_reordered",
+    meta: { mediaId, direction },
   });
 
   revalidateTag(`biz:${ctx.business.slug}`);

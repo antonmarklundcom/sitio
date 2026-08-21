@@ -2,19 +2,15 @@ import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, businessModules, media } from "@/db/schema";
+import { businesses, media } from "@/db/schema";
 import { currentUser } from "@/lib/session";
 import { getIntakeBusinessId } from "@/db/intake-queries";
 import { tokenFingerprint } from "@/lib/intake";
 import { rateLimit } from "@/lib/rate-limit";
 import { logActivity } from "@/lib/auth";
 import { processImage } from "@/lib/media";
-import {
-  ALLOWED_MIME,
-  MAX_PHOTOS_BASE,
-  MAX_PHOTOS_GALLERY,
-  MAX_UPLOAD_BYTES,
-} from "@/lib/media-shared";
+import { ALLOWED_MIME, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
+import { photoLimitFor } from "@/db/module-queries";
 
 export const runtime = "nodejs";
 
@@ -84,21 +80,34 @@ export async function POST(req: Request) {
     .limit(1);
   if (!business) return NextResponse.json({ error: "Sajten finns inte." }, { status: 404 });
 
+  // Samma rutt betjänar tre klienter: adminet (svenska), owner-panelen och
+  // intaken (spanska). Felen renderas rakt av i respektive UI, så språket måste
+  // följa avsändaren.
+  const isAdmin = user?.role === "superadmin";
+  const msg = (sv: string, es: string) => (isAdmin ? sv : es);
+
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ error: "Bilden är större än 10 MB." }, { status: 413 });
+    return NextResponse.json(
+      { error: msg("Bilden är större än 10 MB.", "La foto pesa más de 10 MB.") },
+      { status: 413 },
+    );
   }
   if (!(ALLOWED_MIME as readonly string[]).includes(file.type)) {
-    return NextResponse.json({ error: "Formatet stöds inte. Använd JPEG, PNG, WEBP eller HEIC." }, { status: 415 });
+    return NextResponse.json(
+      {
+        error: msg(
+          "Formatet stöds inte. Använd JPEG, PNG, WEBP eller HEIC.",
+          "Ese formato no anda. Mandá JPEG, PNG, WEBP o HEIC.",
+        ),
+      },
+      { status: 415 },
+    );
   }
 
-  // Fototak: höjs av gallery-modulen.
+  // Fototak: höjs av gallery-modulen. Gränsen räknas ut i photoLimitFor() så att
+  // owner-panelens "12/20" och det här avslaget alltid kommer från samma regel.
   if (kindRaw === "photo") {
-    const [gallery] = await db
-      .select({ isEnabled: businessModules.isEnabled })
-      .from(businessModules)
-      .where(and(eq(businessModules.businessId, businessId), eq(businessModules.moduleKey, "gallery")))
-      .limit(1);
-    const limit = gallery?.isEnabled ? MAX_PHOTOS_GALLERY : MAX_PHOTOS_BASE;
+    const limit = await photoLimitFor(businessId);
 
     const [{ n }] = await db
       .select({ n: sql<number>`count(*)` })
@@ -106,8 +115,16 @@ export async function POST(req: Request) {
       .where(and(eq(media.businessId, businessId), eq(media.kind, "photo")));
 
     if (Number(n) >= limit) {
+      // Kunden kan inte slå på galleriet själv — det är upsellen. Att be henne
+      // göra det hade varit ett återvändsgränd-fel; hon ska veta vem hon
+      // frågar i stället.
       return NextResponse.json(
-        { error: `Max ${limit} foton. Ta bort en bild först, eller slå på gallery-modulen.` },
+        {
+          error: msg(
+            `Max ${limit} foton. Ta bort en bild först, eller slå på gallery-modulen.`,
+            `Llegaste al máximo de ${limit} fotos. Borrá una para subir otra, o escribinos para ampliar tu plan.`,
+          ),
+        },
         { status: 409 },
       );
     }
@@ -119,7 +136,10 @@ export async function POST(req: Request) {
   try {
     processed = await processImage({ businessId, buffer, kind: kindRaw });
   } catch {
-    return NextResponse.json({ error: "Bilden gick inte att läsa. Är filen skadad?" }, { status: 422 });
+    return NextResponse.json(
+      { error: msg("Bilden gick inte att läsa. Är filen skadad?", "No pudimos leer esa foto. ¿Probás con otra?") },
+      { status: 422 },
+    );
   }
 
   // En logga i taget: den gamla ersätts.

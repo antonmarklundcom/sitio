@@ -8,11 +8,16 @@ import { assertBusinessAccess, requireRole } from "@/lib/auth";
 import { currentUser } from "@/lib/session";
 import { absoluteUrl } from "@/lib/env";
 import { displayPhone } from "@/lib/format";
-import { MAX_PHOTOS_BASE, MAX_PHOTOS_GALLERY, smallestVariant } from "@/lib/media-shared";
-import { businessModules } from "@/db/schema";
+import { smallestVariant } from "@/lib/media-shared";
+import { enabledModules, photoLimitFor } from "@/db/module-queries";
 import { OwnerEditForm, OwnerPhotos } from "@/components/mi-sitio/owner-forms";
 import { OwnerStats } from "@/components/mi-sitio/owner-stats";
-import { ownerDeletePhotoAction, ownerSetHeroAction, updateOwnerBusinessAction } from "./actions";
+import {
+  ownerDeletePhotoAction,
+  ownerMoveMediaAction,
+  ownerSetHeroAction,
+  updateOwnerBusinessAction,
+} from "./actions";
 import { ownerLogoutAction } from "./login/actions";
 
 export const dynamic = "force-dynamic";
@@ -48,17 +53,17 @@ export default async function MiSitioPage({
   const business = await getBusinessById(businessId);
   if (!business) redirect("/mi-sitio/login");
 
-  const [analytics, mediaRows, modules] = await Promise.all([
+  const [analytics, mediaRows, modules, maxPhotos] = await Promise.all([
     getBusinessAnalytics(businessId),
     db
       .select()
       .from(media)
       .where(and(eq(media.businessId, businessId), inArray(media.kind, ["photo", "logo"])))
       .orderBy(asc(media.sortOrder), asc(media.id)),
-    db
-      .select({ moduleKey: businessModules.moduleKey })
-      .from(businessModules)
-      .where(and(eq(businessModules.businessId, businessId), eq(businessModules.isEnabled, true))),
+    enabledModules(businessId),
+    // Samma källa som /api/upload använder, så panelens räknare och ruttens
+    // avslag aldrig kan säga olika saker om samma sajt.
+    photoLimitFor(businessId),
   ]);
 
   const photos = mediaRows
@@ -67,7 +72,7 @@ export default async function MiSitioPage({
   const logo = mediaRows.find((m) => m.kind === "logo");
   const logoUrl = logo ? `/media/${businessId}/${smallestVariant(logo.variantsJson ?? {}) ?? ""}` : null;
 
-  const hasGallery = modules.some((m) => m.moduleKey === "gallery");
+  const hasGallery = modules.has("gallery");
   const socials = business.socialsJson ?? {};
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const liveUrl = absoluteUrl(`/${business.slug}`);
@@ -100,9 +105,11 @@ export default async function MiSitioPage({
         photos={photos}
         logoUrl={logoUrl}
         heroMediaId={business.heroMediaId}
-        maxPhotos={hasGallery ? MAX_PHOTOS_GALLERY : MAX_PHOTOS_BASE}
+        maxPhotos={maxPhotos}
+        hasGallery={hasGallery}
         setHero={ownerSetHeroAction}
         deletePhoto={ownerDeletePhotoAction}
+        movePhoto={ownerMoveMediaAction}
       />
 
       <OwnerEditForm

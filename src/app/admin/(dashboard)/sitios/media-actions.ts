@@ -7,6 +7,7 @@ import { businesses, media } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import { deleteMediaFiles } from "@/lib/media";
+import { moveMediaWithinKind } from "@/lib/media-order";
 
 async function loadMedia(mediaId: number) {
   const [row] = await db.select().from(media).where(eq(media.id, mediaId)).limit(1);
@@ -49,34 +50,16 @@ export async function deleteMediaAction(formData: FormData): Promise<void> {
 export async function moveMediaAction(formData: FormData): Promise<void> {
   await requireRole("superadmin");
   const mediaId = Number(formData.get("mediaId"));
-  const direction = String(formData.get("direction")) === "up" ? -1 : 1;
+  const direction = String(formData.get("direction")) === "up" ? "up" : "down";
 
   const row = await loadMedia(mediaId);
   if (!row) return;
-
-  const siblings = await db
-    .select()
-    .from(media)
-    .where(and(eq(media.businessId, row.businessId), eq(media.kind, row.kind)))
-    .orderBy(asc(media.sortOrder), asc(media.id));
-
-  const index = siblings.findIndex((s) => s.id === mediaId);
-  const target = siblings[index + direction];
-  if (!target) return;
-
-  // Byt plats genom att skriva om hela ordningen — robustare än att byta två
-  // sortOrder-värden som kan ha kolliderat sedan tidigare.
-  const reordered = [...siblings];
-  reordered[index] = target;
-  reordered[index + direction] = row;
-
-  for (const [i, item] of reordered.entries()) {
-    await db.update(media).set({ sortOrder: i }).where(eq(media.id, item.id));
-  }
+  if (!(await moveMediaWithinKind({ businessId: row.businessId, mediaId, direction }))) return;
 
   const business = await getBusinessById(row.businessId);
   if (business) revalidateTag(`biz:${business.slug}`);
   revalidatePath(`/admin/sitios/${row.businessId}`);
+  revalidatePath("/mi-sitio");
 }
 
 export async function setHeroAction(formData: FormData): Promise<void> {

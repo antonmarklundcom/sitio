@@ -158,3 +158,12 @@
 .panel-photos figcaption button { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 0.35rem 0; min-height: 36px; }
 .panel-photos figcaption button.danger { color: var(--danger); }
 .panel-photos .tag { color: var(--accent); font-weight: 600; }
+
+/* Sorteringen ligger i samma figcaption som "hacer principal" och "borrar".
+   Bildkorten är 140 px breda på mobil, så raden måste få radbryta — annars
+   pressas knapparna under 44 px och blir omöjliga att träffa med tummen. */
+.panel-photos figcaption { flex-wrap: wrap; }
+.panel-photo-order { display: inline-flex; align-items: center; gap: 0.1rem; }
+.panel-photo-order .pos { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 1.25ch; text-align: center; }
+.panel-photo-order button { min-width: 36px; font-size: 1rem; line-height: 1; }
+.panel-photo-order button:disabled { color: var(--muted); opacity: 0.4; cursor: default; }

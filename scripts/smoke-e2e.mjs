@@ -102,7 +102,9 @@ await p.goto(B + '/admin/sitios/1');
 // sanden och testet ser ut att passera.
 await p.waitForLoadState('networkidle');
 await p.waitForTimeout(1500);
-await p.locator('input[type=file]').first().setInputFiles({ name: 'smoke.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+// Uttryckligen fotouppladdaren: betalningsformuläret har ett eget
+// input[type=file] för kvitton, och det ligger före bildrutan på sidan.
+await p.locator('input[name=photo]').first().setInputFiles({ name: 'smoke.jpg', mimeType: 'image/jpeg', buffer: jpeg });
 await p.waitForTimeout(5000);
 const detail = await p.locator('body').innerText();
 ok('uppladdning syns i admin', /Logga|Foton/.test(detail));
@@ -250,7 +252,9 @@ ok('sajten ligger i granskningskön', (await p.locator('body').innerText()).incl
 // 11. owner-auth och /mi-sitio: konto, OTP-login, redigering, tenant-gränser
 await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);
-if ((await p.locator('body').innerText()).includes('utan owner-konto')) {
+// Rubrikerna är versaliserade med CSS, och innerText följer text-transform —
+// en skiftlägeskänslig jämförelse här missade knappen helt och tyst.
+if (/utan owner-konto/i.test(await p.locator('body').innerText())) {
   await p.getByRole('button', { name: 'Skapa konto' }).first().click();
   await p.waitForTimeout(3000);
   await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
@@ -338,6 +342,98 @@ ok(
   'owner kan inte ladda upp till annans sajt',
   crossRes.status === 200 && typeof crossJson.fileKey === 'string' && !crossJson.fileKey.startsWith('2/'),
 );
+
+// 12. moduler (PR-12): superadmin slår på/av, owner ser effekten
+// Owner-sajtens slug läses ur panelen — testet ska inte gissa vilket business
+// seeden gav owner-kontot.
+const ownerSlug12 = (await owner.locator('.panel-top a').first().getAttribute('href').catch(() => null))?.split('/').pop() ?? null;
+
+const modulesCardFor = (page) => page.locator('section').filter({ hasText: /moduler/i }).last();
+const galleryRowFor = (page) => modulesCardFor(page).locator('li').filter({ hasText: 'gallery' }).first();
+
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+ok('modulpanelen finns i admin', await modulesCardFor(p).getByText('gallery').first().isVisible());
+ok('obyggda moduler flaggas som obyggda', /ej byggt än/i.test(await modulesCardFor(p).innerText()));
+
+// Utgångsläget beror på seeden och på tidigare körningar — nolla det först.
+if ((await galleryRowFor(p).innerText()).includes('Stäng av')) {
+  await galleryRowFor(p).getByRole('button', { name: 'Stäng av' }).click();
+  await p.waitForTimeout(2500);
+  await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1500);
+}
+const galleryOffText = await galleryRowFor(p).innerText();
+ok('galleriet är av', galleryOffText.includes('Slå på'));
+ok('fototaket visar basplanen', galleryOffText.includes('/8'), galleryOffText.replace(/\n/g, ' | '));
+
+await galleryRowFor(p).getByRole('button', { name: 'Slå på' }).click();
+await p.waitForTimeout(2500);
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+const galleryOnText = await galleryRowFor(p).innerText();
+ok('galleriet slås på', galleryOnText.includes('Stäng av'));
+ok('aktiveringsdatum registreras', galleryOnText.includes('Aktiverad'));
+ok('fototaket höjs till 20', galleryOnText.includes('/20'), galleryOnText.replace(/\n/g, ' | '));
+
+// 13. owner-vyn: sortering av egna foton, och inga modulväxlar
+// Två foton behövs för att kunna byta ordning på något.
+const ownerCookies13 = (await owner.context().cookies()).map((c) => `${c.name}=${c.value}`).join('; ');
+for (let i = 0; i < 2; i++) {
+  const extra = new FormData();
+  extra.set('kind', 'photo');
+  extra.set('file', new File([jpeg], `orden-${i}-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+  await fetch(B + '/api/upload', { method: 'POST', headers: { cookie: ownerCookies13 }, body: extra });
+}
+
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1500);
+const ownerPhotoIds = async () => {
+  const values = await owner.locator('.panel-photo-order input[name=mediaId]').evaluateAll((els) => els.map((el) => el.value));
+  return values.filter((v, i) => values.indexOf(v) === i);
+};
+
+const beforeOrder = await ownerPhotoIds();
+ok('owner har sorteringsknappar', beforeOrder.length >= 2, `${beforeOrder.length} foton`);
+ok('owner ser inga modulväxlar', !/Slå på|Stäng av/.test(await owner.locator('body').innerText()));
+
+if (beforeOrder.length >= 2) {
+  await owner
+    .locator('.panel-photo-order form')
+    .filter({ has: owner.locator('input[value=down]') })
+    .first()
+    .getByRole('button')
+    .click();
+  await owner.waitForTimeout(3000);
+  const afterOrder = await ownerPhotoIds();
+  ok(
+    'sorteringen byter plats på de två första',
+    afterOrder[0] === beforeOrder[1] && afterOrder[1] === beforeOrder[0],
+    `${beforeOrder.join(',')} → ${afterOrder.join(',')}`,
+  );
+
+  // Ordningen måste slå igenom publikt, annars är knappen en illusion:
+  // ISR-cachen serverar den gamla ordningen tills taggen slängs. Varianterna
+  // delar hashprefix (<hash>-w400.webp), så prefixet identifierar bilden.
+  if (ownerSlug12) {
+    const prefixes = await owner
+      .locator('.panel-photos figure', { has: owner.locator('.panel-photo-order') })
+      .locator('img')
+      .evaluateAll((els) => els.map((el) => (el.getAttribute('src') ?? '').split('/').pop().split('-w')[0]));
+    const html = await (await fetch(B + '/' + ownerSlug12)).text();
+    const at = (prefix) => html.indexOf(prefix);
+    ok(
+      'publika sajten följer den nya ordningen',
+      prefixes.length >= 2 && at(prefixes[0]) >= 0 && at(prefixes[1]) >= 0 && at(prefixes[0]) < at(prefixes[1]),
+      `${prefixes.slice(0, 2).join(' → ')} @ ${at(prefixes[0])}, ${at(prefixes[1])}`,
+    );
+  }
+}
+
+// En owner får aldrig kunna slå på sin egen upsell — växeln ligger bakom
+// requireRole("superadmin"), inte bakom att knappen är dold.
+await owner.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+ok('owner når inte modulväxeln', owner.url().includes('/admin/login'));
 
 await b.close();
 console.log(failed === 0 ? '\nAllt grönt.' : `\n${failed} kontroll(er) föll.`);
