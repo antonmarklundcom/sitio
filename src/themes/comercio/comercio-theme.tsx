@@ -1,6 +1,7 @@
 import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
+import { SiteMenu } from "@/components/site/menu-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -21,7 +22,7 @@ import type { ThemeProps } from "../types";
  * Hero är medvetet INTE P1: den asymmetriska splitten bär redan `servicios`,
  * och två sajter i portföljen får inte dela sektion→mönster-karta.
  */
-export function ComercioTheme({ business, photos, logo, hero, modules }: ThemeProps) {
+export function ComercioTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -173,6 +174,15 @@ export function ComercioTheme({ business, photos, logo, hero, modules }: ThemePr
       ) : null}
 
       {/* ---------- 04 CÓMO COMPRAR — P4 editorial two-column ---------- */}
+      {/* Menu-modulen. I comercio är den en prislista — `products` (PR-14) blir
+          den riktiga produktkatalogen; tills dess är det här fallbacken. */}
+      <SiteMenu
+        menu={menu}
+        eyebrow="Precios"
+        title="Nuestra lista"
+        intro="Precios en guaraníes. Consultanos por WhatsApp si buscás algo que no está acá."
+      />
+
       <section id="como-comprar">
         <div className="wrap editorial">
           <div>

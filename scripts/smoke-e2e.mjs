@@ -435,6 +435,106 @@ if (beforeOrder.length >= 2) {
 await owner.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 ok('owner når inte modulväxeln', owner.url().includes('/admin/login'));
 
+// 14. menu-modulen (PR-13): växel, owner-CRUD, rendering, tillgänglighet
+// Owner-sajtens id läses ur en av panelens bild-URL:er (/media/<id>/…) i
+// stället för att antas vara 1 — seeden bestämmer vilket business som får
+// owner-kontot, inte testet.
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1200);
+const ownerBizId = ((await owner.locator('.panel-photos img').first().getAttribute('src')) ?? '').split('/')[2];
+ok('owner-sajtens id kunde läsas', /^\d+$/.test(ownerBizId), ownerBizId);
+ok('menyn syns inte utan modulen', !(await owner.locator('body').innerText()).includes('Tu carta'));
+
+await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+const menuRow = () => modulesCardFor(p).locator('li').filter({ hasText: 'menu' }).first();
+ok('menyn är byggd och märks inte som obyggd', !/ej byggt än/i.test(await menuRow().innerText()));
+if ((await menuRow().innerText()).includes('Slå på')) {
+  await menuRow().getByRole('button', { name: 'Slå på' }).click();
+  await p.waitForTimeout(2500);
+}
+
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1500);
+ok('menyredigeraren dyker upp med modulen', (await owner.locator('body').innerText()).includes('Tu carta'));
+
+const seccion = 'Entradas ' + Date.now().toString().slice(-4);
+await owner.fill('#new-section', seccion);
+await owner.getByRole('button', { name: 'Agregar sección' }).click();
+await owner.waitForTimeout(3000);
+ok('sektion skapad', (await owner.locator('body').innerText()).includes(seccion));
+
+// En rätt med pris och en utan: tomt prisfält ska bli "A consultar", inte 0.
+await owner.getByRole('button', { name: new RegExp('Agregar plato') }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill('Empanada de carne');
+await owner.locator('.panel-menu-form input[name=priceGs]').first().fill('8000');
+await owner.getByRole('button', { name: 'Agregar plato' }).last().click();
+await owner.waitForTimeout(3000);
+const menuText = await owner.locator('body').innerText();
+ok('plato med pris sparat', menuText.includes('Empanada de carne') && menuText.includes('8.000'));
+
+await owner.getByRole('button', { name: new RegExp('Agregar plato a') }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill('Pescado del día');
+await owner.locator('.panel-menu-form input[name=priceGs]').first().fill('');
+await owner.getByRole('button', { name: 'Agregar plato' }).last().click();
+await owner.waitForTimeout(3000);
+ok('tomt pris blir "A consultar"', (await owner.locator('body').innerText()).includes('A consultar'));
+
+const ownerSlug14 = ((await owner.locator('.panel-top a').first().getAttribute('href').catch(() => null)) ?? '').split('/').pop();
+if (ownerSlug14) {
+  const html = await (await fetch(B + '/' + ownerSlug14)).text();
+  ok('menyn syns på publika sajten (ISR)', html.includes('Empanada de carne') && html.includes(seccion));
+  ok('menyn skickar menu_view', html.includes('data-ev-view="menu_view"'));
+}
+
+// "No hay hoy": rätten ska bort från sajten men ligga kvar i panelen — annars
+// måste kunden skriva in den på nytt i morgon.
+await owner.locator('.panel-menu-items li').filter({ hasText: 'Empanada de carne' }).first()
+  .getByRole('button', { name: 'No hay hoy' }).click();
+await owner.waitForTimeout(3000);
+ok('slutsåld rätt ligger kvar i panelen', (await owner.locator('body').innerText()).includes('Empanada de carne'));
+if (ownerSlug14) {
+  const html = await (await fetch(B + '/' + ownerSlug14)).text();
+  ok('slutsåld rätt döljs på sajten', !html.includes('Empanada de carne'));
+}
+
+// Modulen av: menyn försvinner från sajten, men datat ligger kvar och kommer
+// tillbaka när den slås på igen. Owner-sidan lämnas medvetet öppen — nästa
+// kontroll använder den som en gammal flik.
+await owner.getByRole('button', { name: new RegExp('Agregar plato a') }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill('Plato fantasma');
+
+await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+await menuRow().getByRole('button', { name: 'Stäng av' }).click();
+await p.waitForTimeout(2500);
+if (ownerSlug14) {
+  const html = await (await fetch(B + '/' + ownerSlug14)).text();
+  ok('avstängd modul döljer menyn', !html.includes(seccion));
+}
+
+// Serveråtgärden måste neka posten från den gamla fliken. Modulkontrollen
+// ligger i menuContext(), inte i att knappen inte renderas.
+await owner.getByRole('button', { name: 'Agregar plato' }).last().click();
+await owner.waitForTimeout(3000);
+ok(
+  'avstängd modul nekar posten från en gammal flik',
+  (await owner.locator('body').innerText()).includes('No pudimos guardar'),
+);
+
+await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+await menuRow().getByRole('button', { name: 'Slå på' }).click();
+await p.waitForTimeout(2500);
+if (ownerSlug14) {
+  const html = await (await fetch(B + '/' + ownerSlug14)).text();
+  ok('avstängning raderar inte menyn', html.includes(seccion));
+  ok('den nekade rätten skrevs aldrig', !html.includes('Plato fantasma'));
+}
+
 await b.close();
 console.log(failed === 0 ? '\nAllt grönt.' : `\n${failed} kontroll(er) föll.`);
 process.exit(failed === 0 ? 0 : 1);

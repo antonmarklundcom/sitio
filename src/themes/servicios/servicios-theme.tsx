@@ -1,6 +1,7 @@
 import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
+import { SiteMenu } from "@/components/site/menu-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -21,7 +22,7 @@ import type { ThemeProps } from "../types";
  * (kontaktpanelen i 07) och oversized statement (07) finns alltid — de får
  * inte hänga på att kunden har laddat upp foton.
  */
-export function ServiciosTheme({ business, photos, logo, hero, modules }: ThemeProps) {
+export function ServiciosTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -182,6 +183,16 @@ export function ServiciosTheme({ business, photos, logo, hero, modules }: ThemeP
       ) : null}
 
       {/* ---------- 04 PROCESO — P5 numbered process rail ---------- */}
+      {/* Menu-modulen. `servicios` säljer inte rätter utan tjänster till pris,
+          så rubriken är "Precios" — samma data, ärlig rubrik. Generisk
+          fallback så att en kund med modulen på aldrig får en tom sida. */}
+      <SiteMenu
+        menu={menu}
+        eyebrow="Precios"
+        title="Lo que cuesta"
+        intro="Precios de referencia en guaraníes. Escribinos y te pasamos el presupuesto exacto."
+      />
+
       <section id="proceso">
         <div className="wrap">
           <span className="eyebrow">Cómo trabajamos</span>
@@ -253,7 +264,7 @@ export function ServiciosTheme({ business, photos, logo, hero, modules }: ThemeP
 
       {/* ---------- 06 GALERÍA — P6 bleed-image band ---------- */}
       {galleryPhotos.length > 0 ? (
-        <section id="trabajos" style={{ paddingBlockEnd: 0 }}>
+        <section id="trabajos" data-ev-view="gallery_view" style={{ paddingBlockEnd: 0 }}>
           <div className="wrap">
             <span className="eyebrow">Trabajos</span>
           </div>

@@ -4,34 +4,13 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, media } from "@/db/schema";
-import { getBusinessById } from "@/db/queries";
-import { assertBusinessAccess, logActivity, requireRole } from "@/lib/auth";
-import { currentUser } from "@/lib/session";
+import { logActivity } from "@/lib/auth";
 import { deleteMediaFiles } from "@/lib/media";
 import { moveMediaWithinKind } from "@/lib/media-order";
 import { ownerFormSchema, ownerHoursFromForm, ownerServicesFromForm } from "@/lib/owner-form";
+import { ownerContext } from "@/lib/owner-context";
 
 export type OwnerFormState = { error?: string; fieldErrors?: Record<string, string>; ok?: string };
-
-/**
- * Owner-mutationer. Varje åtgärd gör tre saker innan den rör något:
- * kräver rollen, hämtar tenanten ur SESSIONEN (aldrig ur formuläret) och
- * kontrollerar åtkomsten. businessId kommer alltså aldrig från klienten.
- */
-async function ownerContext() {
-  const session = await requireRole("owner", "superadmin");
-  const user = await currentUser();
-
-  // Superadmin kan felsöka en kunds vy via ?sitio=<id>; owner är låst till sin
-  // egen. Superadmins val bärs i sessionen bara för läsning — mutationer
-  // kräver ett explicit businessId som ändå passerar assertBusinessAccess.
-  const businessId = session.role === "owner" ? user?.businessId : undefined;
-  if (!businessId) return null;
-
-  await assertBusinessAccess(businessId);
-  const business = await getBusinessById(businessId);
-  return business ? { userId: session.userId, business } : null;
-}
 
 function fieldErrors(issues: { path: PropertyKey[]; message: string }[]): Record<string, string> {
   const out: Record<string, string> = {};

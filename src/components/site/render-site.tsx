@@ -44,7 +44,7 @@ export function siteMetadata(site: SiteData, opts: { isPreview: boolean }): Meta
 }
 
 export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boolean }) {
-  const { business, photos, logo, hero, modules } = site;
+  const { business, photos, logo, hero, modules, menu } = site;
   const palette = paletteFor(business.themeKey, business.paletteVariant);
   const Theme = themeComponent(business.themeKey);
 
@@ -65,7 +65,14 @@ export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boo
         </p>
       ) : null}
 
-      <Theme business={business} photos={photos} logo={logo} hero={hero} modules={new Set(modules)} />
+      <Theme
+        business={business}
+        photos={photos}
+        logo={logo}
+        hero={hero}
+        modules={new Set(modules)}
+        menu={menu}
+      />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <MotionScript />

@@ -237,6 +237,31 @@ function css(themeCssFile: string): string {
   ].join("\n");
 }
 
+/**
+ * Demomeny för QA-gaten. Sektioner med och utan beskrivning, en rätt utan pris
+ * ("A consultar") och ett långt namn — de tre fall som spräcker layouten.
+ */
+const DEMO_MENU = [
+  {
+    id: 1,
+    name: "Para empezar",
+    sortOrder: 0,
+    items: [
+      { id: 1, sectionId: 1, name: "Empanadas de carne", description: "Docena, masa casera.", priceGs: 48000, isAvailable: true, sortOrder: 0 },
+      { id: 2, sectionId: 1, name: "Chipa guasú", description: null, priceGs: 25000, isAvailable: true, sortOrder: 1 },
+    ],
+  },
+  {
+    id: 2,
+    name: "Platos principales",
+    sortOrder: 1,
+    items: [
+      { id: 3, sectionId: 2, name: "Milanesa napolitana con papas fritas y ensalada", description: "Porción grande, alcanza para dos.", priceGs: 75000, isAvailable: true, sortOrder: 0 },
+      { id: 4, sectionId: 2, name: "Pescado del día", description: "Según lo que llegue de la pescadería.", priceGs: null, isAvailable: true, sortOrder: 1 },
+    ],
+  },
+];
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const written: string[] = [];
@@ -266,7 +291,11 @@ async function main() {
           photos={photos}
           logo={null}
           hero={photos[0]}
-          modules={new Set<string>()}
+          // Demodatat kör med modulerna PÅ: QA-gaten ska se sektionerna som
+          // en betalande kund ser dem, annars granskas ett utseende som ingen
+          // kund har.
+          modules={new Set<string>(["gallery", "menu"])}
+          menu={DEMO_MENU}
         />,
       );
 

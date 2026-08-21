@@ -156,6 +156,28 @@ pronto" (≤45 dagar) med en wa.me-länk per kund vars meddelande innehåller
 årets siffror — *"Tu página tuvo 340 visitas y 52 contactos por WhatsApp este
 año 📈"*. Saknas trafik utelämnas siffrorna hellre än att skönmålas.
 
+### Menyn (`menu`)
+
+Owner bygger menyn själv i `/mi-sitio` när modulen är på: sektioner, rätter,
+pris i guaraníes och "hay hoy". Superadmin gör det inte åt kunden — samma gräns
+som för övriga owner-fält (se Owner-panelen nedan).
+
+- **Tomt prisfält betyder "A consultar", inte 0.** Ett nollpris på en meny läser
+  som gratis.
+- **"No hay hoy" döljer rätten på sajten men behåller den i panelen.** Dagens
+  slutsålda rätt ska tillbaka i morgon utan att skrivas in på nytt.
+- **Att stänga av modulen raderar ingenting.** Menyn försvinner från sajten och
+  redigeraren, och kommer tillbaka orörd när modulen slås på igen. Åtgärderna
+  kontrollerar modulen på servern, så en kund med en gammal flik öppen kan inte
+  fortsätta skriva i en avstängd meny.
+- **Taken:** 12 sektioner, 40 rätter per sektion. En meny läses uppifrån och ner
+  på en telefon utan navigering.
+- **`menu_view`** skickas av beaconen när menysektionen faktiskt syns
+  (IntersectionObserver, en gång per sidvisning). En meny läses, den klickas
+  inte — ett klickevent hade mätt noll. Samma mekanik taggar galleriet med
+  `gallery_view`. Utan IntersectionObserver skickas inget alls: ett hål är
+  ärligare än en uppskattning, eftersom siffran används i säljsamtal.
+
 ## Intake (onboarding av ny kund)
 
 Superadmin skapar utkast + länk i `/admin/alta`, delar den via WhatsApp, och
@@ -192,7 +214,7 @@ migrering — raden finns i schemat från dag 1 (PLAN.md §1.6).
 | Modul | Vad påslaget faktiskt gör | Status |
 |---|---|---|
 | `gallery` | Fototaket i `/api/upload` går från 8 till 20, och temat renderar hela fotoserien i stället för de tre till sex första. | Byggd |
-| `menu` | Meny med sektioner och Gs-priser. | PR-13 |
+| `menu` | Menyredigerare i `/mi-sitio` och en menysektion på sajten: egen i `gastronomia`, delad primitiv i övriga teman. Läsningar mäts som `menu_view`. | Byggd |
 | `products` | Produktlista. | PR-14 |
 | `extra_pages` | Undersidor + sitemap. | PR-18 |
 | `booking` | Turno-förfrågan via wa.me. | Fas 3 |
@@ -253,7 +275,8 @@ ogiltig), bilduppladdning genom sharp och ut via `/media`, prenumeration →
 betalning → bekräftelse → förlängd period, hela intake-flödet med OTP
 (inklusive att uppladdning utan token nekas), owner-inloggningen med
 tenant-gränserna, modulväxeln (av → på → höjt fototak) med owners fotosortering
-hela vägen ut på den publika sajten, samt beaconen.
+hela vägen ut på den publika sajten, meny-modulen (CRUD, "A consultar", "no hay
+hoy", av/på utan dataförlust), samt beaconen.
 
 ```bash
 npm run db:migrate && npm run db:seed
@@ -271,7 +294,7 @@ subfråga jämförde med sin EGEN id-kolumn (alla sajter fick samma statistik oc
 fel betalstatus), och att `drizzle-kit` inte läser `.env.local` — den fil
 README säger åt dig att skapa.
 
-Sviten är 58 kontroller. Utöver den är betalningarnas livscykel verifierad mot
+Sviten är 75 kontroller. Utöver den är betalningarnas livscykel verifierad mot
 databasen i PR-09:
 respit håller sajten uppe, förfall pausar den (404 + ur sitemap), en andra
 körning är en no-op, och en bekräftad betalning publicerar den igen.
