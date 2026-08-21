@@ -22,7 +22,7 @@ const STEP_LABELS: Record<IntakeStep, string> = {
 function Steps({ current }: { current: IntakeStep }) {
   const index = INTAKE_STEPS.indexOf(current);
   return (
-    <ol className="alta-steps">
+    <ol className="panel-steps">
       {INTAKE_STEPS.map((step, i) => (
         <li key={step} aria-current={step === current ? "step" : undefined} data-done={i < index ? "1" : undefined}>
           {i + 1}. {STEP_LABELS[step]}
@@ -46,7 +46,7 @@ export default async function IntakePage({
   // slås upp — annars ser kunden en 404 direkt efter att ha skickat in.
   if (sp.listo === "1") {
     return (
-      <div className="alta-wrap alta-done">
+      <div className="panel-wrap panel-done">
         <p className="tick">✓</p>
         <h1>¡Listo, gracias!</h1>
         <p>
@@ -83,8 +83,8 @@ export default async function IntakePage({
     photos.length >= 1;
 
   return (
-    <div className="alta-wrap">
-      <span className="alta-brand">sitio.com.py</span>
+    <div className="panel-wrap">
+      <span className="panel-brand">sitio.com.py</span>
       <h1>{step === "datos" ? `Armemos la página de ${business.name}` : business.name}</h1>
       <p>Tres pasos. Podés volver a este enlace cuando quieras — se guarda todo.</p>
 
@@ -113,11 +113,11 @@ export default async function IntakePage({
       {step === "fotos" ? (
         <>
           <IntakePhotos token={token} photos={photos} hasLogo={session.hasLogo} maxPhotos={MAX_PHOTOS_BASE} />
-          <div className="alta-actions">
-            <a className="alta-btn alta-btn--ghost" href={`/alta/${token}?paso=datos`}>
+          <div className="panel-actions">
+            <a className="panel-btn panel-btn--ghost" href={`/alta/${token}?paso=datos`}>
               Volver
             </a>
-            <a className="alta-btn" href={`/alta/${token}?paso=verificacion`}>
+            <a className="panel-btn" href={`/alta/${token}?paso=verificacion`}>
               Seguir
             </a>
           </div>
@@ -133,8 +133,8 @@ export default async function IntakePage({
             verified={Boolean(business.whatsappVerifiedAt)}
           />
           <IntakeSubmit action={submitIntakeAction.bind(null, token)} disabled={!canSubmit} />
-          <div className="alta-actions">
-            <a className="alta-btn alta-btn--ghost" href={`/alta/${token}?paso=fotos`}>
+          <div className="panel-actions">
+            <a className="panel-btn panel-btn--ghost" href={`/alta/${token}?paso=fotos`}>
               Volver
             </a>
           </div>

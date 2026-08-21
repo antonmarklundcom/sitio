@@ -183,6 +183,32 @@ verificación**. Länken gäller 14 dagar och stängs när formuläret skickas i
 Okänd, utgången och redan inskickad token ger alla samma 404 — sidan får inte
 gå att använda för att gissa fram giltiga länkar.
 
+## Owner-panelen (/mi-sitio)
+
+Företagaren loggar in med WhatsApp-OTP — inget lösenord att glömma, och numret
+är redan verifierat i intaken (PLAN.md D1).
+
+- **Owner-kontot skapas vid publicering.** Det är först då kunden har något att
+  logga in på. Kräver verifierat nummer; ett konto vars inloggning går till ett
+  obekräftat nummer är ett konto vem som helst kan ta över. Sajter som
+  publicerades tidigare får konto med en knapp i `/admin/accesos`.
+- **Koden genereras av dig** i `/admin/accesos` och visas en gång (bara hashen
+  lagras). Kunden ber om en kod på inloggningssidan, och begäran syns i
+  adminvyn. Automatiseras i PR-17.
+- **Inloggningssidan svarar likadant för kända och okända nummer.** Annars vore
+  den ett sätt att ta reda på vilka företag som är kunder.
+- **`/mi-sitio` är whitelistad, inte begränsad i UI:t.** Serveråtgärden läser
+  bara de fält som står i `src/lib/owner-form.ts`: namn, beskrivning, tjänster,
+  öppettider, adress/zon/stad, andratelefon, kartlänk och sociala länkar.
+  Tema, palett, slug, status, kategori, SEO-fälten och WhatsApp-numret finns
+  inte med och kan därför inte ändras ens med ett handskrivet formulär.
+- **Tenanten läses ur sessionen, aldrig ur formuläret.** Det gäller också
+  `/api/upload`: för en owner-session ignoreras `businessId` i posten helt.
+- Owner kan byta huvudbild och radera foton, men inte det sista fotot — en
+  publicerad sajt utan bild ser trasig ut, och det är kundens egen sajt.
+- Superadmin når `/mi-sitio?sitio=<id>` för att se en kunds vy. Motsatsen
+  gäller aldrig: en owner har inget i `/admin` att göra.
+
 ## Röktest mot riktig databas
 
 `npm run smoke` kör en riktig genomgång med Playwright mot en byggd app och en
@@ -190,7 +216,8 @@ riktig MySQL: inloggning, sajtlistan, statistikpanelen, CRUD med
 ISR-invalidering, slug-byte med permanent redirect, preview-token (giltig och
 ogiltig), bilduppladdning genom sharp och ut via `/media`, prenumeration →
 betalning → bekräftelse → förlängd period, hela intake-flödet med OTP
-(inklusive att uppladdning utan token nekas), samt beaconen.
+(inklusive att uppladdning utan token nekas), owner-inloggningen med
+tenant-gränserna, samt beaconen.
 
 ```bash
 npm run db:migrate && npm run db:seed
@@ -208,7 +235,8 @@ subfråga jämförde med sin EGEN id-kolumn (alla sajter fick samma statistik oc
 fel betalstatus), och att `drizzle-kit` inte läser `.env.local` — den fil
 README säger åt dig att skapa.
 
-Utöver röktestet är betalningarnas livscykel verifierad mot databasen i PR-09:
+Sviten är 46 kontroller. Utöver den är betalningarnas livscykel verifierad mot
+databasen i PR-09:
 respit håller sajten uppe, förfall pausar den (404 + ur sitemap), en andra
 körning är en no-op, och en bekräftad betalning publicerar den igen.
 

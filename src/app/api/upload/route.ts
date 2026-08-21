@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, businessModules, media } from "@/db/schema";
@@ -38,6 +38,14 @@ export async function POST(req: Request) {
   const intakeToken = String(form.get("token") ?? "").trim();
   let businessId = Number(form.get("businessId"));
 
+  if (user?.role === "owner") {
+    // En owner har exakt ett business. Att läsa det ur sessionen i stället för
+    // ur formuläret gör tenant-checken omöjlig att kringgå — det finns inget
+    // fält kvar att manipulera.
+    if (!user.businessId) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    businessId = user.businessId;
+  }
+
   if (!user) {
     if (!intakeToken) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
     if (!rateLimit(`upload-token:${tokenFingerprint(intakeToken)}`, 30, 600_000).ok) {
@@ -64,12 +72,16 @@ export async function POST(req: Request) {
   }
 
   // Kvitton hör till betalningsflödet i admin och ska aldrig gå att ladda upp
-  // med en intake-token.
-  if (!user && kindRaw !== "photo" && kindRaw !== "logo") {
+  // med en intake-token eller av en owner.
+  if (user?.role !== "superadmin" && kindRaw !== "photo" && kindRaw !== "logo") {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 
-  const [business] = await db.select({ id: businesses.id }).from(businesses).where(eq(businesses.id, businessId)).limit(1);
+  const [business] = await db
+    .select({ id: businesses.id, slug: businesses.slug })
+    .from(businesses)
+    .where(eq(businesses.id, businessId))
+    .limit(1);
   if (!business) return NextResponse.json({ error: "Sajten finns inte." }, { status: 404 });
 
   if (file.size > MAX_UPLOAD_BYTES) {
@@ -148,10 +160,20 @@ export async function POST(req: Request) {
     actorUserId: user?.userId ?? null,
     businessId,
     action: "media_uploaded",
-    meta: { kind: kindRaw, fileKey: processed.fileKey, bytes: processed.bytes, viaIntake: !user },
+    meta: {
+      kind: kindRaw,
+      fileKey: processed.fileKey,
+      bytes: processed.bytes,
+      viaIntake: !user,
+      byOwner: user?.role === "owner",
+    },
   });
 
+  // Utan detta syns en ny bild på den publika sajten först när ISR-fönstret
+  // löper ut (en timme). En owner som just bytt bild ska se den direkt.
+  revalidateTag(`biz:${business.slug}`);
   revalidatePath(`/admin/sitios/${businessId}`);
+  if (user?.role === "owner") revalidatePath("/mi-sitio");
 
   return NextResponse.json({ id: created.id, fileKey: created.fileKey, variants: created.variantsJson });
 }

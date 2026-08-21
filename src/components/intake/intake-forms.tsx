@@ -16,7 +16,7 @@ import type { IntakeState } from "@/app/alta/[token]/actions";
 function Submit({ label, busyLabel = "Guardando…", ghost }: { label: string; busyLabel?: string; ghost?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={`alta-btn${ghost ? " alta-btn--ghost" : ""}`}>
+    <button type="submit" disabled={pending} className={`panel-btn${ghost ? " panel-btn--ghost" : ""}`}>
       {pending ? busyLabel : label}
     </button>
   );
@@ -36,7 +36,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="alta-field">
+    <div className="panel-field">
       <label htmlFor={name}>{label}</label>
       {children}
       {hint ? <p className="hint">{hint}</p> : null}
@@ -73,9 +73,9 @@ export function IntakeDataForm({
 
   return (
     <form action={formAction}>
-      {state.error ? <p className="alta-note alta-note--err">{state.error}</p> : null}
+      {state.error ? <p className="panel-note panel-note--err">{state.error}</p> : null}
 
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Tu negocio</h2>
         <Field label="Nombre del negocio" name="name" error={err("name")}>
           <input id="name" name="name" type="text" defaultValue={defaults.name} maxLength={120} required />
@@ -105,11 +105,11 @@ export function IntakeDataForm({
         </Field>
       </div>
 
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Servicios o productos</h2>
         <p>Al menos dos. Lo que más te piden va primero.</p>
         {services.map((service, i) => (
-          <div key={i} className="alta-row alta-row--2">
+          <div key={i} className="panel-row panel-row--2">
             <Field label={`${i + 1}. Nombre`} name={`service.${i}.name`} error={err(`service.${i}.name`)}>
               <input
                 id={`service.${i}.name`}
@@ -132,7 +132,7 @@ export function IntakeDataForm({
         ))}
       </div>
 
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Cómo te contactan</h2>
         <Field
           label="WhatsApp"
@@ -153,7 +153,7 @@ export function IntakeDataForm({
         <Field label="Otro teléfono (opcional)" name="secondaryPhone" error={err("secondaryPhone")}>
           <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={defaults.secondaryPhone} />
         </Field>
-        <div className="alta-row alta-row--2">
+        <div className="panel-row panel-row--2">
           <Field label="Ciudad" name="city" error={err("city")}>
             <input id="city" name="city" type="text" defaultValue={defaults.city} maxLength={80} required />
           </Field>
@@ -164,7 +164,7 @@ export function IntakeDataForm({
         <Field label="Dirección (opcional)" name="address" error={err("address")}>
           <input id="address" name="address" type="text" defaultValue={defaults.address} maxLength={200} />
         </Field>
-        <div className="alta-row alta-row--2">
+        <div className="panel-row panel-row--2">
           <Field label="Instagram (link)" name="instagram" error={err("instagram")}>
             <input id="instagram" name="instagram" type="url" defaultValue={defaults.instagram} maxLength={300} />
           </Field>
@@ -174,14 +174,14 @@ export function IntakeDataForm({
         </div>
       </div>
 
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Horario</h2>
         <p>Un horario por día. Si cerrás al mediodía, lo arreglamos nosotros después.</p>
-        <div className="alta-hours">
+        <div className="panel-hours">
           {WEEKDAYS.map((day) => {
             const interval = defaults.hours?.[day.key]?.[0];
             return (
-              <div key={day.key} className="alta-hours-row">
+              <div key={day.key} className="panel-hours-row">
                 <label className="day" htmlFor={`hours.${day.key}.open`}>
                   {day.short}
                 </label>
@@ -207,7 +207,7 @@ export function IntakeDataForm({
         </div>
       </div>
 
-      <div className="alta-actions">
+      <div className="panel-actions">
         <Submit label="Guardar y seguir" />
       </div>
     </form>
@@ -262,12 +262,12 @@ export function IntakePhotos({
 
   return (
     <div>
-      {error ? <p className="alta-note alta-note--err">{error}</p> : null}
+      {error ? <p className="panel-note panel-note--err">{error}</p> : null}
 
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Tu logo</h2>
         <p>Si no tenés, no pasa nada — seguimos sin logo.</p>
-        <label className="alta-btn alta-btn--ghost">
+        <label className="panel-btn panel-btn--ghost">
           {busy ? "Subiendo…" : hasLogo ? "Cambiar logo" : "Subir logo"}
           <input
             ref={(el) => {
@@ -282,18 +282,18 @@ export function IntakePhotos({
         </label>
       </div>
 
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Fotos ({photos.length}/{maxPhotos})</h2>
         <p>Fotos reales de tu local, tus trabajos o tus productos. Sacadas con el celular está perfecto.</p>
         {photos.length > 0 ? (
-          <div className="alta-photos">
+          <div className="panel-photos">
             {photos.map((photo) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img key={photo.id} src={photo.url} alt="" loading="lazy" />
             ))}
           </div>
         ) : null}
-        <label className="alta-btn alta-btn--ghost">
+        <label className="panel-btn panel-btn--ghost">
           {busy ? "Subiendo…" : "Subir fotos"}
           <input
             ref={(el) => {
@@ -328,7 +328,7 @@ export function IntakeVerification({
 
   if (verified) {
     return (
-      <div className="alta-card">
+      <div className="panel-card">
         <h2>Número verificado ✓</h2>
         <p>Tu WhatsApp {phone} está confirmado. Ya podés enviar tus datos.</p>
       </div>
@@ -336,23 +336,23 @@ export function IntakeVerification({
   }
 
   return (
-    <div className="alta-card">
+    <div className="panel-card">
       <h2>Verificá tu WhatsApp</h2>
       <p>
         Te mandamos un código de 6 números al {phone}. Es para confirmar que el número es tuyo — es el número
         al que van a escribirte tus clientes.
       </p>
 
-      {reqState.error ? <p className="alta-note alta-note--err">{reqState.error}</p> : null}
-      {reqState.ok ? <p className="alta-note alta-note--ok">{reqState.ok}</p> : null}
+      {reqState.error ? <p className="panel-note panel-note--err">{reqState.error}</p> : null}
+      {reqState.ok ? <p className="panel-note panel-note--ok">{reqState.ok}</p> : null}
 
       <form action={reqAction} style={{ marginBottom: "1rem" }}>
         <Submit label="Pedir el código" busyLabel="Pidiendo…" ghost />
       </form>
 
       <form action={verAction}>
-        {verState.error ? <p className="alta-note alta-note--err">{verState.error}</p> : null}
-        {verState.ok ? <p className="alta-note alta-note--ok">{verState.ok}</p> : null}
+        {verState.error ? <p className="panel-note panel-note--err">{verState.error}</p> : null}
+        {verState.ok ? <p className="panel-note panel-note--ok">{verState.ok}</p> : null}
         <Field label="Código" name="code" error={verState.fieldErrors?.code}>
           <input
             id="code"
@@ -361,7 +361,7 @@ export function IntakeVerification({
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            className="alta-code"
+            className="panel-code"
             placeholder="000000"
             required
           />
@@ -383,9 +383,9 @@ export function IntakeSubmit({
 
   return (
     <form action={formAction}>
-      {state.error ? <p className="alta-note alta-note--err">{state.error}</p> : null}
-      <div className="alta-actions">
-        <button type="submit" className="alta-btn" disabled={disabled}>
+      {state.error ? <p className="panel-note panel-note--err">{state.error}</p> : null}
+      <div className="panel-actions">
+        <button type="submit" className="panel-btn" disabled={disabled}>
           Enviar mis datos
         </button>
       </div>

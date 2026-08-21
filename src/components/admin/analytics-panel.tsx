@@ -34,12 +34,15 @@ export function AnalyticsPanel({ analytics }: { analytics: BusinessAnalytics }) 
 
       {hasData ? (
         <div className="mb-5">
-          <div className="flex h-28 items-end gap-[3px]" role="img" aria-label="Besök per dag, senaste 30 dagarna">
+          {/* items-stretch + h-full: staplarnas procenthöjder resolverar mot 0
+              om kolumnen krymper till sitt innehåll, och grafen blir tom. */}
+          <div className="flex h-28 items-stretch gap-[3px]" role="img" aria-label="Besök per dag, senaste 30 dagarna">
             {series30.map((point) => (
               <div
                 key={point.day}
                 title={`${point.day}: ${point.views} besök, ${point.uniques} unika, ${point.waClicks} WhatsApp`}
-                className="flex flex-1 flex-col justify-end gap-[2px]"
+                // Baslinjen gör en nolldag läsbar som en tom dag, inte som ett hål.
+                className="flex h-full flex-1 flex-col justify-end gap-[2px] border-b border-admin-line"
               >
                 {point.waClicks > 0 ? (
                   <div
