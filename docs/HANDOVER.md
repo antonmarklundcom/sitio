@@ -1,6 +1,6 @@
 # Läge och nästa steg
 
-> Uppdaterad i slutet av sessionen som byggde PR-12. Läs den här filen först i
+> Uppdaterad i slutet av sessionen som byggde PR-12 och PR-13. Läs den här filen först i
 > nästa session, sedan `PLAN.md`.
 
 ## Var bygget står
@@ -13,8 +13,9 @@
 | **PR-09** | Prenumerationer, betalningsadmin, livscykel active→grace→expired, "Vencen pronto" | Mergad (#10) |
 | **PR-10** | Intake med tokenad länk, tre steg, manuell WhatsApp-OTP | Mergad (#11) |
 | **PR-11** | Owner-auth (WhatsApp-OTP), `/admin/accesos`, `/mi-sitio` med whitelistad redigering | Mergad (#13) |
-| **PR-12** | Modul-infra: modulväxel per kund i admin, `photoLimitFor()` som enda fototakskälla, owner sorterar sina foton | Mergad |
-| PR-13 → | Fas 2 fortsätter: meny, produkter, teman 4–6, radar | **Nästa** |
+| **PR-12** | Modul-infra: modulväxel per kund i admin, `photoLimitFor()` som enda fototakskälla, owner sorterar sina foton | Mergad (#15) |
+| **PR-13** | Meny-modulen: owner-CRUD i `/mi-sitio`, rendering i alla tre teman, `menu_view`/`gallery_view` som vy-event | Mergad |
+| PR-14 → | Fas 2 fortsätter: produkter, teman 4–6, radar | **Nästa** |
 
 **Fas 1 är färdigbyggd** och fas 2 är påbörjad. Det som återstår innan första
 betalande kund är deploy-steg A och B — infrastruktur, inte kod.
@@ -46,6 +47,11 @@ PR-08 installerade MySQL 8.0.46 i containern och körde igenom kedjan. Följande
 - Modulerna (PR-12): växeln av → på → av, `enabledAt` sätts, fototaket följer
   modulen i både owner-panelen och `/api/upload`, obyggda moduler märks som
   obyggda, och owners omsortering slår igenom på den publika sajten via ISR.
+- Meny-modulen (PR-13): sektioner och rätter skapas, tomt pris blir
+  "A consultar", "no hay hoy" döljer rätten publikt men behåller den i panelen,
+  menyn slår igenom på sajten via ISR, avstängd modul döljer menyn utan att
+  radera den, och en post från en flik som stod öppen när modulen stängdes av
+  nekas av serveråtgärden.
 
 PR-12 lagade också två röktest som ljög: fotouppladdningen i admin träffade
 betalningsformulärets kvittofält (`input[type=file]` matchade det först på
@@ -53,7 +59,7 @@ sidan, och kvittofältet ligger före bildrutan), och owner-kontokontrollen
 matchade skiftlägeskänsligt mot en rubrik som CSS versaliserar — så knappen
 "Skapa konto" klickades aldrig. Båda passerade grönt utan att mäta något.
 
-Röktestet är nu 58 kontroller. Kör det efter varje PR som rör admin, intake,
+Röktestet är nu 75 kontroller. Kör det efter varje PR som rör admin, intake,
 betalningar, owner-panelen eller uppladdning. Två körningar tätt inpå varandra
 slår i inloggningens rate limit (5 försök / 15 min, per process) — starta om
 servern mellan körningarna.
@@ -76,22 +82,21 @@ Allt nedan kräver Hostinger och kan inte mätas härifrån:
    då uppdateras siffrorna först när du öppnar adminet.
 4. **Byggtid och minne på Hostinger-noden.** `next build` här tar ~40 s.
 
-## Nästa session: PR-13 (menu-modulen)
+## Nästa session: PR-14 (products-modulen)
 
-Modul-infran finns nu, så PR-13 är att fylla en av flaggorna med innehåll:
+`products` är samma mönster som menyn, med en tabell i stället för två:
 
-1. `menu_sections` + `menu_items` finns i schemat. CRUD för owner ska vara
-   idiotsäker: bara namn, pris, beskrivning, bild och "tillgänglig".
-2. Rendering i `gastronomia`-temat plus en generisk fallback — en kund med
-   menyn påslagen och `servicios`-temat får inte en tom sida.
-3. `menu_view`-event till analytics, så radarn (PR-16) kan se om modulen
-   används.
-4. Mönstret att kopiera ligger i PR-12: registret i `src/lib/modules.ts` (sätt
-   `plannedIn: undefined` när modulen är byggd), frågorna i
-   `src/db/module-queries.ts`, växeln i `src/components/admin/modules-panel.tsx`
-   och owner-mutationerna i `src/app/mi-sitio/actions.ts` — whitelist, tenant ur
-   sessionen, aldrig ur formuläret.
-5. Utöka `npm run smoke` (58 kontroller i dag) och kör mot en lokal MySQL innan
+1. `products`-tabellen finns i schemat (namn, beskrivning, `priceGs`, `mediaId`,
+   `isVisible`, `sortOrder`). Ingen migrering.
+2. Kopiera kedjan från PR-13 rakt av: `src/lib/menu-form.ts` →
+   `product-form.ts`, `src/db/menu-queries.ts` → `product-queries.ts`,
+   `src/app/mi-sitio/menu-actions.ts` → `product-actions.ts` (samma
+   `menuContext()`-mönster: modulen kontrolleras på servern, inte i UI:t), och
+   `SiteMenu` → en `SiteProducts`-primitiv i `theme.css`.
+3. Rendering i `comercio`-temat plus generisk fallback i övriga.
+4. Sätt `plannedIn: undefined` för `products` i `src/lib/modules.ts` när den är
+   byggd — annars fortsätter adminet säga "ej byggt än".
+5. Utöka `npm run smoke` (75 kontroller i dag) och kör mot en lokal MySQL innan
    PR:en stängs. Så här sätter du upp den i en tom container:
 
    ```bash
@@ -108,6 +113,11 @@ Modul-infran finns nu, så PR-13 är att fylla en av flaggorna med innehåll:
    `serial AUTO_INCREMENT` är MySQL-syntax och migreringarna faller.)
    Verifierat i PR-12: apt-vägen fungerar i sandlådan även när Docker Hub är
    blockerat.
+
+Kvar i menyn (medvetet uppskjutet från PR-13): **bild per rätt.** `menuItems.mediaId`
+finns i schemat men används inte än. Det kräver att `/api/upload` släpper igenom
+`menu_item` för en owner-session och kopplar bilden till rätten — samma
+tenant-kontroll som i dag, men en ny kind. Menyn fungerar och säljer utan det.
 
 Regler som gäller oförändrat: inga filer under `.github/workflows/`, noll
 hårdkodade absolut-URL:er, spanska (voseo) i kund-UI och svenska i superadmin,
@@ -128,6 +138,11 @@ varje mutation bakom `requireRole()` + tenant-filter, och QA-gaten
   systemet (PLAN.md D10) — `enabledAt` är datumet du räknar året från.
 - Sorteringen flyttar en bild ett steg i taget. Drag-and-drop är trevligare men
   kräver klientstate och touch-hantering; med 8–20 bilder räcker knapparna.
+  Samma gäller menyns sektioner och rätter.
+- Menyn kan bara redigeras av owner, inte av superadmin. Det följer gränsen
+  ovan, men betyder att en kund som inte vill röra panelen inte får någon meny.
+  När det blir ett problem är lösningen en adminvy som loggar mot rätt aktör —
+  inte att låta `/mi-sitio` spara med superadmin-session.
 
 - `media.width` / `height` sparar originalets mått, inte variantens. Spelar
   ingen roll för loggan (renderas med max-height) men bör städas när

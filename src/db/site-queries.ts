@@ -4,6 +4,7 @@ import { and, asc, eq, ne } from "drizzle-orm";
 import { db } from "./index";
 import { businesses, businessModules, media, slugRedirects } from "./schema";
 import type { Business, Media } from "./schema";
+import { getMenu, publicMenu, type MenuSectionRow } from "./menu-queries";
 
 export type SiteData = {
   business: Business;
@@ -11,6 +12,8 @@ export type SiteData = {
   logo: Media | null;
   hero: Media | null;
   modules: string[];
+  /** Menyn, redan filtrerad: tom när modulen är av eller inget är upplagt. */
+  menu: MenuSectionRow[];
 };
 
 async function loadSite(slug: string): Promise<SiteData | null> {
@@ -31,12 +34,18 @@ async function loadSite(slug: string): Promise<SiteData | null> {
 
   const photos = mediaRows.filter((m) => m.kind === "photo");
 
+  // Menyn hämtas bara när modulen är på: en avstängd modul ska inte kosta en
+  // extra fråga per sajt, och datat ligger kvar orört tills den slås på igen.
+  const moduleKeys = moduleRows.map((m) => m.moduleKey);
+  const menu = moduleKeys.includes("menu") ? publicMenu(await getMenu(business.id)) : [];
+
   return {
     business,
     photos,
     logo: mediaRows.find((m) => m.kind === "logo") ?? null,
     hero: photos.find((m) => m.id === business.heroMediaId) ?? photos[0] ?? null,
-    modules: moduleRows.map((m) => m.moduleKey),
+    modules: moduleKeys,
+    menu,
   };
 }
 

@@ -10,6 +10,18 @@ import { absoluteUrl } from "@/lib/env";
 import { displayPhone } from "@/lib/format";
 import { smallestVariant } from "@/lib/media-shared";
 import { enabledModules, photoLimitFor } from "@/db/module-queries";
+import { getMenu } from "@/db/menu-queries";
+import { OwnerMenu } from "@/components/mi-sitio/owner-menu";
+import {
+  addSectionAction,
+  deleteItemAction,
+  deleteSectionAction,
+  moveItemAction,
+  moveSectionAction,
+  renameSectionAction,
+  saveItemAction,
+  toggleItemAvailabilityAction,
+} from "./menu-actions";
 import { OwnerEditForm, OwnerPhotos } from "@/components/mi-sitio/owner-forms";
 import { OwnerStats } from "@/components/mi-sitio/owner-stats";
 import {
@@ -73,6 +85,9 @@ export default async function MiSitioPage({
   const logoUrl = logo ? `/media/${businessId}/${smallestVariant(logo.variantsJson ?? {}) ?? ""}` : null;
 
   const hasGallery = modules.has("gallery");
+  // Menyn läses först när modulen är på: en avstängd modul ska inte kosta två
+  // frågor per sidladdning, och datat ligger kvar tills den slås på igen.
+  const menu = modules.has("menu") ? await getMenu(businessId) : [];
   const socials = business.socialsJson ?? {};
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const liveUrl = absoluteUrl(`/${business.slug}`);
@@ -111,6 +126,20 @@ export default async function MiSitioPage({
         deletePhoto={ownerDeletePhotoAction}
         movePhoto={ownerMoveMediaAction}
       />
+
+      {modules.has("menu") ? (
+        <OwnerMenu
+          menu={menu}
+          addSection={addSectionAction}
+          renameSection={renameSectionAction}
+          deleteSection={deleteSectionAction}
+          moveSection={moveSectionAction}
+          saveItem={saveItemAction}
+          deleteItem={deleteItemAction}
+          toggleAvailability={toggleItemAvailabilityAction}
+          moveItem={moveItemAction}
+        />
+      ) : null}
 
       <OwnerEditForm
         action={updateOwnerBusinessAction}

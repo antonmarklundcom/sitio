@@ -1,6 +1,7 @@
 import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
+import { SiteMenu } from "@/components/site/menu-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -24,7 +25,7 @@ import type { ThemeProps } from "../types";
  * full-bleed-krav som QA-gaten ställer bärs då av 02, och överlappet av
  * kontaktkortet, som ligger utanför bildvillkoret.
  */
-export function GastronomiaTheme({ business, photos, logo, hero, modules }: ThemeProps) {
+export function GastronomiaTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -211,9 +212,19 @@ export function GastronomiaTheme({ business, photos, logo, hero, modules }: Them
         </section>
       ) : null}
 
+      {/* ---------- 04b LA CARTA — menu-modulen ---------- */}
+      {/* Ligger efter especialidades och före galleriet: "la carta, en corto"
+          är rubrikerna, menyn är hela listan med priser. Utan modulen finns
+          bara den korta versionen, och sidan har ingen lucka. */}
+      <SiteMenu
+        menu={menu}
+        title="Nuestra carta"
+        intro="Precios en guaraníes. Si algo se terminó por hoy, lo sacamos de acá."
+      />
+
       {/* ---------- 05 GALERÍA — P7 sticky-side scroll ---------- */}
       {galleryPhotos.length > 0 ? (
-        <section id="galeria">
+        <section id="galeria" data-ev-view="gallery_view">
           <div className="wrap gast-gallery">
             <div className="gast-gallery-side">
               <span className="eyebrow">Galería</span>

@@ -38,8 +38,8 @@ export const MODULES: ModuleMeta[] = [
     key: "menu",
     label: "Meny",
     summary: "Meny med sektioner, rätter och priser i guaraníes.",
-    effect: "Egen CRUD för owner och en menysektion i gastronomia-temat.",
-    plannedIn: "PR-13",
+    effect:
+      "Ger owner en menyredigerare i /mi-sitio och renderar menyn på sajten — egen sektion i gastronomia, delad primitiv i övriga teman. Läsningar mäts som menu_view.",
   },
   {
     key: "products",
