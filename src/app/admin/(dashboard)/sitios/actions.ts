@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { businesses, media, slugRedirects } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { logActivity, requireRole } from "@/lib/auth";
+import { ensureOwnerAccount } from "@/lib/owner";
 import {
   businessFormSchema,
   canTransition,
@@ -195,6 +196,31 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
     })
     .where(eq(businesses.id, businessId));
 
+  // Owner-kontot skapas vid publicering: det är först då kunden har något att
+  // logga in på. Misslyckas det (numret hör redan till ett annat konto) ska
+  // publiceringen stå kvar — kontot fixas för hand i /admin/accesos, och
+  // publishBlockers har redan garanterat att numret är verifierat.
+  let ownerNote = "";
+  if (to === "published") {
+    const owner = await ensureOwnerAccount({ ...business, status: to });
+    if (owner.ok) {
+      if (owner.created) {
+        await logActivity({
+          actorUserId: user.userId,
+          businessId,
+          action: "owner_account_created_on_publish",
+          meta: { userId: owner.userId },
+        });
+      }
+    } else {
+      ownerNote = `&ownerWarning=${encodeURIComponent(
+        owner.reason === "phone_taken"
+          ? "Sajten är publicerad, men numret hör redan till ett annat owner-konto. Lös det i Inloggningar."
+          : "Sajten är publicerad, men WhatsApp-numret är inte verifierat — inget owner-konto skapades.",
+      )}`;
+    }
+  }
+
   await logActivity({
     actorUserId: user.userId,
     businessId,
@@ -206,7 +232,8 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
   revalidatePath("/admin");
   revalidatePath(`/admin/sitios/${businessId}`);
   revalidatePath("/sitemap.xml");
-  redirect(`/admin/sitios/${businessId}?status=1`);
+  revalidatePath("/admin/accesos");
+  redirect(`/admin/sitios/${businessId}?status=1${ownerNote}`);
 }
 
 export async function verifyWhatsappManuallyAction(formData: FormData): Promise<void> {

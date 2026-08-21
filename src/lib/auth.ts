@@ -22,7 +22,9 @@ export class ForbiddenError extends Error {
  */
 export async function requireRole(...allowed: Role[]): Promise<Required<Pick<SessionData, "userId" | "role">> & SessionData> {
   const user = await currentUser();
-  const loginPath = allowed.includes("superadmin") ? "/admin/login" : "/mi-sitio/login";
+  // Första rollen i listan avgör vart en utloggad besökare skickas:
+  // requireRole("owner", "superadmin") är en owner-yta som superadmin också når.
+  const loginPath = allowed[0] === "owner" ? "/mi-sitio/login" : "/admin/login";
 
   if (!user?.userId || !user.role) redirect(loginPath);
   if (!allowed.includes(user.role)) throw new ForbiddenError();

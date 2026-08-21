@@ -33,7 +33,14 @@ await p.click('button[type=submit]');
 await p.waitForURL((u) => !u.pathname.startsWith('/admin/login'), { timeout: 30000 }).catch(() => {});
 ok('login', !p.url().includes('/admin/login'), p.url());
 if (p.url().includes('/admin/login')) {
-  console.error('avbryter: inloggningen gick inte igenom —', await p.locator('body').innerText());
+  const why = await p.locator('body').innerText();
+  // Inloggningens rate limit är per process och gäller 15 minuter. Två
+  // smoke-körningar tätt inpå varandra slår i den — starta om servern.
+  if (why.includes('För många försök')) {
+    console.error('avbryter: inloggningens rate limit slog till. Starta om servern och kör igen.');
+  } else {
+    console.error('avbryter: inloggningen gick inte igenom —', why);
+  }
   await b.close();
   process.exit(1);
 }
@@ -194,7 +201,7 @@ await cust.waitForLoadState('networkidle');
 await cust.waitForTimeout(1200);
 await cust.locator('input[type=file]').last().setInputFiles({ name: 'pan.jpg', mimeType: 'image/jpeg', buffer: jpeg });
 await cust.waitForTimeout(4000);
-ok('foto uppladdat via intake-token', (await cust.locator('.alta-photos img').count()) > 0);
+ok('foto uppladdat via intake-token', (await cust.locator('.panel-photos img').count()) > 0);
 
 // Behörighetsgränserna för tokenläget i uppladdningsrouten.
 const anon = new FormData();
@@ -239,6 +246,98 @@ ok('länken stängd efter inlämning', (await fetch(B + '/alta/' + token)).statu
 await p.goto(B + '/admin?status=pending_review', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1000);
 ok('sajten ligger i granskningskön', (await p.locator('body').innerText()).includes(negocio));
+
+// 11. owner-auth och /mi-sitio: konto, OTP-login, redigering, tenant-gränser
+await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1200);
+if ((await p.locator('body').innerText()).includes('utan owner-konto')) {
+  await p.getByRole('button', { name: 'Skapa konto' }).first().click();
+  await p.waitForTimeout(3000);
+  await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1200);
+}
+ok('owner-konto finns', (await p.locator('table tbody tr').count()) > 0);
+
+const ownerPhone = (await p.locator('table tbody tr').first().locator('td').nth(1).innerText()).replace(/\s/g, '');
+ok('owner har ett nummer', /^\+595\d+$/.test(ownerPhone));
+
+const owner = await b.newPage();
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+ok('/mi-sitio kräver inloggning', owner.url().includes('/mi-sitio/login'));
+
+await owner.fill('input[name=phone]', ownerPhone);
+await owner.getByRole('button', { name: /Pedir código/ }).click();
+await owner.waitForTimeout(2500);
+const neutral = 'Si el número está registrado';
+ok('kodbegäran kvitteras neutralt', (await owner.locator('body').innerText()).includes(neutral));
+
+// Ett okänt nummer måste ge exakt samma svar — annars är inloggningssidan en
+// kunddatabas att fiska i.
+const stranger = await b.newPage();
+await stranger.goto(B + '/mi-sitio/login', { waitUntil: 'domcontentloaded' });
+await stranger.fill('input[name=phone]', '0999 000 111');
+await stranger.getByRole('button', { name: /Pedir código/ }).click();
+await stranger.waitForTimeout(2000);
+ok('okänt nummer ger samma svar', (await stranger.locator('body').innerText()).includes(neutral));
+await stranger.close();
+
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+ok('admin ser att kunden väntar på kod', (await p.locator('body').innerText()).includes('väntar på en kod'));
+await p.getByRole('button', { name: 'Generera kod' }).first().click();
+await p.waitForTimeout(2500);
+const ownerCode = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
+ok('inloggningskod genererad', Boolean(ownerCode));
+
+await owner.fill('input[name=code]', '000000');
+await owner.getByRole('button', { name: 'Entrar' }).click();
+await owner.waitForTimeout(2000);
+ok('fel kod nekas', (await owner.locator('body').innerText()).includes('No pudimos verificar'));
+
+await owner.fill('input[name=code]', ownerCode ?? '');
+await owner.getByRole('button', { name: 'Entrar' }).click();
+await owner.waitForTimeout(3000);
+ok('rätt kod loggar in', owner.url().endsWith('/mi-sitio'));
+
+const ownerText = await owner.locator('body').innerText();
+ok('statistik visas för owner', ownerText.includes('Tu página en números'));
+ok('inga adminfält läcker till owner', !/Palett|Tema|SEO/i.test(ownerText));
+
+await owner.goto(B + '/admin', { waitUntil: 'domcontentloaded' });
+ok('owner blockeras från /admin', owner.url().includes('/admin/login'));
+
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1200);
+const nuevaDesc =
+  'Descripción actualizada por el dueño ' + Date.now().toString().slice(-5) +
+  '. Trabajamos todos los días y atendemos pedidos por WhatsApp sin vueltas.';
+await owner.fill('textarea[name=description]', nuevaDesc);
+await owner.getByRole('button', { name: /Guardar cambios/ }).click();
+await owner.waitForTimeout(3000);
+ok('owner-ändring sparad', (await owner.locator('body').innerText()).includes('¡Guardado!'));
+
+const liveHref = await owner.locator('.panel-top a').first().getAttribute('href').catch(() => null);
+if (liveHref) {
+  const ownerSlug = liveHref.split('/').pop();
+  const pubHtml = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('publika sajten uppdaterad (ISR)', pubHtml.includes(nuevaDesc.slice(0, 40)));
+} else {
+  ok('publika sajten uppdaterad (ISR)', false, 'ingen publik länk i panelen');
+}
+
+// Tenant-gränsen: owner postar ett främmande businessId, rutten ska ändå
+// skriva till ägarens egen sajt — den läser tenanten ur sessionen.
+const ownerCookies = (await owner.context().cookies()).map((c) => `${c.name}=${c.value}`).join('; ');
+const crossTenant = new FormData();
+crossTenant.set('kind', 'photo');
+crossTenant.set('businessId', '2');
+crossTenant.set('file', new File([jpeg], 'x.jpg', { type: 'image/jpeg' }));
+const crossRes = await fetch(B + '/api/upload', { method: 'POST', headers: { cookie: ownerCookies }, body: crossTenant });
+const crossJson = await crossRes.json().catch(() => ({}));
+ok(
+  'owner kan inte ladda upp till annans sajt',
+  crossRes.status === 200 && typeof crossJson.fileKey === 'string' && !crossJson.fileKey.startsWith('2/'),
+);
 
 await b.close();
 console.log(failed === 0 ? '\nAllt grönt.' : `\n${failed} kontroll(er) föll.`);

@@ -1,10 +1,10 @@
 import "@/styles/panel.css";
 
 export const metadata = {
-  // Intake-länkarna är personliga och ska aldrig indexeras.
+  // Owner-adminet är privat och ska aldrig indexeras.
   robots: { index: false, follow: false },
 };
 
-export default function AltaLayout({ children }: { children: React.ReactNode }) {
+export default function MiSitioLayout({ children }: { children: React.ReactNode }) {
   return <div className="panel">{children}</div>;
 }

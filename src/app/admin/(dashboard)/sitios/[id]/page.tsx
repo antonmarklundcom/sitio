@@ -47,7 +47,13 @@ export default async function EditBusinessPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ created?: string; status?: string; verified?: string; error?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    status?: string;
+    verified?: string;
+    error?: string;
+    ownerWarning?: string;
+  }>;
 }) {
   await requireRole("superadmin");
   const { id } = await params;
@@ -101,6 +107,7 @@ export default async function EditBusinessPage({
       {sp.error ? <Notice tone="danger">{sp.error}</Notice> : null}
       {sp.created ? <Notice tone="ok">Utkastet är skapat. Fyll på och publicera när det är klart.</Notice> : null}
       {sp.status ? <Notice tone="ok">Statusen är uppdaterad.</Notice> : null}
+      {sp.ownerWarning ? <Notice tone="warn">{sp.ownerWarning}</Notice> : null}
       {sp.verified ? <Notice tone="ok">WhatsApp-numret är markerat som verifierat.</Notice> : null}
 
       <Card>

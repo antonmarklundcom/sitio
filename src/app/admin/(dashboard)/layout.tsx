@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin", label: "Sajter" },
   { href: "/admin/alta", label: "Intake" },
   { href: "/admin/pagos", label: "Cobros" },
+  { href: "/admin/accesos", label: "Inloggningar" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
