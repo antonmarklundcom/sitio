@@ -10,12 +10,12 @@
 | PR-01…PR-06 | Scaffold, datamodell, seed, superadmin-auth, businesses-CRUD, media-pipeline, publik rendering + tema `servicios` | Mergad (#3–#6) |
 | **PR-07** | Teman `gastronomia` + `comercio`, fyra palettvarianter per tema, temaväljare med färgprover i admin, QA-gate med skärmdumpar | Mergad (#7) |
 | **PR-08** | `/api/ev`-ingest, rollup till `analytics_daily`, adminstatistik, `npm run smoke` mot riktig MySQL | Mergad (#8) |
-| PR-09 | Subscriptions + payments-admin | **Nästa** |
-| PR-10 | Intake + WhatsApp-verifiering (manuell OTP) | Efter PR-09 |
-| PR-15 | Teman `salud`, `belleza`, `taller` | Fas 2 |
+| **PR-09** | Prenumerationer, betalningsadmin, livscykel active→grace→expired, "Vencen pronto" | Mergad (#10) |
+| **PR-10** | Intake med tokenad länk, tre steg, manuell WhatsApp-OTP | Mergad (#11) |
+| PR-11 → | Fas 2: owner-admin, moduler, radar | **Nästa** |
 
-Fas 1 är klar efter PR-09 och PR-10. Deploy-steg A kan göras när som helst —
-det hänger inte på dem.
+**Fas 1 är färdigbyggd.** Det som återstår innan första betalande kund är
+deploy-steg A och B — infrastruktur, inte kod.
 
 ## Vad som nu ÄR verifierat mot en riktig databas
 
@@ -31,6 +31,15 @@ PR-08 installerade MySQL 8.0.46 i containern och körde igenom kedjan. Följande
 - Analytics-ingesten: botklassning, rate limit (exakt 120/min), avvisning av
   opublicerade sajter och okända eventtyper, rollup med botfiltrering,
   prunning vid 13 månader.
+- Betalningarnas livscykel (PR-09): respit håller sajten uppe, förfall pausar
+  den (404 + ur sitemap), andra körningen är en no-op, bekräftad betalning
+  publicerar den igen med ISR-cachen invaliderad.
+- Hela intake-flödet (PR-10) inklusive behörighetsgränser: uppladdning utan
+  token nekas (401), kvittouppladdning med intake-token nekas (403), fel OTP
+  avvisas, inlämning stänger länken (404) och sajten hamnar i granskningskön.
+
+Röktestet är nu 24 kontroller. Kör det efter varje PR som rör admin, intake,
+betalningar eller uppladdning.
 
 Kör om det när som helst med `npm run smoke` (se README). Testet skriver i
 databasen — aldrig mot produktion.
@@ -50,23 +59,28 @@ Allt nedan kräver Hostinger och kan inte mätas härifrån:
    då uppdateras siffrorna först när du öppnar adminet.
 4. **Byggtid och minne på Hostinger-noden.** `next build` här tar ~40 s.
 
-## Nästa session: PR-09 (subscriptions + payments-admin)
+## Nästa session: fas 2 börjar med PR-11 (owner-auth + /mi-sitio)
 
-Allt finns redan i schemat (`subscriptions`, `payments`) — inga migreringar.
+Fas 1 är klar. PR-11 är delbar i 11a (auth) och 11b (redigering + statistik) —
+gör det, den blir annars stor.
 
-1. Serveråtgärder bakom `requireRole("superadmin")`: skapa prenumeration
-   (plan, pris i heltals-Gs, `startsAt`, `expiresAt` = +1 år), registrera
-   betalning (metod, referens, kvittobild via befintlig media-pipeline med
-   `kind: "receipt"`), bekräfta/avvisa. Bekräftelse förlänger `expiresAt`.
-2. Statusmaskineri `active → grace → expired → paused`. Lägg dagssteget i
-   `/api/cron/rollup` — routen finns och har redan CRON_SECRET och
-   lazy-fallback-mönstret.
-3. Vy "Vencen pronto" (≤45 dagar) med wa.me-länk vars meddelande innehåller
-   årets statistik. Statistiken hämtas från `getBusinessAnalytics()` i
-   `src/db/analytics-queries.ts` — den finns och är testad.
-4. Pengar visas alltid som `formatGs()` (`₲ 300.000`, inga decimaler).
-5. Utöka `npm run smoke` med betalningsflödet, och kör den mot en lokal MySQL
-   innan PR:en stängs. Så här sätter du upp den i en tom container:
+1. **Owner-login via WhatsApp-OTP.** Hela mekaniken finns redan i
+   `src/lib/intake.ts` (`newOtpCode`, `hashOtp`, `otpMatches`) och tabellen
+   `verifications` har `purpose: "login"`. Skillnaden mot intake är att koden
+   ska skickas till ett nummer som redan är verifierat, och att den upprättar
+   en session — återanvänd `establishSession()` i `src/lib/auth.ts`.
+2. **Owner-konto skapas vid publicering**, med `businesses.ownerUserId`.
+   `assertBusinessAccess()` finns och gör tenant-kontrollen; varje mutation i
+   `/mi-sitio` måste gå genom den.
+3. **`/mi-sitio`**: whitelistade fält med maxlängder, bildbyte via samma
+   uppladdningsväg (owner har session, så tokenläget behövs inte),
+   öppettidswidget och statistikvyn. `getBusinessAnalytics()` finns och är
+   testad — återanvänd panelen i `src/components/admin/analytics-panel.tsx`
+   men på spanska.
+4. Owner får aldrig röra tema, palett, slug eller status. Det är hela
+   idiotsäkerheten (PLAN.md §1.3 D).
+5. Utöka `npm run smoke` med owner-flödet och kör mot en lokal MySQL innan
+   PR:en stängs. Så här sätter du upp den i en tom container:
 
    ```bash
    apt-get update -qq && apt-get install -y -qq mysql-server
@@ -78,7 +92,8 @@ Allt finns redan i schemat (`subscriptions`, `payments`) — inga migreringar.
    ```
 
    Sedan `.env.local` med `DATABASE_URL=mysql://sitio:sitio-dev@127.0.0.1:3306/sitio`,
-   `npm run db:migrate && npm run db:seed`.
+   `npm run db:migrate && npm run db:seed`. (MariaDB duger inte — drizzles
+   `serial AUTO_INCREMENT` är MySQL-syntax och migreringarna faller.)
 
 Regler som gäller oförändrat: inga filer under `.github/workflows/`, noll
 hårdkodade absolut-URL:er, spanska (voseo) i kund-UI och svenska i superadmin,
@@ -86,6 +101,12 @@ varje mutation bakom `requireRole()` + tenant-filter, och QA-gaten
 (`theme:preview` + `theme:shots`) före varje temaändring.
 
 ## Kända skavanker (inte buggar som blockerar något)
+
+- Öppettider i intaken tar ett intervall per dag. Delade pass (siesta) är
+  vanliga i Paraguay och läggs till i admin efteråt — ett stegformulär på mobil
+  tål inte fyra tidsfält per dag.
+- Kunden kan inte ta bort en uppladdad bild själv under intake, bara lägga
+  till. Fototaket (8) stoppar värsta fallet, och du städar i admin.
 
 - `media.width` / `height` sparar originalets mått, inte variantens. Spelar
   ingen roll för loggan (renderas med max-height) men bör städas när
