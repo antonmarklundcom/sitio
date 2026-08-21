@@ -12,6 +12,16 @@ const eslintConfig = [
     ignores: [".next/**", "out/**", "build/**", "next-env.d.ts", "drizzle/**"],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // Serveråtgärder som körs med useActionState måste ta (prevState, formData)
+      // även när de inte använder dem. Understreck betyder "med flit oanvänd".
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

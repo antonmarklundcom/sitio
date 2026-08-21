@@ -6,6 +6,7 @@ import { logoutAction } from "../login/actions";
 // värre än en kort meny.
 const NAV = [
   { href: "/admin", label: "Sajter" },
+  { href: "/admin/alta", label: "Intake" },
   { href: "/admin/pagos", label: "Cobros" },
 ];
 

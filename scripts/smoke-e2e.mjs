@@ -40,8 +40,10 @@ if (p.url().includes('/admin/login')) {
 
 // 2. lista
 await p.goto(B+'/admin', { waitUntil: 'domcontentloaded' });
-const row1 = await p.locator('tbody tr').first().innerText({ timeout: 15000 });
-ok('lista renderar', row1.includes('Electricidad'));
+// Ordningen är senast ändrad först, så raden för seedens sajt kan ligga var
+// som helst — testet skapar egna sajter i senare steg.
+const listText = await p.locator('tbody').first().innerText({ timeout: 15000 });
+ok('lista renderar', listText.includes('Electricidad'));
 
 // 3. detaljsida + statistikpanel
 await p.goto(B+'/admin/sitios/1');
@@ -156,6 +158,87 @@ ok('betalningen står som bekräftad', afterConfirm.includes('Bekräftad'));
 // 9. analytics: beacon på publicerad sajt, avvisad på opublicerad
 const send = (bid, ua) => fetch(B+'/api/ev', {method:'POST', headers:{'content-type':'application/json','user-agent':ua}, body: JSON.stringify({b:bid,t:'whatsapp_click',p:'/smoke'})});
 ok('beacon svarar 204', (await send(1,'Mozilla/5.0 (iPhone)')).status === 204);
+
+// 10. intake: länk → kundformulär utan inloggning → foto via token → OTP → inlämning
+await p.goto(B + '/admin/alta', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1000);
+const negocio = 'Panadería Smoke ' + Date.now().toString().slice(-4);
+await p.fill('input[name=name]', negocio);
+await p.fill('input[name=phone]', '0985 334 221');
+await p.getByRole('button', { name: /Skapa länk/ }).click();
+await p.waitForTimeout(2500);
+ok('intake-länk skapad', (await p.locator('body').innerText()).includes(negocio));
+
+const intakeUrl = await p.locator('button[title^="http"]').first().getAttribute('title');
+const token = (intakeUrl ?? '').split('/alta/')[1] ?? '';
+ok('token utdelad', /^[0-9a-f]{32}$/.test(token));
+
+const cust = await b.newPage();
+await cust.goto(B + '/alta/' + token, { waitUntil: 'domcontentloaded' });
+await cust.waitForTimeout(800);
+ok('kundformuläret öppnas utan inloggning', (await cust.locator('h1').innerText()).includes('Panader'));
+
+await cust.fill(
+  'textarea[name=rawDescription]',
+  'Panadería de barrio con pan casero, facturas y tortas por encargo. Atendemos todos los días desde temprano.',
+);
+await cust.fill('input[name="service.0.name"]', 'Pan casero');
+await cust.fill('input[name="service.1.name"]', 'Tortas por encargo');
+await cust.fill('input[name=whatsappPhone]', '0985 334 221');
+await cust.fill('input[name=city]', 'Luque');
+await cust.getByRole('button', { name: /Guardar y seguir/ }).click();
+await cust.waitForTimeout(2500);
+ok('steg 1 sparat', cust.url().includes('paso=fotos'));
+
+await cust.waitForLoadState('networkidle');
+await cust.waitForTimeout(1200);
+await cust.locator('input[type=file]').last().setInputFiles({ name: 'pan.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+await cust.waitForTimeout(4000);
+ok('foto uppladdat via intake-token', (await cust.locator('.alta-photos img').count()) > 0);
+
+// Behörighetsgränserna för tokenläget i uppladdningsrouten.
+const anon = new FormData();
+anon.set('kind', 'photo');
+anon.set('businessId', '1');
+anon.set('file', new File([jpeg], 'x.jpg', { type: 'image/jpeg' }));
+ok('uppladdning utan token/session nekas', (await fetch(B + '/api/upload', { method: 'POST', body: anon })).status === 401);
+
+const receipt = new FormData();
+receipt.set('kind', 'receipt');
+receipt.set('token', token);
+receipt.set('file', new File([jpeg], 'x.jpg', { type: 'image/jpeg' }));
+ok('kvittouppladdning med intake-token nekas', (await fetch(B + '/api/upload', { method: 'POST', body: receipt })).status === 403);
+
+await cust.goto(B + '/alta/' + token + '?paso=verificacion', { waitUntil: 'domcontentloaded' });
+await cust.waitForTimeout(1000);
+await cust.getByRole('button', { name: /Pedir el código/ }).click();
+await cust.waitForTimeout(2000);
+
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1200);
+await p.getByRole('button', { name: 'Generera kod' }).first().click();
+await p.waitForTimeout(2500);
+const code = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
+ok('OTP-kod genererad och visad en gång för admin', Boolean(code));
+
+await cust.fill('input[name=code]', '000000');
+await cust.getByRole('button', { name: /Verificar/ }).click();
+await cust.waitForTimeout(2000);
+ok('fel kod avvisas', (await cust.locator('body').innerText()).includes('no coincide'));
+
+await cust.fill('input[name=code]', code ?? '');
+await cust.getByRole('button', { name: /Verificar/ }).click();
+await cust.waitForTimeout(2500);
+ok('rätt kod verifierar numret', (await cust.locator('body').innerText()).includes('verificado'));
+
+await cust.getByRole('button', { name: /Enviar mis datos/ }).click();
+await cust.waitForTimeout(3000);
+ok('inlämning ger tacksida', cust.url().includes('listo=1'));
+ok('länken stängd efter inlämning', (await fetch(B + '/alta/' + token)).status === 404);
+
+await p.goto(B + '/admin?status=pending_review', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1000);
+ok('sajten ligger i granskningskön', (await p.locator('body').innerText()).includes(negocio));
 
 await b.close();
 console.log(failed === 0 ? '\nAllt grönt.' : `\n${failed} kontroll(er) föll.`);

@@ -60,3 +60,21 @@ export function validateSlug(raw: string): SlugCheck {
   if (isReservedSlug(slug)) return { ok: false, error: "Ese enlace está reservado por el sistema." };
   return { ok: true, slug };
 }
+
+/**
+ * Första lediga slugen från en bas: "pizzeria-la-nona", annars -2, -3 …
+ *
+ * Används när ett utkast skapas åt kunden (intake, PR-10) och slugen ännu inte
+ * är ett medvetet val. Superadmin sätter den riktiga slugen före publicering —
+ * en slug som byts efter publicering kostar en 301-kedja.
+ */
+export function uniqueSlugCandidate(base: string, taken: Set<string>): string {
+  const root = (slugify(base) || "negocio").slice(0, 52);
+  let candidate = root;
+  let n = 1;
+  while (taken.has(candidate) || isReservedSlug(candidate)) {
+    n += 1;
+    candidate = `${root}-${n}`;
+  }
+  return candidate;
+}
