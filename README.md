@@ -156,13 +156,41 @@ pronto" (≤45 dagar) med en wa.me-länk per kund vars meddelande innehåller
 årets siffror — *"Tu página tuvo 340 visitas y 52 contactos por WhatsApp este
 año 📈"*. Saknas trafik utelämnas siffrorna hellre än att skönmålas.
 
+## Intake (onboarding av ny kund)
+
+Superadmin skapar utkast + länk i `/admin/alta`, delar den via WhatsApp, och
+kunden fyller i själv på `/alta/<token>` — tre steg: **datos → fotos →
+verificación**. Länken gäller 14 dagar och stängs när formuläret skickas in.
+
+- Utkastet finns i databasen redan när kunden öppnar länken. Varje fält kunden
+  fyller i uppdaterar en rad du kan se, i stället för att leva i webbläsaren
+  tills allt skickas.
+- Kundens råtext sparas i `rawDescription` och publiceras **aldrig** oredigerad;
+  `description` sätts av dig i admin (ev. med AI-puts).
+- Uppladdning under intake går genom samma `/api/upload` som adminet, men
+  auktoriseras av token i stället för session. Token bestämmer själv vilket
+  business bilden hamnar på — ett `businessId` i formuläret ignoreras — och
+  bara `photo` och `logo` släpps igenom, aldrig `receipt`.
+- **OTP:** koden genereras av dig i `/admin/alta` och visas **en gång**. Bara
+  hashen lagras (HMAC med `SESSION_SECRET`), så en tappad kod ersätts av en ny
+  — den går inte att läsa upp. Du skickar den från din egen WhatsApp tills
+  Cloud API finns (PR-17). Koden lever 10 minuter och tål fem försök.
+- Byter kunden WhatsApp-nummer nollställs verifieringen. Ett verifierat nummer
+  ska inte kunna bytas mot ett obekräftat efter godkännandet.
+- Inlämning kräver beskrivning, två tjänster, verifierat nummer och minst en
+  bild ⇒ status `pending_review` och länken stängs.
+
+Okänd, utgången och redan inskickad token ger alla samma 404 — sidan får inte
+gå att använda för att gissa fram giltiga länkar.
+
 ## Röktest mot riktig databas
 
 `npm run smoke` kör en riktig genomgång med Playwright mot en byggd app och en
 riktig MySQL: inloggning, sajtlistan, statistikpanelen, CRUD med
 ISR-invalidering, slug-byte med permanent redirect, preview-token (giltig och
 ogiltig), bilduppladdning genom sharp och ut via `/media`, prenumeration →
-betalning → bekräftelse → förlängd period, samt beaconen.
+betalning → bekräftelse → förlängd period, hela intake-flödet med OTP
+(inklusive att uppladdning utan token nekas), samt beaconen.
 
 ```bash
 npm run db:migrate && npm run db:seed

@@ -4,6 +4,9 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, businessModules, media } from "@/db/schema";
 import { currentUser } from "@/lib/session";
+import { getIntakeBusinessId } from "@/db/intake-queries";
+import { tokenFingerprint } from "@/lib/intake";
+import { rateLimit } from "@/lib/rate-limit";
 import { logActivity } from "@/lib/auth";
 import { processImage } from "@/lib/media";
 import {
@@ -23,11 +26,28 @@ function isKind(v: string): v is Kind {
 }
 
 export async function POST(req: Request) {
-  const user = await currentUser();
-  if (!user) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
-
   const form = await req.formData();
-  const businessId = Number(form.get("businessId"));
+  const user = await currentUser();
+
+  /**
+   * Två sätt att vara behörig: en inloggad session (admin/owner), eller en
+   * giltig intake-token (PR-10) — kunden som fyller i formuläret har inget
+   * konto. Token slås upp mot databasen och bestämmer SJÄLV vilket business
+   * uppladdningen hamnar på; ett businessId i formuläret ignoreras då.
+   */
+  const intakeToken = String(form.get("token") ?? "").trim();
+  let businessId = Number(form.get("businessId"));
+
+  if (!user) {
+    if (!intakeToken) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+    if (!rateLimit(`upload-token:${tokenFingerprint(intakeToken)}`, 30, 600_000).ok) {
+      return NextResponse.json({ error: "Demasiadas subidas. Esperá unos minutos." }, { status: 429 });
+    }
+    const tokenBusinessId = await getIntakeBusinessId(intakeToken);
+    if (!tokenBusinessId) return NextResponse.json({ error: "Este enlace ya no es válido." }, { status: 403 });
+    businessId = tokenBusinessId;
+  }
+
   const kindRaw = String(form.get("kind") ?? "photo");
   const file = form.get("file");
 
@@ -37,8 +57,15 @@ export async function POST(req: Request) {
   if (!isKind(kindRaw)) return NextResponse.json({ error: "Ogiltig bildtyp." }, { status: 400 });
   if (!(file instanceof File)) return NextResponse.json({ error: "Ingen fil bifogad." }, { status: 400 });
 
-  // Tenant-check: en owner får bara ladda upp till sitt eget business.
-  if (user.role !== "superadmin" && user.businessId !== businessId) {
+  // Tenant-check: en owner får bara ladda upp till sitt eget business. Kunden
+  // med intake-token har redan fått businessId satt av token ovan.
+  if (user && user.role !== "superadmin" && user.businessId !== businessId) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  }
+
+  // Kvitton hör till betalningsflödet i admin och ska aldrig gå att ladda upp
+  // med en intake-token.
+  if (!user && kindRaw !== "photo" && kindRaw !== "logo") {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 
@@ -117,10 +144,11 @@ export async function POST(req: Request) {
   }
 
   await logActivity({
-    actorUserId: user.userId,
+    // Utan session är det kunden själv som laddat upp via intake-länken.
+    actorUserId: user?.userId ?? null,
     businessId,
     action: "media_uploaded",
-    meta: { kind: kindRaw, fileKey: processed.fileKey, bytes: processed.bytes },
+    meta: { kind: kindRaw, fileKey: processed.fileKey, bytes: processed.bytes, viaIntake: !user },
   });
 
   revalidatePath(`/admin/sitios/${businessId}`);
