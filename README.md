@@ -183,6 +183,36 @@ verificación**. Länken gäller 14 dagar och stängs när formuläret skickas i
 Okänd, utgången och redan inskickad token ger alla samma 404 — sidan får inte
 gå att använda för att gissa fram giltiga länkar.
 
+## Moduler
+
+Bas är en one-page. Modulerna (`business_modules`) är upsellen och slås på per
+kund i `/admin/sitios/<id>` → **Moduler**. Att slå på en är en flagga, aldrig en
+migrering — raden finns i schemat från dag 1 (PLAN.md §1.6).
+
+| Modul | Vad påslaget faktiskt gör | Status |
+|---|---|---|
+| `gallery` | Fototaket i `/api/upload` går från 8 till 20, och temat renderar hela fotoserien i stället för de tre till sex första. | Byggd |
+| `menu` | Meny med sektioner och Gs-priser. | PR-13 |
+| `products` | Produktlista. | PR-14 |
+| `extra_pages` | Undersidor + sitemap. | PR-18 |
+| `booking` | Turno-förfrågan via wa.me. | Fas 3 |
+
+Moduler som ännu inte är byggda går att slå på — flaggan och faktureringen får
+ligga före koden — men panelen märker dem "ej byggt än", i stället för att låtsas
+att växeln gör något.
+
+Fototaket räknas ut på ett enda ställe (`photoLimitFor()`). Owner-panelens
+"12/20" och uppladdningens avslag kommer därför från samma regel; innan dess
+kunde de två säga olika saker om samma sajt.
+
+`enabledAt` sätts om vid varje ny påslagning — det är datumet du fakturerar
+ifrån (PLAN.md D10: helår vid aktivering). Vid avstängning lämnas det kvar, för
+att veta när modulen senast var aktiv är mer värt än ett tomt fält.
+
+Stänger du av galleriet på en sajt som redan har fler än 8 foton varnar panelen:
+temat visar bara de första, och nya uppladdningar nekas tills antalet är under
+taket. Befintliga bilder raderas aldrig av en avstängd modul.
+
 ## Owner-panelen (/mi-sitio)
 
 Företagaren loggar in med WhatsApp-OTP — inget lösenord att glömma, och numret
@@ -204,8 +234,13 @@ Företagaren loggar in med WhatsApp-OTP — inget lösenord att glömma, och num
   inte med och kan därför inte ändras ens med ett handskrivet formulär.
 - **Tenanten läses ur sessionen, aldrig ur formuläret.** Det gäller också
   `/api/upload`: för en owner-session ignoreras `businessId` i posten helt.
-- Owner kan byta huvudbild och radera foton, men inte det sista fotot — en
-  publicerad sajt utan bild ser trasig ut, och det är kundens egen sajt.
+- Owner kan byta huvudbild, sortera och radera foton, men inte det sista fotot
+  — en publicerad sajt utan bild ser trasig ut, och det är kundens egen sajt.
+- **Sorteringen är basfunktion, inte gallerifunktion.** Utan `gallery` visar
+  temat de tre till sex första bilderna, så ordningen bestämmer vilka som syns.
+  Modulen höjer taket och visar hela serien — den äger inte ordningen.
+- Modulväxlarna finns bara i `/admin`. En owner som postar adminets formulär
+  möter `requireRole("superadmin")`: ingen slår på sin egen upsell.
 - Superadmin når `/mi-sitio?sitio=<id>` för att se en kunds vy. Motsatsen
   gäller aldrig: en owner har inget i `/admin` att göra.
 
@@ -217,7 +252,8 @@ ISR-invalidering, slug-byte med permanent redirect, preview-token (giltig och
 ogiltig), bilduppladdning genom sharp och ut via `/media`, prenumeration →
 betalning → bekräftelse → förlängd period, hela intake-flödet med OTP
 (inklusive att uppladdning utan token nekas), owner-inloggningen med
-tenant-gränserna, samt beaconen.
+tenant-gränserna, modulväxeln (av → på → höjt fototak) med owners fotosortering
+hela vägen ut på den publika sajten, samt beaconen.
 
 ```bash
 npm run db:migrate && npm run db:seed
@@ -235,7 +271,7 @@ subfråga jämförde med sin EGEN id-kolumn (alla sajter fick samma statistik oc
 fel betalstatus), och att `drizzle-kit` inte läser `.env.local` — den fil
 README säger åt dig att skapa.
 
-Sviten är 46 kontroller. Utöver den är betalningarnas livscykel verifierad mot
+Sviten är 58 kontroller. Utöver den är betalningarnas livscykel verifierad mot
 databasen i PR-09:
 respit håller sajten uppe, förfall pausar den (404 + ur sitemap), en andra
 körning är en no-op, och en bekräftad betalning publicerar den igen.

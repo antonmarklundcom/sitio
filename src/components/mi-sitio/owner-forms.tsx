@@ -209,15 +209,19 @@ export function OwnerPhotos({
   logoUrl,
   heroMediaId,
   maxPhotos,
+  hasGallery,
   setHero,
   deletePhoto,
+  movePhoto,
 }: {
   photos: { id: number; url: string }[];
   logoUrl: string | null;
   heroMediaId: number | null;
   maxPhotos: number;
+  hasGallery: boolean;
   setHero: (formData: FormData) => Promise<void>;
   deletePhoto: (formData: FormData) => Promise<void>;
+  movePhoto: (formData: FormData) => Promise<void>;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -287,8 +291,13 @@ export function OwnerPhotos({
           Fotos ({photos.length}/{maxPhotos})
         </h2>
         <p>La foto marcada como principal es la que se ve arriba de todo en tu página.</p>
+        <p>
+          {hasGallery
+            ? "El resto se muestra en tu galería, en el orden que armes acá."
+            : `Tu plan muestra las primeras fotos de la lista, así que el orden decide cuáles se ven. Con la galería entran las ${maxPhotos}.`}
+        </p>
         <div className="panel-photos">
-          {photos.map((photo) => (
+          {photos.map((photo, i) => (
             <figure key={photo.id} className={photo.id === heroMediaId ? "is-hero" : undefined}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo.url} alt="" loading="lazy" />
@@ -301,6 +310,29 @@ export function OwnerPhotos({
                     <button type="submit">Hacer principal</button>
                   </form>
                 )}
+                {photos.length > 1 ? (
+                  <span className="panel-photo-order">
+                    <form action={movePhoto}>
+                      <input type="hidden" name="mediaId" value={photo.id} />
+                      <input type="hidden" name="direction" value="up" />
+                      <button type="submit" disabled={i === 0} aria-label={`Mover la foto ${i + 1} antes`}>
+                        ↑
+                      </button>
+                    </form>
+                    <span className="pos">{i + 1}</span>
+                    <form action={movePhoto}>
+                      <input type="hidden" name="mediaId" value={photo.id} />
+                      <input type="hidden" name="direction" value="down" />
+                      <button
+                        type="submit"
+                        disabled={i === photos.length - 1}
+                        aria-label={`Mover la foto ${i + 1} después`}
+                      >
+                        ↓
+                      </button>
+                    </form>
+                  </span>
+                ) : null}
                 {photos.length > 1 ? (
                   <form action={deletePhoto}>
                     <input type="hidden" name="mediaId" value={photo.id} />

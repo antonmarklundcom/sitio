@@ -33,6 +33,9 @@ import {
   updateAltTextAction,
 } from "../media-actions";
 import { MediaGrid, MediaUploader, type MediaItem } from "@/components/admin/media-manager";
+import { ModulesPanel } from "@/components/admin/modules-panel";
+import { listModuleStates } from "@/db/module-queries";
+import { toggleModuleAction } from "../module-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -64,12 +67,13 @@ export default async function EditBusinessPage({
   const business = await getBusinessById(businessId);
   if (!business) notFound();
 
-  const [mediaRows, analytics, subscription, paymentRows, yearStats] = await Promise.all([
+  const [mediaRows, analytics, subscription, paymentRows, yearStats, moduleStates] = await Promise.all([
     listMediaForBusiness(businessId),
     getBusinessAnalytics(businessId),
     getCurrentSubscription(businessId),
     getPaymentsWithReceipts(businessId),
     getYearStats(businessId),
+    listModuleStates(businessId),
   ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
@@ -250,6 +254,13 @@ export default async function EditBusinessPage({
         registerPayment={registerPaymentAction.bind(null, business.id)}
         confirmPayment={confirmPaymentAction}
         rejectPayment={rejectPaymentAction}
+      />
+
+      <ModulesPanel
+        businessId={business.id}
+        modules={moduleStates}
+        photoCount={photos.length}
+        toggleModule={toggleModuleAction}
       />
 
       <Card>

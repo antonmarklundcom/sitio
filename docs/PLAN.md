@@ -106,6 +106,18 @@ systemet, eller kopplas till plan):
 Datamodellen (2.x) gör varje modul till en rad i `business_modules` + egna
 tabeller — att slå på en modul är en flagga, aldrig en migrering.
 
+Två regler som PR-12 slog fast:
+
+- **Modulen höjer taket, den äger inte ordningen.** Owner får sortera sina
+  foton på basplanen också: temana visar de tre till sex första bilderna när
+  `gallery` är av, så ordningen avgör *vilka* bilder kunden visar upp. Att låsa
+  sorteringen bakom modulen hade gjort basplanen sämre än den behöver vara utan
+  att göra galleriet mer säljbart.
+- **Växeln ljuger aldrig om vad den gör.** Moduler får slås på innan funktionen
+  finns — flaggan och faktureringen ska kunna ligga före implementationen — men
+  adminet märker dem "ej byggt än (PR-xx)", precis som temaväljaren gör med
+  teman som ännu inte är byggda.
+
 ### 1.7 Betalning i Paraguay (v1: manuell, inte Stripe)
 
 - Pris i heltal Gs (`bigint`), visning `₲ 300.000` (es-PY, inga decimaler).

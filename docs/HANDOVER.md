@@ -1,7 +1,7 @@
 # Läge och nästa steg
 
-> Skriven i slutet av sessionen som byggde PR-07 och PR-08. Läs den här filen
-> först i nästa session, sedan `PLAN.md`.
+> Uppdaterad i slutet av sessionen som byggde PR-12. Läs den här filen först i
+> nästa session, sedan `PLAN.md`.
 
 ## Var bygget står
 
@@ -13,7 +13,8 @@
 | **PR-09** | Prenumerationer, betalningsadmin, livscykel active→grace→expired, "Vencen pronto" | Mergad (#10) |
 | **PR-10** | Intake med tokenad länk, tre steg, manuell WhatsApp-OTP | Mergad (#11) |
 | **PR-11** | Owner-auth (WhatsApp-OTP), `/admin/accesos`, `/mi-sitio` med whitelistad redigering | Mergad (#13) |
-| PR-12 → | Fas 2 fortsätter: moduler, radar | **Nästa** |
+| **PR-12** | Modul-infra: modulväxel per kund i admin, `photoLimitFor()` som enda fototakskälla, owner sorterar sina foton | Mergad |
+| PR-13 → | Fas 2 fortsätter: meny, produkter, teman 4–6, radar | **Nästa** |
 
 **Fas 1 är färdigbyggd** och fas 2 är påbörjad. Det som återstår innan första
 betalande kund är deploy-steg A och B — infrastruktur, inte kod.
@@ -42,8 +43,17 @@ PR-08 installerade MySQL 8.0.46 i containern och körde igenom kedjan. Följande
   blockeras från `/admin`, ändring slår igenom på publika sajten via ISR, och
   en owner som postar ett främmande `businessId` skriver ändå till sin egen
   sajt.
+- Modulerna (PR-12): växeln av → på → av, `enabledAt` sätts, fototaket följer
+  modulen i både owner-panelen och `/api/upload`, obyggda moduler märks som
+  obyggda, och owners omsortering slår igenom på den publika sajten via ISR.
 
-Röktestet är nu 46 kontroller. Kör det efter varje PR som rör admin, intake,
+PR-12 lagade också två röktest som ljög: fotouppladdningen i admin träffade
+betalningsformulärets kvittofält (`input[type=file]` matchade det först på
+sidan, och kvittofältet ligger före bildrutan), och owner-kontokontrollen
+matchade skiftlägeskänsligt mot en rubrik som CSS versaliserar — så knappen
+"Skapa konto" klickades aldrig. Båda passerade grönt utan att mäta något.
+
+Röktestet är nu 58 kontroller. Kör det efter varje PR som rör admin, intake,
 betalningar, owner-panelen eller uppladdning. Två körningar tätt inpå varandra
 slår i inloggningens rate limit (5 försök / 15 min, per process) — starta om
 servern mellan körningarna.
@@ -66,19 +76,22 @@ Allt nedan kräver Hostinger och kan inte mätas härifrån:
    då uppdateras siffrorna först när du öppnar adminet.
 4. **Byggtid och minne på Hostinger-noden.** `next build` här tar ~40 s.
 
-## Nästa session: PR-12 (modul-infra + gallery)
+## Nästa session: PR-13 (menu-modulen)
 
-1. **`business_modules`-admin**: slå på/av moduler per kund. Tabellen finns,
-   `businessModules` läses redan av `getSiteBySlug()` och skickas till temana
-   som `modules: Set<string>` — temana renderar alltså redan villkorat.
-   `servicios` och `gastronomia` respekterar `gallery` för fotoantalet, och
-   `/api/upload` höjer fototaket från 8 till 20 när modulen är på.
-2. **Gallery-modulen i owner-vyn**: owner ska kunna sortera sina foton, inte
-   bara byta huvudbild. `moveMediaAction` i adminets `media-actions.ts` har
-   mönstret (skriv om hela ordningen, byt inte två sortOrder-värden).
-3. Bygg vidare på mönstret från PR-11: whitelist i `src/lib/owner-form.ts`,
-   tenant ur sessionen, aldrig ur formuläret.
-4. Utöka `npm run smoke` (46 kontroller i dag) och kör mot en lokal MySQL innan
+Modul-infran finns nu, så PR-13 är att fylla en av flaggorna med innehåll:
+
+1. `menu_sections` + `menu_items` finns i schemat. CRUD för owner ska vara
+   idiotsäker: bara namn, pris, beskrivning, bild och "tillgänglig".
+2. Rendering i `gastronomia`-temat plus en generisk fallback — en kund med
+   menyn påslagen och `servicios`-temat får inte en tom sida.
+3. `menu_view`-event till analytics, så radarn (PR-16) kan se om modulen
+   används.
+4. Mönstret att kopiera ligger i PR-12: registret i `src/lib/modules.ts` (sätt
+   `plannedIn: undefined` när modulen är byggd), frågorna i
+   `src/db/module-queries.ts`, växeln i `src/components/admin/modules-panel.tsx`
+   och owner-mutationerna i `src/app/mi-sitio/actions.ts` — whitelist, tenant ur
+   sessionen, aldrig ur formuläret.
+5. Utöka `npm run smoke` (58 kontroller i dag) och kör mot en lokal MySQL innan
    PR:en stängs. Så här sätter du upp den i en tom container:
 
    ```bash
@@ -93,6 +106,8 @@ Allt nedan kräver Hostinger och kan inte mätas härifrån:
    Sedan `.env.local` med `DATABASE_URL=mysql://sitio:sitio-dev@127.0.0.1:3306/sitio`,
    `npm run db:migrate && npm run db:seed`. (MariaDB duger inte — drizzles
    `serial AUTO_INCREMENT` är MySQL-syntax och migreringarna faller.)
+   Verifierat i PR-12: apt-vägen fungerar i sandlådan även när Docker Hub är
+   blockerat.
 
 Regler som gäller oförändrat: inga filer under `.github/workflows/`, noll
 hårdkodade absolut-URL:er, spanska (voseo) i kund-UI och svenska i superadmin,
@@ -109,6 +124,10 @@ varje mutation bakom `requireRole()` + tenant-filter, och QA-gaten
   tål inte fyra tidsfält per dag.
 - Kunden kan inte ta bort en uppladdad bild själv under intake, bara lägga
   till. Fototaket (8) stoppar värsta fallet, och du städar i admin.
+- Modulväxeln ändrar inte prenumerationens pris. Priset sätts av dig utanför
+  systemet (PLAN.md D10) — `enabledAt` är datumet du räknar året från.
+- Sorteringen flyttar en bild ett steg i taget. Drag-and-drop är trevligare men
+  kräver klientstate och touch-hantering; med 8–20 bilder räcker knapparna.
 
 - `media.width` / `height` sparar originalets mått, inte variantens. Spelar
   ingen roll för loggan (renderas med max-height) men bör städas när
