@@ -2,7 +2,10 @@
 
 Foot-in-the-door-SaaS för paraguayanska småföretag: en WhatsApp-first one-page-sajt
 på `sitio.com.py/[slug]`. Se [`docs/PLAN.md`](docs/PLAN.md) för produkt- och byggplan,
-[`docs/RUNNER-POLICY.md`](docs/RUNNER-POLICY.md) för CI-/minutpolicyn.
+[`plan.md`](plan.md) + [`prompts/`](prompts/) för pågående byggrunda (fasplan,
+modell per fas, autonomiprotokoll), [`docs/REPORT-2026-09.md`](docs/REPORT-2026-09.md)
+för granskningen bakom den, och [`docs/RUNNER-POLICY.md`](docs/RUNNER-POLICY.md)
+för CI-/minutpolicyn.
 
 ## Stack
 
