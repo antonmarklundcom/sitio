@@ -41,6 +41,14 @@ export const env = {
     return process.env.ANTHROPIC_API_KEY ?? "";
   },
   /**
+   * Säljnumret bakom landningssidans enda CTA. Saknas det renderas knappen
+   * mot ankaret `#contacto` och bygget varnar — sidan går alltid att bygga.
+   * NEXT_PUBLIC_ betyder att värdet bakas in i klientbundeln vid bygget.
+   */
+  get salesWhatsapp() {
+    return process.env.NEXT_PUBLIC_SALES_WHATSAPP ?? "";
+  },
+  /**
    * Timförskjutning från databasens klocka till Asunción-dygnet i rollupen.
    * Default -3 förutsätter att MySQL står på UTC — verifieras vid deploy.
    */
