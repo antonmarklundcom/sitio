@@ -121,7 +121,6 @@
 .lp-btn svg { flex: none; }
 .lp-btn--primary { background: var(--accent); color: var(--on-accent); }
 .lp-btn--ghost { border-color: var(--line-strong); color: var(--ink); }
-.lp-btn--ghost svg { display: none; }
 .lp-btn:hover { transform: translateY(-1px); }
 .lp-btn--primary:hover { background: #48e08f; }
 .lp-btn--ghost:hover { border-color: var(--ink); }
