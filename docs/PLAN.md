@@ -4,7 +4,10 @@
 > Drizzle ORM, MySQL (Hostinger), Hostinger managed Node.js, deploy via GitHub-webhook
 > (budgeted-runner-policy, se `docs/RUNNER-POLICY.md`: inga filer under
 > `.github/workflows/` utan Antons uttryckliga ja — default är noll).
-> Kundsajter ligger på `sitio.com.py/[slug]` — folder-baserat, inte subdomäner.
+> Kundsajter ligger på `sitio.com.py/[slug]` — folder-baserat, inte subdomäner
+> (omprövat och bekräftat 2026-09-13, se §1.11).
+> 2026-09-13: §1.5 (tema låst av bransch, fyra teman), §1.7 (prislista) och
+> D2/D10 uppdaterade av planeringssessionen; byggplanen ligger i `plan.md`.
 > Domänen är ännu inte registrerad: bygg och deploya på Hostingers temp-domän,
 > byt till `sitio.com.py` via `NEXT_PUBLIC_BASE_URL` + A-record (se §3, Deploy).
 
@@ -15,7 +18,8 @@
 ### 1.1 Vad produkten är
 
 En foot-in-the-door-SaaS för paraguayanska småföretagare: en färdig, snygg,
-WhatsApp-first one-page-sajt på `sitio.com.py/[slug]` för 200.000–600.000 Gs/år.
+WhatsApp-first one-page-sajt på `sitio.com.py/[slug]` för 400.000 (Básico) eller
+600.000 Gs/år (Plus) — prislistan i §1.7.
 Säljs manuellt via WhatsApp i v1. Produkten är samtidigt en upsell-radar:
 analytics per sajt (besök + WhatsApp-klick) identifierar heta kunder för CRM,
 Google Business Profile, annonsering och riktig hemsida på egen domän.
@@ -26,6 +30,8 @@ Google Business Profile, annonsering och riktig hemsida på egen domän.
 |---|---|---|
 | `superadmin` | Du | Allt: skapa/redigera/publicera/pausa/ta bort sajter, bekräfta betalningar, se all statistik, hantera moduler |
 | `owner` | Företagaren | Redigera texter, byta bilder, ändra öppettider, se sin egen statistik. Kan INTE: byta tema, ändra slug, röra design-tokens, publicera/avpublicera |
+
+Ingen roll väljer tema eller palett: de följer branschen (§1.5).
 
 ### 1.3 Kärnflöden
 
@@ -67,24 +73,40 @@ sparas som vanliga fält, redigerbara efteråt. Kostnad ~noll per sajt, körs en
 gång. Detta löser också doorway-/duplicate-content-risken: 200 sajter med
 identisk mallprosa och bara namnet utbytt rankar sämre och ser billigt ut.
 
-### 1.5 Teman (6 st, branschanpassade)
+### 1.5 Teman (4 st, låsta av bransch — beslut 2026-09-13)
 
-Ett tema = en komponentuppsättning + en design-token-fil + 3–4 palettvarianter.
-Spänningen mot web-design-system-skillens registerregel (unika accenter ≥40°
-isär) är olöslig vid 200+ kunder — lösningen är: **6 teman × 4 palettvarianter
-× olika hero-mönster = 24 grundutseenden**, plus att kundens logga/foton bär
-det mesta av identiteten. Sajterna länkar aldrig till varandra, så kollisioner
-syns bara om två grannar i samma bransch får samma tema+variant — admin väljer
-variant manuellt, så det undviks vid publicering.
+Ett tema = en komponentuppsättning + en design-token-fil + palettvarianter.
+**Branschen bestämmer tema och palett.** `themeKey` och `paletteVariant`
+härleds ur `businesses.category` av en enda ren funktion
+(`presentationFor(category)`, `src/lib/presentation.ts`) och skrivs på varje
+väg som skapar eller sparar ett företag. Ingen väljare i admin, inget val per
+kund, ingen override-flagga. Kolumnerna finns kvar i schemat (ingen migrering)
+som det lagrade, alltid synkade resultatet.
 
-| Temakey | Bransch | Track (web-design-system) | Karaktär |
-|---|---|---|---|
-| `comercio` | butik/handel | EDITORIAL | ljus, produktkort, prislista-modul naturlig |
-| `servicios` | plomero/electricista/cerrajero m.fl. | INDUSTRIAL | mörk hero, hög kontrast, stor WhatsApp-CTA, zonlista |
-| `gastronomia` | restaurang/café | WARM CRAFT | varm, bildtung, meny-modul central |
-| `salud` | clínica/dentista/consultorio | CLINICAL | lugn, förtroende, öppettider + turnos framträdande |
-| `belleza` | salón/barbería/estética | WARM CRAFT (egen typografi/palettfamilj) | mjuk, galleri central |
-| `taller` | mecánica/gomería | INDUSTRIAL (egen palettfamilj) | robust, tjänster + telefon/WhatsApp direkt |
+Skälet: innehållet ska bära sajten, inte dekorationen. Kundens logga, foton och
+AI-putsade text är identiteten; två frisörer i samma barrio får samma tema och
+samma palett, och det är avsiktligt. Färre teman är dessutom billigare för
+alltid: varje modul och varje tvärgående ändring rör fyra temakataloger, inte
+sex. Den tidigare tanken "24 grundutseenden, admin väljer variant för hand"
+utgår.
+
+| Bransch (`category`) | Tema | Variant | Accent | Karaktär |
+|---|---|---|---|---|
+| `servicios` | `servicios` | 2 | cyan 186° | INDUSTRIAL: mörk hero, hög kontrast, stor WhatsApp-CTA, zonlista |
+| `taller` | `servicios` | 1 | orange 29° | samma tema — mecánica/gomería är samma säljsituation |
+| `comercio` | `comercio` | 1 | blå 212° | EDITORIAL: ljus, nästan neutral, produktkort |
+| `otro` | `comercio` | 2 | grön 163° | det neutralaste temat är det säkraste för okänd bransch |
+| `gastronomia` | `gastronomia` | 1 | rödbrun 11° | WARM CRAFT: varm, bildtung, meny central |
+| `salud` | `salud` | 1 | teal | CALM: ljus, öppettider + turnos först, fotoblock efter heron |
+| `belleza` | `salud` | 2 | rosa | samma tema — salong och klinik är båda turno-verksamheter, fotona bär sajten |
+
+`themeKey`-enumet behåller värdena `belleza` och `taller` (ingen migrering)
+men ingen rad skrivs någonsin med dem; ett enhetstest låser tabellen ovan.
+Variant 3–4 i varje tema är en vilande, kontrastverifierad reserv som inget
+väljer. Byggs som S7 i `plan.md` §6.5; temat `salud` byggs av S2 (§6.2 där).
+Återhållsamhetsregeln för alla teman: accent på högst tre elementtyper, ink på
+all text, hårstreck i stället för fyllda paneler — läser en sektion som
+dekoration utan demofotona, stryk den.
 
 Varje tema följer skillens hårda regler: en accent, WhatsApp-grönt endast i
 knappglyfen, grain på mörka sektioner, motion.js-mönstret, scrim på text-över-bild,
@@ -92,8 +114,10 @@ mobil-först (nästan all PY-trafik är mobil).
 
 ### 1.6 Moduler (upsell inuti produkten)
 
-Bas = one-page. Moduler slås på per kund av superadmin (prissätts av dig utanför
-systemet, eller kopplas till plan):
+Bas = one-page. Moduler slås på per kund av superadmin och säljs inte styckvis:
+de ingår i planen Plus (prislistan i §1.7). Bransch avgör vilken innehållsmodul
+som är den naturliga i Plus (meny för gastronomía, produkter för comercio/otro,
+galleri för alla):
 
 | Modulkey | Innehåll | Kräver |
 |---|---|---|
@@ -118,9 +142,37 @@ Två regler som PR-12 slog fast:
   adminet märker dem "ej byggt än (PR-xx)", precis som temaväljaren gör med
   teman som ännu inte är byggda.
 
-### 1.7 Betalning i Paraguay (v1: manuell, inte Stripe)
+### 1.7 Pris och betalning i Paraguay (v1: manuell, inte Stripe)
 
-- Pris i heltal Gs (`bigint`), visning `₲ 300.000` (es-PY, inga decimaler).
+**Prislista (beslut 2026-09-13; siffrorna väntar på Antons godkännande i
+`docs/decisions-needed.md`, strukturen är låst).** Två sålda nivåer, samma
+pris för alla branscher. Bransch ändrar aldrig priset — den ändrar bara vilken
+innehållsmodul Plus innehåller. Inga moduler à la carte.
+
+| Plan | Pris/år | Ingår | Moduler |
+|---|---|---|---|
+| **Básico** | ₲ 400.000 | one-page-sajt på `sitio.com.py/[slug]`, branschtema, logga + upp till 8 foton, WhatsApp-CTA, öppettider med "abierto ahora", karta, sociala länkar, AI-putsad text, SEO + JSON-LD, statistik i `/mi-sitio` | inga |
+| **Plus** | ₲ 600.000 | allt i Básico | `gallery` (20 foton) + branschens innehållsmodul: `menu` (gastronomía), `products` (comercio, otro); övriga branscher får galleriet som sin modul |
+| **Pro** | reserverad (förslag ₲ 900.000) | allt i Plus | `extra_pages` och `booking` när de finns (fas 3). Säljs inte förrän då |
+
+Regler:
+
+- Varför två nivåer: en flat ₲ 500.000 hade dödat modul-upsellen som radarn
+  (§1.10) finns för att sälja; tre nivåer säljer sämre i ett WhatsApp-meddelande
+  än två. ₲ 400.000 är fortfarande under en timmes konsultarvode.
+- Varför bransch inte påverkar priset: menyn är det som får en restaurangsajt
+  att ranka och konvertera; kostar den extra väljs den bort. Kostnaden för dig
+  är densamma som för produktmodulen.
+- Uppgradering mitt i året: mellanskillnaden (₲ 200.000) betalas rakt av,
+  förfallodatumet ligger kvar, nästa förnyelse sker till den nya nivåns pris
+  (ersätter D10:s "helår vid aktivering"; enklare att förklara och inget
+  pro-rata-räknande).
+- Admin behåller fritt `priceGs` per prenumeration — du förhandlar. Listan är
+  defaultvärdet (`PLAN_SUGGESTED_PRICE_GS`), inte en spärr. Landningssidan
+  säger "desde ₲ 400.000 por año".
+- D4-rabatten ("Hecho con sitio.com.py"-länk) är fortfarande av som default.
+
+- Pris i heltal Gs (`bigint`), visning `₲ 400.000` (es-PY, inga decimaler).
 - Flöde: du säljer via WhatsApp → skapar `subscription` (plan, pris, `startsAt`,
   `expiresAt` = +1 år) → kunden betalar via **transferencia/giros/Tigo Money/
   Billetera Personal/efectivo** → skickar comprobante-foto via WhatsApp → du
@@ -129,7 +181,7 @@ Två regler som PR-12 slog fast:
 - **Förnyelse:** admin-vy "Vencen pronto" (≤45 dagar). Per kund: en
   wa.me-deeplink med förifyllt meddelande som inkluderar årets statistik —
   *"Tu página tuvo 340 visitas y 52 contactos por WhatsApp este año 📈.
-  Renovamos por ₲ 300.000?"* Det är säljargumentet, byggt in i produkten.
+  Renovamos por ₲ 400.000?"* Det är säljargumentet, byggt in i produkten.
 - Livscykel efter förfall: `active` → (förfallodatum) `grace` (15 dagar, sajten
   uppe) → `expired` ⇒ business `paused` (sajten svarar 404 + `noindex`; datat
   finns kvar). Allt manuellt bekräftat men systemet räknar ut datumen.
@@ -203,6 +255,15 @@ Två regler som PR-12 slog fast:
   (Fas 3-option: pusha hot leads till VenderCRM via `vendercrm-lead-capture`.)
 
 ### 1.11 Routing & reserverade slugs
+
+**URL-strukturen omprövad och bekräftad 2026-09-13:** `sitio.com.py/[slug]`,
+sökvägsbaserat. Skäl som fortfarande håller: ingen wildcard-DNS eller
+wildcard-cert på delad Hostinger-hosting, ett enda `NEXT_PUBLIC_BASE_URL`,
+domänauktoriteten delas från dag ett (en ny .com.py rankar långsamt), och
+`src/app/[slug]` är redan byggt och röktestat. Subdomäner eller egna domäner
+per kund är fortfarande upsellen "riktig hemsida" utanför produkten, inte en
+routingändring här. Inget i routingen ändras utan ett konkret skäl som Anton
+godkänner först.
 
 - `app/[slug]/page.tsx` (+ `app/[slug]/[page]/page.tsx` för extra_pages-modulen).
 - Reserverad slug-lista i kod: `admin, mi-sitio, alta, api, media, login,
@@ -522,7 +583,7 @@ tidigare PR verifieras lokalt.)
 | **PR-12 Modul-infra + gallery** | business_modules-admin (slå på/av per kund), tema-sektioner renderar villkorat, gallery-modulen (owner kan sortera/byta upp till 20 foton) | M |
 | **PR-13 Menu-modul** | Sektioner + rätter + Gs-priser, owner-CRUD (idiotsäker: bara text/pris/bild/tillgänglig), rendering i gastronomia-temat + generisk fallback, `menu_view`-event | M |
 | **PR-14 Products-modul** | Samma mönster som PR-13 för comercio | S–M (kopierar mönstret) |
-| **PR-15 Teman 4–6** | `salud`, `belleza`, `taller` + palettvarianter, QA-gate per tema | M–L (dela per tema) |
+| **PR-15 Tema 4 + branschlås** | `salud` (tjänar `salud` + `belleza`) + palettvarianter, QA-gate; `presentationFor(category)` låser tema/palett, temaväljaren tas bort, prislistans defaultvärden synkas. `belleza`/`taller` byggs inte som teman (§1.5). = S2 + S7 i `plan.md` | M |
 | **PR-16 Upsell-radar** | Nattlig score-beräkning, hot-lead-flaggning (trösklar i env), `/admin/leads`-vy med sortering, leadStage-knappar, anteckningar, wa.me-pitch-länk med förifylld statistik | M |
 | **PR-17 WhatsApp Cloud API** | Meta Business-verifiering förutsätts klar (din uppgift, ej kod). Template-baserad OTP-sändning, channel `whatsapp_api`, fallback till manuell, sändlogg i activity_log | M |
 
@@ -577,7 +638,7 @@ env-ändring, aldrig en refaktorering.
 | # | Beslut | Min rekommendation |
 |---|---|---|
 | D1 | **Owner-login: WhatsApp-OTP eller lösenord?** OTP är friktionsfritt och numret är redan verifierat, men kräver att du skickar koder manuellt tills Cloud API (PR-17) finns. | OTP; i fas 2 innan PR-17 innebär det att owner-logins går genom dig — acceptabelt vid <30 kunder |
-| D2 | **Prisplaner:** vad ingår i 200k vs 600k? Moduler per styck eller paketerade i basico/plus/pro? Schemat stödjer båda. | Tre paket: basico (one-page) / plus (en modul + galleri) / pro (allt + extra pages). Enklare att sälja än à la carte |
+| D2 | **Prisplaner:** vad ingår i 200k vs 600k? Moduler per styck eller paketerade i basico/plus/pro? Schemat stödjer båda. | **Beslutat 2026-09-13 (§1.7):** två sålda nivåer, Básico ₲ 400.000 / Plus ₲ 600.000 (galleri + branschens innehållsmodul), Pro reserverad för fas 3. Aldrig à la carte, bransch påverkar inte priset. Siffrorna väntar på ditt ja i `docs/decisions-needed.md` |
 | D3 | **Grace-period efter förfall:** 15 dagar föreslaget. Kortare = kassaflöde, längre = mindre churn-friktion. | 15 dagar + påminnelse dag 45/15/3 före förfall |
 | D4 | **"Hecho con sitio.com.py"-länk i footern?** Gratis marknadsföring och interna länkar, men bryter "fristående"-känslan och avslöjar mall. | Av som default; ev. på som rabattmorot ("₲50.000 billigare med länk") |
 | D5 | **Ska roten sitio.com.py någonsin lista kunder (katalog)?** Katalog hjälper din SEO men gör kundsajterna till "profiler i en katalog". | Nej — roten är endast säljsida för SaaS:en |
@@ -585,7 +646,7 @@ env-ändring, aldrig en refaktorering.
 | D7 | **AI-puts: alltid, eller opt-in per sajt?** Alltid ger unikt innehåll överallt (SEO-skydd) men du förlorar kundens röst. | Alltid köra, men du granskar diffen före publicering (den vyn ingår i AI-puts-steget) |
 | D8 | **Trial/demo-läge:** bygga sajten gratis och visa preview-länk innan betalning (starkt säljverktyg), eller betala först? Schemat stödjer trial-status. | Bygg-först-visa-sen: preview-token kostar dig inget och stänger affärer |
 | D9 | **Hostinger-konto/slot:** vilket av de tre kontona (LATAM rimligast) och bekräfta att en slot är ledig. | — (bara du vet slot-läget) |
-| D10 | **Priser på moduler i efterhand** (kund köper meny-modul år 2): pro-rata eller helår? | Helår vid aktivering, förenklar bokföringen |
+| D10 | **Priser på moduler i efterhand** (kund köper meny-modul år 2): pro-rata eller helår? | **Beslutat 2026-09-13 (§1.7):** uppgradering Básico→Plus = mellanskillnaden ₲ 200.000 rakt av, samma förfallodatum, förnyelse till Plus-pris. Varken pro-rata eller nytt helår |
 
 ---
 
@@ -621,12 +682,12 @@ env-ändring, aldrig en refaktorering.
    pitch-länkarna är byggda för detta, men systemet kan inte ta emot pengar;
    varje krona kräver din hand. Räkna med att D6/PR-20 (automatiska
    påminnelser) blir nödvändiga tidigare än planerat.
-6. **Design-sameness vid skala.** 6 teman × 4 varianter räcker till ~50 kunder
-   innan två frisörer i samma barrio har samma sajt i olika färg. Det
-   undergräver både priset och "riktig hemsida"-upsellen. Motmedel: foton och
-   logga bär identiteten (kräv bra foton vid onboarding — dålig bildkvalitet
-   är produktens verkliga akilleshäl), och nya palettvarianter är billiga att
-   addera. Men mall är mall; översälj inte "unik design".
+6. **Design-sameness vid skala.** Sedan 2026-09-13 är sameness inom en
+   bransch ett val, inte en risk att mildra: två frisörer i samma barrio får
+   samma tema och palett (§1.5). Det som skiljer dem är logga, foton och
+   AI-putsad text — så kräv bra foton vid onboarding; dålig bildkvalitet är
+   produktens verkliga akilleshäl. Sälj "din sajt, snygg och snabb", aldrig
+   "unik design". Mall är mall.
 7. **Analytics-siffrorna kan ljuga åt båda håll.** Utan botfilter blåses
    siffrorna upp (och ditt förnyelseargument blir ohederligt); med aggressiv
    filtrering tappar du legitima klick (WhatsApp-appens in-app-browser,
@@ -640,7 +701,7 @@ env-ändring, aldrig en refaktorering.
 9. **Innehållsansvar.** Du publicerar andras påståenden ("bästa priserna",
    hälsopåståenden från clínicas) på din domän. Ha användarvillkor + rätt att
    pausa i avtalet från kund #1, och ta bort-flödet finns redan (paused/archived).
-10. **Priset är lågt och supporten är inte noll.** 200.000 Gs/år ≈ en
+10. **Priset är lågt och supporten är inte noll.** 400.000 Gs/år ≈ en och en halv
     timmes konsultarvode. Varje "kan du ändra mina öppettider"-WhatsApp äter
     marginalen. Owner-admin (PR-11) är därför inte en lyxfunktion utan
     lönsamhetens förutsättning — prioritera den direkt efter MVP.

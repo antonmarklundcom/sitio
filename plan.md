@@ -6,6 +6,9 @@
 > which model runs it, which files it owns, and how phases hand off.
 > Background and reasoning: `docs/REPORT-2026-09.md`. Read that once; never
 > re-derive its findings in a build session.
+> 2026-09-13: four decisions added by the planning session (§1.11–§1.14):
+> category-locked presentation and four themes (S3/S4 cancelled, S7 added),
+> URL structure reconfirmed, price list, and the round-3 lane (§11).
 
 ## Phase table
 
@@ -16,19 +19,21 @@
 | O3 AI polish | 1 | Opus | `prompts/opus-3-ai-polish.md` | §5.3 | `src/lib/ai-polish.ts`, `src/app/admin/(dashboard)/sitios/polish-actions.ts`, `src/components/admin/polish-panel.tsx`, `tests/unit/ai-polish.test.ts`, `.env.example` (append), `docs/log/O3.md` | O1 |
 | S1 products module (PR-14) | 2 | Sonnet | `prompts/sonnet-1-products.md` | §6.1 | `src/lib/product-form.ts`, `src/db/product-queries.ts`, `src/app/mi-sitio/product-actions.ts`, `src/components/mi-sitio/owner-products.tsx`, `src/components/site/products-section.tsx`, `src/themes/comercio/**`, `tests/smoke/products.mjs`, `docs/log/S1.md` | O1 |
 | S2 theme `salud` | 2 | Sonnet | `prompts/sonnet-2-theme-salud.md` | §6.2 | `src/themes/salud/**`, `docs/log/S2.md` | O1 |
-| S3 theme `belleza` | 2 | Sonnet | `prompts/sonnet-3-theme-belleza.md` | §6.2 | `src/themes/belleza/**`, `docs/log/S3.md` | O1 |
-| S4 theme `taller` | 2 | Sonnet | `prompts/sonnet-4-theme-taller.md` | §6.2 | `src/themes/taller/**`, `docs/log/S4.md` | O1 |
+| ~~S3 theme `belleza`~~ | — | — | — | §1.12 | **Cancelled 2026-09-13.** `belleza` renders on theme `salud` with a locked palette. Prompt file retired. | — |
+| ~~S4 theme `taller`~~ | — | — | — | §1.12 | **Cancelled 2026-09-13.** `taller` renders on theme `servicios` with a locked palette. Prompt file retired. | — |
 | S5 upsell radar (PR-16) | 2 | Sonnet | `prompts/sonnet-5-radar.md` | §6.3 | `src/lib/radar.ts`, `src/db/lead-queries.ts`, `src/app/admin/(dashboard)/leads/**`, `src/components/admin/leads-*.tsx`, `tests/unit/radar.test.ts`, `tests/smoke/radar.mjs`, `docs/log/S5.md` | O1 |
-| S6 link pass | — | Sonnet | `prompts/sonnet-6-link-pass.md` | §6.4 | cross-cutting only (see §6.4), `KNOWN-ISSUES.md`, `docs/log/S6.md` | S1–S5 |
+| S7 category lock + price list | 2 | Sonnet | `prompts/sonnet-7-category-lock.md` (to be written, §7) | §6.5 | `src/lib/presentation.ts`, `tests/unit/presentation.test.ts`, `src/components/admin/theme-picker.tsx` (replace), `src/components/admin/business-form.tsx` (theme/palette block only), `src/app/admin/(dashboard)/sitios/actions.ts` (theme/variant derivation only), `src/app/admin/(dashboard)/alta/actions.ts` (theme/variant derivation only), `src/app/alta/[token]/actions.ts` (theme/variant derivation only), `PLAN_SUGGESTED_PRICE_GS` + `PLAN_LABELS` values in `src/lib/billing.ts`, `tests/smoke/presentation.mjs`, `docs/log/S7.md` | O1 |
+| S6 link pass | — | Sonnet | `prompts/sonnet-6-link-pass.md` | §6.4 | cross-cutting only (see §6.4), `KNOWN-ISSUES.md`, `docs/log/S6.md` | S1, S2, S5, S7 |
 
 Execution order: O1 → O2 → O3 sequentially in one Opus chain (each spawns the
-next). O3 creates the watcher Routine and spawns S1–S5 at once (max 4 running;
-the watcher starts the fifth). S6 is spawned by the watcher when S1–S5 are
-merged.
+next). O3 creates the watcher Routine and spawns S1, S2, S5, S7 at once (four
+slots, all used). S6 is spawned by the watcher when S1, S2, S5 and S7 are
+merged. S3 and S4 are cancelled (§1.12) and are never spawned; their prompt
+files are retired before O1 starts (§7).
 
 Append-only exceptions every phase may touch (§4.9): its own `docs/log/<id>.md`;
 a new `/* == <id> == */` block at the end of `src/themes/theme.css`; one line in
-`docs/decisions-needed.md`; plan §9's index line. Theme phases (S2–S4) may
+`docs/decisions-needed.md`; plan §9's index line. The theme phase (S2) may
 additionally add exactly one entry each to `src/themes/registry.ts`,
 `src/themes/palettes.ts`, `src/app/[slug]/layout.tsx` (CSS import) and one
 section to `docs/PALETTE-REGISTRY.md`. S1 may set `plannedIn: undefined` for
@@ -47,7 +52,8 @@ New decisions for this round:
    `menuItems.mediaId` all exist. A phase that thinks it needs a column writes
    the reason to `docs/decisions-needed.md` and works around it.
 2. **Model per phase is fixed in the phase table.** Opus for O1–O3, Sonnet
-   for S1–S6. Never Fable (§4.8).
+   for S1, S2, S5, S6, S7. Never Fable (§4.8). Round 3 (§11) uses Astra via
+   Codex CLI as the worker and Fable only in Anton's own window.
 3. **Unit tests are vitest, live in `tests/unit/`, run in `.husky/pre-push`
    before the build.** Smoke tests stay Playwright against a real MySQL and
    are not run by the hook. Each lane-2 phase adds `tests/smoke/<phase>.mjs`;
@@ -69,11 +75,11 @@ New decisions for this round:
    in `rawDescription` is never overwritten.
 6. **Products render through a shared primitive** `products-section.tsx`
    (same pattern as `menu-section.tsx`), styled in `theme.css`, with a
-   `comercio`-specific override. Themes 4–6 do not include it in their phase;
-   S6 wires it into every theme.
+   `comercio`-specific override. S2 (`salud`) does not include it in its
+   phase; S6 wires it into every theme.
 7. **Theme design direction is fixed per theme** (§6.2). Palette registry
    rule holds: the four variants of one theme are ≥ 40° apart in hue and every
-   text/base pair ≥ 4.5:1.
+   text/base pair ≥ 4.5:1. Which variant a site gets is decided by §1.11.
 8. **The radar score is computed nightly in the cron route**, never on read.
    Score formula in §6.3. Thresholds come from the existing
    `HOT_LEAD_WA_CLICKS_30D` / `HOT_LEAD_VIEWS_30D`.
@@ -82,6 +88,54 @@ New decisions for this round:
 10. **Language:** customer/owner UI in voseo Spanish, superadmin UI in Swedish,
     code identifiers and this plan in English, commit messages in Swedish or
     English (both exist in history; either is fine).
+11. **Presentation is locked by category (2026-09-13).** `themeKey` and
+    `paletteVariant` are derived from `businesses.category` by one pure
+    function, `presentationFor(category)` in `src/lib/presentation.ts`, and
+    written on every path that creates or saves a business. No admin picker,
+    no per-business choice, no override flag. The two columns stay in the
+    schema (no migration) as the stored, always-in-sync result; the renderer
+    keeps reading them. The mapping (theme / variant, using palettes that
+    already exist and are contrast-verified in `docs/PALETTE-REGISTRY.md`):
+
+    | Category | Theme | Variant | Accent |
+    |---|---|---|---|
+    | `servicios` | `servicios` | 2 | cyan 186° |
+    | `taller` | `servicios` | 1 | orange 29° |
+    | `comercio` | `comercio` | 1 | blue 212° |
+    | `otro` | `comercio` | 2 | green 163° |
+    | `gastronomia` | `gastronomia` | 1 | red-brown 11° |
+    | `salud` | `salud` | 1 | teal (S2) |
+    | `belleza` | `salud` | 2 | rose (S2) |
+
+    Seven looks in production instead of twenty-four. Variants 3–4 of every
+    theme (and 3–4 of `salud`) stay in `palettes.ts` as a dormant, verified
+    reserve; nothing selects them. Two neighbours in the same category look
+    the same by design — identity comes from logo, photos and AI-polished
+    text, not from decoration. This overrides `docs/PLAN.md` §1.5's manual
+    variant choice; §1.5 is rewritten to match. Built by S7 (§6.5).
+12. **Four themes, not six.** `servicios` (dark, INDUSTRIAL), `comercio`
+    (light, EDITORIAL), `gastronomia` (WARM CRAFT) and the new `salud` (light,
+    CALM). `belleza` and `taller` are categories, not themes: S3 and S4 are
+    cancelled. The `themeKey` enum keeps the values `belleza` and `taller`
+    (no migration); `registry.ts` and `palettes.ts` never get entries for
+    them and no row is ever written with them (S7 unit-tests that every
+    category maps to a built theme). Every later cross-cutting change (S6,
+    round 3) touches four theme directories, not six.
+13. **Price list (2026-09-13, pending Anton's sign-off on the numbers, see
+    `docs/decisions-needed.md`).** Two sold tiers, category never changes the
+    price: Básico ₲ 400.000/year (one-page site, everything core), Plus
+    ₲ 600.000/year (Básico + gallery + the category's content module: `menu`
+    for gastronomia, `products` for comercio/otro, gallery-only for the rest).
+    `pro` stays in the enum, reserved for `extra_pages`/`booking` (fase 3,
+    suggested ₲ 900.000). Upgrade mid-year = the flat difference, same expiry
+    date; renewal at the new tier's price. Full table in `docs/PLAN.md` §1.7.
+    The landing (O2) says "desde ₲ 400.000 por año". `PLAN_SUGGESTED_PRICE_GS`
+    is synced by S7. Admin keeps its free `priceGs` field (Anton negotiates);
+    the list is the default, not a constraint.
+14. **URL structure reconfirmed:** `sitio.com.py/[slug]`, path-based. No
+    subdomains, no wildcard DNS or certificates on shared Hostinger hosting,
+    one `NEXT_PUBLIC_BASE_URL`, domain authority shared from day one. Nothing
+    in routing changes; `docs/PLAN.md` §1.11 carries the note.
 
 ## 2. Object model
 
@@ -91,12 +145,14 @@ Unchanged — `src/db/schema.ts` is authoritative. Relevant for this round:
   `aiPolishedAt` — written by O3.
 - `businesses.upsellScore`, `hotLead`, `leadStage`, `adminNotes` — written by S5.
 - `products` table, `media.kind = "product"`, `business_modules.products` — S1.
-- `businesses.themeKey ∈ {salud, belleza, taller}` — rendered by S2–S4.
+- `businesses.themeKey ∈ {servicios, comercio, gastronomia, salud}` — derived
+  from `category` by S7 (§1.11); `salud` rendered by S2.
 
 ## 3. Feature scope
 
 Core (this round): dependency fix, unit tests, security headers, landing
-page, AI polish, products module, three themes, upsell radar, link pass.
+page, AI polish, products module, one theme (`salud`), category-locked
+presentation and price list, upsell radar, link pass.
 
 Not in scope: anything in §10.
 
@@ -220,8 +276,9 @@ a phone-framed mock of a customer site built from the `servicios` theme
 markup with demo data); "Qué incluye" (one-page, WhatsApp button, horario
 with abierto-ahora, mapa, Google-ready SEO, estadísticas); "Cómo funciona"
 (three steps: hablamos por WhatsApp, cargás tus datos y fotos, publicamos en
-48 h); precio (single band "desde ₲ 200.000 por año", modules as upsells
-listed without prices); FAQ (5 questions, FAQ JSON-LD); footer with the
+48 h); precio (two tiers from §1.13: "Básico desde ₲ 400.000 por año" and
+"Plus ₲ 600.000 por año" with what each includes, no per-module prices; if
+`docs/decisions-needed.md` carries a different signed-off number, use that); FAQ (5 questions, FAQ JSON-LD); footer with the
 sales WhatsApp and "Hecho en Paraguay".
 
 Rules: static (`export const dynamic = "force-static"` or no dynamic APIs),
@@ -280,7 +337,8 @@ polished end to end and the diff shown; without a key, the panel degrades as
 specified; `npm run smoke` unchanged and green (or a new
 `tests/smoke/polish.mjs` covering the no-key state).
 
-After O3: create the watcher Routine and spawn S1–S5 per `prompts/_handoff.md`.
+After O3: create the watcher Routine and spawn S1, S2, S5, S7 per `prompts/_handoff.md`
+(as synced per §7; S3/S4 are cancelled).
 
 ## 6. Lane 2 phases (Sonnet, parallel)
 
@@ -313,53 +371,55 @@ empty price renders "A consultar", hidden product absent from the public
 site, module off hides section without deleting rows; comercio theme
 screenshot via the QA gate once; unit test for the product form parser.
 
-### 6.2 S2–S4 — Themes `salud`, `belleza`, `taller`
+### 6.2 S2 — Theme `salud` (serves categories `salud` and `belleza`)
 
-Each phase builds one theme: `src/themes/<key>/<key>-theme.tsx`,
-`<key>.css`, four palettes appended to `palettes.ts`, one line in
-`registry.ts`, one CSS import in `src/app/[slug]/layout.tsx`, one section in
-`docs/PALETTE-REGISTRY.md`. Read `servicios-theme.tsx` and `comercio-theme.tsx`
-first for the props contract and the shared primitives (`SiteImage`,
-`WhatsAppGlyph`, `SiteMenu`, hours/footer/status primitives in `theme.css`).
-The theme must render the menu via `SiteMenu` when `modules.has("menu")`,
-and must not reference products (S6 adds it).
+S3 (`belleza`) and S4 (`taller`) are cancelled by §1.12; this is the only
+theme phase in the round. S2 builds `src/themes/salud/salud-theme.tsx`,
+`salud.css`, four palettes appended to `palettes.ts` (the tuple type stays
+four wide this round; only variants 1 and 2 are ever selected, §1.11), one
+line in `registry.ts`, one CSS import in `src/app/[slug]/layout.tsx`, one
+section in `docs/PALETTE-REGISTRY.md`. Read `servicios-theme.tsx` and
+`comercio-theme.tsx` first for the props contract and the shared primitives
+(`SiteImage`, `WhatsAppGlyph`, `SiteMenu`, hours/footer/status primitives in
+`theme.css`). The theme must render the menu via `SiteMenu` when
+`modules.has("menu")`, and must not reference products (S6 adds it).
 
-Design direction (fixed, §1.7):
+Design direction (fixed, §1.7): **CALM, APPOINTMENT-FIRST.** One light theme
+for the two "turno" businesses — clínica/dentista/consultorio and
+salón/barbería/estética. Both live on being reachable and open; both are
+sold by their photos. Light, cool-neutral base (near-white, faint blue-green
+cast), one deep accent used only on the WhatsApp CTA, the "Abierto ahora"
+state and link underlines; generous whitespace; 12 px radii; no grain; no
+decorative shapes or gradients. Section map, different from every existing
+theme's header comment: hero P1-style split with the name, the schedule and
+"Abierto ahora" prominent; a photo block immediately after the hero showing
+the first six photos (all photos when `gallery` is on) so a salon's site is
+image-led without a second theme; "Servicios" as cards with short
+descriptions; a "Cómo llegar" map block; trust ribbon "Turnos por WhatsApp";
+socials row with Instagram first. Palettes, in this order: v1 teal (locked to
+`salud`), v2 rose (locked to `belleza`), v3 navy, v4 sage (reserve). No
+health claims and no beauty superlatives in template copy.
 
-- **salud** — CALM TRUST. Light, cool base (near-white with a blue-green
-  cast), one deep accent, generous whitespace, rounded 12 px radii, no grain,
-  hero P1-style split with the schedule and "Abierto ahora" prominent (a
-  clinic's first question is "are they open"), a "Servicios" list as cards
-  with short descriptions, a "Cómo llegar" map block, trust ribbon with
-  "Turnos por WhatsApp". Palettes: teal, navy, sage, plum. No health claims
-  in template copy.
-- **belleza** — SOFT GALLERY. Light warm base, editorial serif feel achieved
-  with the existing display font at lighter weight and wide tracking,
-  image-led: hero is a full-bleed photo with the name overlaid, then a
-  masonry-ish gallery of up to six photos (all photos when `gallery` is on),
-  services as a two-column price-less list, socials prominent (Instagram
-  first). Palettes: rose, terracotta, lilac, olive.
-- **taller** — ROBUST DIRECT. Dark, high-contrast like `servicios` but with a
-  different section map (so the two are not twins): hero is a P9 oversized
-  statement with the phone number as the headline element, then a
-  "Qué arreglamos" grid, then a "Horario y ubicación" sticky-side block,
-  then a photo strip. Chunkier borders (2 px), square corners, mono-style
-  numerals for the phone. Palettes: safety-orange, yellow, red, steel-blue.
-  Must differ from `servicios` variant hues by ≥ 20° where the same family is
-  used.
+Restraint rule (applies to S2 and to every later theme edit in round 3):
+the customer's logo, photos and polished text carry the page. Accent on at
+most three element kinds; body text and headings in ink; hairlines, not
+filled panels, separate sections. If a section reads as decoration with the
+demo photos removed, cut it.
 
-Rules for all three: `.t-light` on the root for light themes; contrast per
-the registry rule (compute and record the ratios in the registry section);
-sections use `.reveal`; WhatsApp CTA sticky on mobile with `data-ev`
-attributes matching the other themes; JSON-LD is provided by `RenderSite`,
-do not add another. QA gate: `npm run theme:preview && npm run theme:shots
-<key>` — no horizontal overflow at 360/768/1280 for all four variants.
-`THEME_LABELS` in `src/lib/business.ts` already has the label; do not edit it.
+Rules: `.t-light` on the root; contrast per the registry rule (compute and
+record the ratios in the registry section); sections use `.reveal`; WhatsApp
+CTA sticky on mobile with `data-ev` attributes matching the other themes;
+JSON-LD is provided by `RenderSite`, do not add another. QA gate: `npm run
+theme:preview && npm run theme:shots salud` — no horizontal overflow at
+360/768/1280 for all four variants (all four are built and verified; two are
+selected). `THEME_LABELS` in `src/lib/business.ts` already has the label; do
+not edit it. Do not touch the admin picker: S7 replaces it, and S7 reads
+`BUILT_THEMES` from the registry, so S2 has no admin work.
 
-Exit: registry shows the theme as built (`isThemeBuilt` true), QA gate green
-for four variants, `PALETTE-REGISTRY.md` section with hue and contrast
-table, admin theme picker shows it selectable (it reads the registry; verify
-by screenshot or by a unit test on `BUILT_THEMES`).
+Exit: registry shows the theme as built (`isThemeBuilt("salud")` true), QA
+gate green for four variants, `PALETTE-REGISTRY.md` section with hue and
+contrast table and the two locked variants marked, a unit test on
+`BUILT_THEMES` including `salud`.
 
 ### 6.3 S5 — Upsell radar (PR-16)
 
@@ -384,33 +444,83 @@ Exit: unit and smoke green; `/admin/leads` renders; `hotLead` and
 `upsellScore` populated after one cron call; the dashboard's existing hot-lead
 column reflects it.
 
-### 6.4 S6 — Link pass (after S1–S5 merged)
+### 6.4 S6 — Link pass (after S1, S2, S5, S7 merged)
 
 Cross-cutting edits only:
 
-1. Add `<SiteProducts>` to `salud`, `belleza`, `taller`, `servicios`,
-   `gastronomia` guarded by `modules.has("products")`, styled by the shared
-   block (S1 built the primitive; comercio has its own override).
+1. Add `<SiteProducts>` to `salud`, `servicios`, `gastronomia` guarded by
+   `modules.has("products")`, styled by the shared block (S1 built the
+   primitive; comercio has its own override). Four themes total (§1.12).
 2. Verify `registry.ts`, `palettes.ts`, `layout.tsx` imports and
-   `PALETTE-REGISTRY.md` are consistent after three parallel merges; run the
-   full QA gate for all six themes once.
+   `PALETTE-REGISTRY.md` are consistent after the parallel merges; verify
+   `presentationFor` (S7) maps every category to a theme in `BUILT_THEMES`
+   and that no code path still reads `themeKey`/`paletteVariant` from a form;
+   run the full QA gate for all four themes once.
 3. `npm run smoke` runs every `tests/smoke/*.mjs`; run it end to end against
    MySQL 8 once and record the count.
 4. Retire `docs/HANDOVER.md`: replace its body with three lines pointing at
    `plan.md` §9 and `docs/log/`. Update README's "Teman", "Moduler" and
-   "Röktest" sections to the new state (products built, six themes, `npm
-   test`). Update `docs/PLAN.md` §3 tables with "byggd" marks for PR-14/16.
+   "Röktest" sections to the new state (products built, four themes locked
+   by category, price list, `npm test`). Update `docs/PLAN.md` §3 tables with
+   "byggd" marks for PR-14/15/16 (PR-15 = S2 + S7).
 5. Create root `KNOWN-ISSUES.md` from the still-open items across
    `docs/log/*.md`.
 6. Delete the watcher Routine, write `docs/log/S6.md`, and end with the
    closing report (what shipped, what is open, the §7 items still needed
-   from Anton).
+   from Anton). `KNOWN-ISSUES.md` plus §10 is the ticket source for round 3
+   (§11); S6 does not start round 3.
+
+### 6.5 S7 — Category-locked presentation and price list
+
+Implements §1.11–§1.13. No schema change: `themeKey` and `paletteVariant`
+stay, they stop being chosen.
+
+1. `src/lib/presentation.ts`: `PRESENTATION_BY_CATEGORY` (the table in §1.11,
+   typed against `CATEGORIES` and `THEME_KEYS` from `business.ts`),
+   `presentationFor(category): { themeKey, paletteVariant }`, and
+   `presentationLabel(category)` for the admin (Swedish, e.g.
+   "servicios · variant 2 (cyan)"). Pure, no imports from `db` or React.
+2. Write paths set both columns from `presentationFor(category)` and ignore
+   any submitted `themeKey`/`paletteVariant`: `sitios/actions.ts` (create and
+   update), `alta/actions.ts` (draft from intake link; replaces the inline
+   `category === "otro" ? "servicios" : category` expression), and
+   `src/app/alta/[token]/actions.ts` when the customer's submitted category
+   differs from the prefilled one. The zod schema in `business.ts` stops
+   requiring the two fields from the form; the server fills them.
+3. Admin: replace `theme-picker.tsx` with a read-only block that shows the
+   derived theme and a palette swatch for the currently selected category
+   (client-side, listens to the `category` select so it updates before save)
+   and the line "Tema och palett följer branschen (plan §1.11)". No hidden
+   inputs. `business-form.tsx` keeps its layout; only the picker block
+   changes. The "ej byggt än" warning stays, driven by `isThemeBuilt`
+   (relevant until S2 merges).
+4. `src/lib/billing.ts`: `PLAN_SUGGESTED_PRICE_GS` = basico 400 000, plus
+   600 000, pro 900 000; `PLAN_LABELS` unchanged. Nothing else in billing
+   moves (O1 owns its tests; they assert lifecycle, not prices).
+5. Tests: `tests/unit/presentation.test.ts` — every `CATEGORIES` value maps
+   to a key in `THEME_KEYS`, every variant is 1–4, and the mapping equals the
+   §1.11 table literally (so a drift is a failing test, not a surprise);
+   `tests/smoke/presentation.mjs` — create a business as `taller` in admin,
+   assert the stored theme is `servicios`/1 and the public page root carries
+   `.t-servicios` with the orange accent; change the category to `comercio`,
+   assert it re-derives.
+
+Owns: see the phase table. Not in scope: trimming the palette tuples, the
+`themeKey` enum, `scripts/theme-preview.tsx` (it iterates `BUILT_THEMES` ×
+4 and stays a QA tool for all built variants), seed data (`seed-dev.ts`
+already matches the table for its three demo rows).
+
+Exit: unit and smoke green; admin `nuevo` and `[id]` pages show the derived
+presentation and no picker; `grep -rn 'formData.get("themeKey")' src` is
+empty; pre-push green; PR merged; log + §9 line.
 
 ## 7. Human-inputs checklist (Anton)
 
 | Item | Needed by | Status |
 |---|---|---|
 | Merge the plan PR so phases branch from a `main` that has `plan.md` | before O1 | ⬜ |
+| Sync the prompt files with §1.11–§1.13: retire `prompts/sonnet-3-theme-belleza.md` and `prompts/sonnet-4-theme-taller.md`, write `prompts/sonnet-7-category-lock.md` from §6.5 (same shape as the S5 prompt), and change `S1–S5` to `S1, S2, S5, S7` in `prompts/_handoff.md`, `prompts/_watcher.md` and `prompts/sonnet-6-link-pass.md` (also "six themes" → "four"). Ten minutes by hand or one cheap Astra dispatch; the planning session was scoped to docs only | before O1 | ⬜ |
+| Sign off (or change) the price numbers in `docs/decisions-needed.md` | before O2 opens its PR; S7 reads the same answer | ⬜ |
 | `ANTHROPIC_API_KEY` in local `.env.local` (to test O3 end to end) and in Hostinger env | O3 (degrades without) | ⬜ |
 | `NEXT_PUBLIC_SALES_WHATSAPP` (your sales number, E.164) | O2 (degrades without) | ⬜ |
 | Hostinger slot, database, env vars, `UPLOADS_DIR`, cron — deploy step A (README) | not a phase; do it whenever | ⬜ |
@@ -420,8 +530,8 @@ Cross-cutting edits only:
 
 ## 8. Open business questions (parked)
 
-- Price of each module when sold separately (D2 said packages; the admin
-  still sets the price by hand). Not build work.
+- ~~Price of each module when sold separately~~ — decided §1.13: modules are
+  not sold separately; Plus bundles them. Numbers await sign-off.
 - Whether AI polish should run automatically at intake submission (D7 says
   always run, reviewed). Decide after seeing 10 polished sites.
 - Who approves when Anton is unavailable (`docs/PLAN.md` §5.8).
@@ -450,3 +560,110 @@ Cross-cutting edits only:
 - Move rate limits and lazy rollup to the DB if a second Node process ever
   exists.
 - Full CSP once inline scripts move to hashed or external files.
+- Trim `ThemePalettes` to the variants actually selected once S7 has shipped
+  and the QA tool no longer needs four (round 3, cheap tier).
+- A superadmin presentation override (one flag) — only if a real customer
+  case demands it; today the answer is no (§1.11).
+
+## 11. Round 3: Fable-led refinement, Astra workers
+
+Starts only after S6 has merged and Anton has read its closing report. This
+section is the design; nothing in it runs until Anton opens the first batch.
+Round 2's model assignments above are untouched.
+
+### 11.1 Shape
+
+Manager/worker per skill `manager-worker-codex`, with Codex CLI as the
+worker runtime and the tiers it verified. The manager is the one Fable
+session Anton opens himself on his PC (the Codex wrapper is local:
+`codex-run.ps1`, Windows, repo cloned there). The worker never sees the
+manager's session; the manager never types code beyond the two-tool-call
+rule.
+
+| Role | Who | Does | Never |
+|---|---|---|---|
+| Manager | Fable 5.1, the live session Anton started | Picks the batch, writes each dispatch prompt with a definition of done, chooses the tier, runs the revision gate, merges, writes the batch log, reports | Runs as a subagent, spawned session, Workflow, Routine or watcher (`fable-cost-guardrail`, §4.8); edits more than two tool calls of code; merges a protected-path change it has not read line by line |
+| Worker, cheap | `gpt-5.6-luna`, effort low | Renames, copy edits with the exact text, constant bumps, apply-an-existing-pattern-to-one-more-file, the `ThemePalettes` trim, AGENTS.md drop-in | Anything needing a design choice |
+| Worker, normal | `gpt-6-astra`, effort low | Default: a KNOWN-ISSUES fix with a known cause, a new admin column, a theme section tweak under the restraint rule (§6.2), a new unit or smoke test, one- or two-file changes with judgment | Protected paths (below) |
+| Worker, hard | `gpt-6-astra`, effort high | Multi-file refactors, bugs with no known cause, anything that failed twice at normal, and every protected-path ticket | Running migrations, pushing to `main`, editing `prompts/` or `plan.md` |
+| Side tools | Sonnet or Opus subagent from the manager session, model set explicitly | Only a step Codex cannot reach from the PC (browser QA of a deployed page, Drive, Notion) | Being the worker for code |
+
+Protected paths — Astra may edit them only at the hard tier, only when the
+ticket names them in "Files to touch", and the manager reads the full diff
+before the revision gate counts: `src/db/schema.ts`, `drizzle/**`,
+`src/lib/auth*.ts`, `src/lib/session*.ts`, `src/middleware.ts`,
+`src/lib/env.ts`, `src/lib/billing.ts`, `src/app/api/ev/**`,
+`src/app/api/cron/**`, `src/app/api/upload/**`, `.husky/**`, `.env.example`.
+Every other dispatch lists them under "Do not touch". Migrations are
+generated by the worker and applied by Anton or the manager against a local
+MySQL, never by the worker.
+
+### 11.2 Ticket flow
+
+1. **Source.** `KNOWN-ISSUES.md` (from S6), §10 backlog, entries Anton adds
+   to `docs/r3/inbox.md` (one line each, free form). Nothing else generates
+   work; a worker's "while I was there" finding becomes an inbox line, not a
+   commit.
+2. **Batch.** One Fable session = one batch of at most six tickets, chosen
+   by the manager for value per Fable-minute: customer-visible defects
+   first, then sales tooling (admin, radar, renewals), then internal
+   hygiene. Ticket ids `R3-<n>`, listed in `docs/log/R3-<batch>.md` before
+   the first dispatch.
+3. **Dispatch.** One prompt per ticket from the skill's
+   `assets/dispatch-prompt.txt`, saved to `docs/r3/prompts/R3-<n>.txt` and
+   committed (they are the round's re-runnable memory, like `prompts/` was
+   for round 2). Branch `r3/R3-<n>` off `main`. The prompt's "Commands to run
+   before reporting" is always at least `npm run typecheck && npm run lint
+   && npm test`; `npm run build` when a route or config moves; `npm run
+   smoke` when the ticket touches admin, intake, owner panel or upload; the
+   QA gate `npm run theme:preview && npm run theme:shots <key>` when a
+   theme directory moves. The manager runs each listed command once itself
+   before dispatching (the skill's rule: an unrunnable command is a paid
+   failure).
+4. **Revision gate** (skill §4, plus repo rules): the manager runs the same
+   commands; `git diff --stat` matches "Files to touch"; "Flagged or not
+   done" is empty or explicitly accepted; the restraint rule for theme
+   diffs; an adversarial read of the full diff for protected paths and a
+   read of the summary plus spot checks otherwise. Failure → resume the same
+   session with the exact error, same tier. Escalation exactly as the skill:
+   cheap fails once → normal; normal fails twice → hard; hard fails twice →
+   the ticket goes back to the inbox with the manager's diagnosis, no third
+   dispatch in the batch.
+5. **Merge.** One PR per ticket, body ≤ 15 lines naming the Codex session
+   id and the model/effort read from the session log. The pre-push hook is
+   the CI; a red hook is the worker's job at the same tier. The manager
+   merges; the worker never has `main`.
+6. **Batch log** `docs/log/R3-<batch>.md`: per ticket one line with PR,
+   session id, tier, gate result, findings rejected. Ends with the Fable
+   turn count and the total Codex sessions used. That is the cost record.
+
+### 11.3 What stays with the manager
+
+Deciding what to build, acceptance criteria, all customer-facing copy and
+Swedish admin copy (the worker types it, the manager writes it into the
+prompt), theme direction and the restraint rule, anything under two tool
+calls, reading protected-path diffs, merging, and every answer to Anton.
+Product decisions (D1–D10, §1 here) are never re-litigated by a worker; a
+ticket that needs one is written to `docs/decisions-needed.md` and waits.
+
+### 11.4 Cost rules
+
+- Fable runs only in the window Anton opened. No round-3 Routine, watcher,
+  Workflow or spawned session on Fable, ever. If unattended follow-up is
+  wanted (e.g. an hourly check that the six PRs merged), it is a Sonnet
+  Routine that only reports; it dispatches nothing.
+- Cheap first when the outcome is fully specified; normal by default; hard
+  only when flagged or after two normal failures. Effort is per ticket, not
+  per batch: a hard ticket's follow-ups go back to cheap.
+- A batch ends when its tickets are merged or returned, not when the Fable
+  session is long. Six tickets, one session, one log.
+- The manager reports in the skill's format (task, session ids with model
+  and effort from the log, what was verified, findings rejected, still
+  open); the batch log is that report, committed.
+
+### 11.5 First batch (proposed, not started)
+
+R3-0 drop the skill's `AGENTS.md` into the repo root (cheap; the repo has
+none). R3-1 trim `ThemePalettes` to the selected variants and adjust
+`theme-preview.tsx` (cheap). R3-2..5 from `KNOWN-ISSUES.md` in S6's order.
+Anton reorders freely; the manager writes the prompts.
