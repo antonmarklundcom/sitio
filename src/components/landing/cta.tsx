@@ -18,7 +18,7 @@ export function SalesCta({
       className={`lp-btn lp-btn--${variant} ${className}`.trim()}
       {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
     >
-      <WhatsAppGlyph />
+      {variant === "primary" ? <WhatsAppGlyph /> : null}
       {children}
     </a>
   );

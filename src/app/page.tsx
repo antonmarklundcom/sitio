@@ -58,15 +58,19 @@ export default function LandingPage() {
   const organization = organizationJsonLd(absoluteUrl("/"), contact.e164);
   const faq = faqJsonLd();
 
+  // All text här är vår egen, men `</script>` i en framtida FAQ-formulering
+  // skulle stänga taggen. Escapa `<` en gång, på vägen ut.
+  const ld = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+
   return (
     <div className={`lp ${displayFont.variable} ${textFont.variable}`}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }}
+        dangerouslySetInnerHTML={{ __html: ld(organization) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faq) }}
+        dangerouslySetInnerHTML={{ __html: ld(faq) }}
       />
 
       <LandingHeader contact={contact} />
