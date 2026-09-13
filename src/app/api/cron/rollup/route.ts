@@ -6,6 +6,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { runBillingLifecycle } from "@/lib/billing-lifecycle";
 import { runRollup } from "@/lib/rollup";
+import { runRadar } from "@/db/lead-queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ async function handle(req: Request) {
   const days = Number(new URL(req.url).searchParams.get("days"));
   const rollup = await runRollup(Number.isFinite(days) && days > 0 ? days : undefined);
   const lifecycle = await runBillingLifecycle(null);
+  const radar = await runRadar();
 
   // Pausade sajter måste ur ISR-cachen direkt, annars fortsätter noden servera
   // en sajt som inte längre är betald.
@@ -59,7 +61,7 @@ async function handle(req: Request) {
     revalidatePath("/admin");
   }
 
-  return NextResponse.json({ ok: true, rollup, lifecycle });
+  return NextResponse.json({ ok: true, rollup, lifecycle, radar });
 }
 
 export const GET = handle;

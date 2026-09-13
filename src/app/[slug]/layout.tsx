@@ -4,6 +4,7 @@ import "@/themes/theme.css";
 import "@/themes/servicios/servicios.css";
 import "@/themes/gastronomia/gastronomia.css";
 import "@/themes/comercio/comercio.css";
+import "@/themes/salud/salud.css";
 
 /**
  * Kundsajterna delar inget synligt chrome med varandra eller med adminet —

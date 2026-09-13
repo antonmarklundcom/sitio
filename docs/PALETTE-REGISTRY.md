@@ -45,6 +45,27 @@ brödtext.
 
 Minsta avstånd mellan varianternas hue: **49°** (163 → 212).
 
+### Tema `salud` (CALM, ljusdominant — turno-verksamheter: `salud` + `belleza`)
+
+| Variant | Accent | Hue | Bas | Ink/bas | Accent/bas | Muted/bas | Låst till |
+|---|---|---|---|---|---|---|---|
+| 1 | `#0B6B62` | 174° | `#F3F8F7` | 15,62:1 | 5,95:1 | 5,61:1 | `salud` |
+| 2 | `#93275F` | 329° | `#F8F4F6` | 15,86:1 | 7,14:1 | 6,23:1 | `belleza` |
+| 3 | `#1A3D8C` | 222° | `#F4F6F9` | 15,82:1 | 9,28:1 | 6,30:1 | reserv |
+| 4 | `#3F6B34` | 108° | `#F5F8F3` | 14,99:1 | 5,83:1 | 6,12:1 | reserv |
+
+Minsta avstånd mellan varianternas hue: **42°** (174 → 222; nästa lägst är
+174 → 108 på 66°). `onAccent/accent` (text på CTA-knappen) ligger som lägst på
+5,85:1 (v4). Alla värden är beräknade (sRGB-relativluminans, WCAG-formeln),
+inte skattade. Variant 1 (teal) är låst till kategori `salud`, variant 2
+(rose) till `belleza` (plan §1.11); 3–4 är verifierad reserv och väljs aldrig
+av `presentationFor`.
+
+Ljus, sval-neutral bas med en svag blågrön ton i samtliga fyra — det är
+`salud`s "CALM"-spår, inte en per-variant nyans som i `gastronomia`/`comercio`.
+Ingen grain (design §6.2), 12 px basradie (`--r-md`), CTA/status/länk är de
+enda tre ställena accenten får synas.
+
 ### Sektion → mönster per tema (portföljregeln)
 
 Två sajter i registret får inte dela sektion→mönster-karta. Teman är därför
@@ -55,6 +76,14 @@ kartlagda var för sig:
 | `servicios` | P1 | P8 | P3 | P5 | P4 | P6 | P9 |
 | `gastronomia` | P6 | P8 | P4 | P3 | P7 | P1 | P9 |
 | `comercio` | P2 | P8 | P3 | P4 | P6 | P7 | P9 |
+| `salud` | P1 | P6 | P3 | P4 | P8 | P9 | — |
+
+`salud` har sex nummer­rade sektioner, inte sju (plus den villkorade menyn,
+onumrerad som i övriga teman) — se `src/themes/salud/salud-theme.tsx`s
+header­kommentar. Positionerna är medvetet omkastade mot de andra tre: bildblocket
+(P6) ligger direkt efter hero i stället för sist, och trust-ribbon (P8) ligger
+sent i stället för näst först. Hero (P1) bär själv ingen bild — splitten är
+text mot ett schemakort — så P6 förblir det enda stora bildmomentet.
 
 ### Kända avvikelser
 

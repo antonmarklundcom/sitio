@@ -15,6 +15,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ComercioTheme } from "../src/themes/comercio/comercio-theme";
 import { GastronomiaTheme } from "../src/themes/gastronomia/gastronomia-theme";
+import { SaludTheme } from "../src/themes/salud/salud-theme";
 import { ServiciosTheme } from "../src/themes/servicios/servicios-theme";
 import { paletteFor, paletteToCssVars } from "../src/themes/palettes";
 import type { ThemeProps } from "../src/themes/types";
@@ -217,6 +218,53 @@ const demos: Demo[] = [
       },
       seoTitle: "Ferretería San Blas",
       seoDescription: "Ferretería en San Lorenzo: herramientas, sanitarios, pinturas y entregas en la zona.",
+    } as unknown as Business,
+  },
+  {
+    // S2: demo för tema `salud` (CALM). Sex platshållartoner eftersom fotoblocket
+    // (02) visar upp till sex bilder direkt efter hero.
+    themeKey: "salud",
+    cssFile: "salud/salud.css",
+    Theme: SaludTheme,
+    tones: [
+      { r: 132, g: 168, b: 162 },
+      { r: 150, g: 178, b: 174 },
+      { r: 118, g: 156, b: 150 },
+      { r: 164, g: 186, b: 182 },
+      { r: 140, g: 172, b: 166 },
+      { r: 126, g: 162, b: 156 },
+    ],
+    business: {
+      ...baseDemo,
+      id: 4,
+      slug: "clinica-dental-piriz",
+      name: "Clínica Dental Piriz",
+      category: "salud",
+      themeKey: "salud",
+      description:
+        "Odontología general y estética en Fernando de la Mora. Limpiezas, blanqueamiento, ortodoncia " +
+        "y urgencias con turno el mismo día. Atendemos con seguro y sin seguro, presupuesto sin cargo.",
+      servicesJson: [
+        { name: "Consulta y diagnóstico", desc: "Evaluación completa y plan de tratamiento sin cargo." },
+        { name: "Limpieza y blanqueamiento", desc: "Profilaxis y blanqueamiento en consultorio." },
+        { name: "Ortodoncia", desc: "Brackets metálicos y estéticos, planes en cuotas." },
+        { name: "Urgencias dentales", desc: "Turno el mismo día para dolor o traumatismo." },
+      ],
+      whatsappPhone: "+595981556230",
+      address: "Mariscal López 2140",
+      zone: "Barrio Obrero",
+      city: "Fernando de la Mora",
+      hoursJson: {
+        mon: [{ open: "08:00", close: "12:00" }, { open: "14:00", close: "18:00" }],
+        tue: [{ open: "08:00", close: "12:00" }, { open: "14:00", close: "18:00" }],
+        wed: [{ open: "08:00", close: "12:00" }, { open: "14:00", close: "18:00" }],
+        thu: [{ open: "08:00", close: "12:00" }, { open: "14:00", close: "18:00" }],
+        fri: [{ open: "08:00", close: "12:00" }],
+        sat: null,
+        sun: null,
+      },
+      seoTitle: "Odontología en Fernando de la Mora",
+      seoDescription: "Clínica dental en Fernando de la Mora: limpiezas, ortodoncia y urgencias con turno.",
     } as unknown as Business,
   },
 ];
