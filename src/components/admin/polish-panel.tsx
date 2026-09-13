@@ -2,13 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  MISSING_KEY_MESSAGE,
-  diffFields,
-  type PolishCurrent,
-  type PolishResult,
-  type PolishUsage,
-} from "@/lib/ai-polish";
+import type { FieldDiff, PolishUsage } from "@/lib/ai-polish";
 import type { PolishState } from "@/app/admin/(dashboard)/sitios/polish-actions";
 import { Badge, Card, Notice, SectionTitle } from "./ui";
 
@@ -18,7 +12,15 @@ import { Badge, Card, Notice, SectionTitle } from "./ui";
  * Panelen kör aldrig något själv vid render. Knappen startar en server action,
  * förslaget ligger kvar i activity_log och diffas mot det sparade tills du
  * kryssar i fälten och skriver dem.
+ *
+ * Allt från `@/lib/ai-polish` importeras som TYPER. Den modulen drar in
+ * Anthropic-SDK:n, och ett värde härifrån hade lagt hela SDK:n i
+ * klientbundeln — diffen räknas därför på servern och kommer in som prop.
  */
+
+/** Måste ordagrant matcha MISSING_KEY_MESSAGE i src/lib/ai-polish.ts. */
+const MISSING_KEY_NOTICE = "ANTHROPIC_API_KEY saknas i miljön";
+
 function SubmitButton({
   label,
   pendingLabel,
@@ -51,8 +53,8 @@ function DiffColumn({ title, text, muted }: { title: string; text: string; muted
     <div>
       <p className="mb-1 text-xs uppercase tracking-wide text-admin-muted">{title}</p>
       <pre
-        className={`whitespace-pre-wrap break-words rounded-lg border border-admin-line p-3 text-sm ${
-          muted ? "bg-admin-surface-2 text-admin-muted" : "bg-admin-surface-2 text-admin-text"
+        className={`whitespace-pre-wrap break-words rounded-lg border border-admin-line bg-admin-surface-2 p-3 text-sm ${
+          muted ? "text-admin-muted" : "text-admin-text"
         }`}
       >
         {text || "—"}
@@ -65,8 +67,10 @@ export function PolishPanel({
   businessId,
   hasApiKey,
   model,
-  current,
-  proposal,
+  diffs,
+  warnings,
+  usage,
+  proposedAt,
   aiPolishedAt,
   runPolish,
   applyPolish,
@@ -74,8 +78,11 @@ export function PolishPanel({
   businessId: number;
   hasApiKey: boolean;
   model: string;
-  current: PolishCurrent;
-  proposal: { result: PolishResult; warnings: string[]; usage: PolishUsage; proposedAt: string } | null;
+  /** null = inget förslag finns ännu. */
+  diffs: FieldDiff[] | null;
+  warnings: string[];
+  usage: PolishUsage | null;
+  proposedAt: string | null;
   aiPolishedAt: string | null;
   runPolish: (state: PolishState, formData: FormData) => Promise<PolishState>;
   applyPolish: (state: PolishState, formData: FormData) => Promise<PolishState>;
@@ -83,8 +90,7 @@ export function PolishPanel({
   const [runState, runAction] = useActionState<PolishState, FormData>(runPolish, {});
   const [applyState, applyAction] = useActionState<PolishState, FormData>(applyPolish, {});
 
-  const diffs = proposal ? diffFields(current, proposal.result) : [];
-  const changed = diffs.filter((d) => d.changed);
+  const changed = diffs?.filter((d) => d.changed) ?? [];
 
   return (
     <Card>
@@ -104,8 +110,8 @@ export function PolishPanel({
 
         {hasApiKey ? null : (
           <Notice tone="warn">
-            {MISSING_KEY_MESSAGE}. Putsningen är avstängd tills nyckeln finns i .env.local — allt annat
-            på sidan fungerar som vanligt.
+            {MISSING_KEY_NOTICE}. Putsningen är avstängd tills nyckeln finns i .env.local — allt annat på
+            sidan fungerar som vanligt.
           </Notice>
         )}
 
@@ -117,26 +123,24 @@ export function PolishPanel({
         <form action={runAction}>
           <input type="hidden" name="businessId" value={businessId} />
           <SubmitButton
-            label={proposal ? "Kör igen" : "Pulir textos"}
+            label={diffs ? "Kör igen" : "Pulir textos"}
             pendingLabel="Putsar…"
             disabled={!hasApiKey}
           />
         </form>
 
-        {proposal ? (
+        {diffs ? (
           <form action={applyAction} className="space-y-4 border-t border-admin-line pt-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-admin-muted">
-                Förslag från {proposal.proposedAt ? new Date(proposal.proposedAt).toLocaleString("sv-SE") : "okänd tid"} —{" "}
-                {changed.length} av {diffs.length} fält skiljer sig. {proposal.usage.inputTokens} in /{" "}
-                {proposal.usage.outputTokens} ut tokens.
-              </p>
-            </div>
+            <p className="text-sm text-admin-muted">
+              Förslag från {proposedAt ? new Date(proposedAt).toLocaleString("sv-SE") : "okänd tid"} —{" "}
+              {changed.length} av {diffs.length} fält skiljer sig
+              {usage ? ` (${usage.inputTokens} in / ${usage.outputTokens} ut tokens, ${usage.model})` : ""}.
+            </p>
 
-            {proposal.warnings.length > 0 ? (
+            {warnings.length > 0 ? (
               <Notice tone="warn">
                 <ul className="list-disc space-y-0.5 pl-5">
-                  {proposal.warnings.map((w) => (
+                  {warnings.map((w) => (
                     <li key={w}>{w}</li>
                   ))}
                 </ul>

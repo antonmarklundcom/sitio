@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   MISSING_KEY_MESSAGE,
@@ -323,6 +324,19 @@ describe("supportsEffort", () => {
 describe("felmeddelandet utan nyckel", () => {
   it("är den sträng panelen och röktestet letar efter", () => {
     expect(MISSING_KEY_MESSAGE).toBe("ANTHROPIC_API_KEY saknas i miljön");
+  });
+
+  /**
+   * Panelen är en klientkomponent och får inte importera ett värde härifrån —
+   * det hade lagt hela Anthropic-SDK:n i webbläsarbundeln. Strängen är därför
+   * dubblerad, och den här kontrollen är det som hindrar den från att glida isär.
+   */
+  it("står ordagrant i polish-panel.tsx, som har en egen kopia", () => {
+    const panel = readFileSync(new URL("../../src/components/admin/polish-panel.tsx", import.meta.url), "utf8");
+    expect(panel).toContain(`"${MISSING_KEY_MESSAGE}"`);
+    expect(panel).toContain('import type { FieldDiff, PolishUsage } from "@/lib/ai-polish"');
+    // Bara `import type` får peka hit — ett värdeimport drar in SDK:n.
+    expect(panel).not.toMatch(/^import (?!type )[^\n]*from "@\/lib\/ai-polish"/m);
   });
 });
 
