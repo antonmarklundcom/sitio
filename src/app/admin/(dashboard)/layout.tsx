@@ -2,12 +2,11 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { logoutAction } from "../login/actions";
 
-// Hot leads (PR-16) läggs till när vyn finns — en meny som pekar på 404 är
-// värre än en kort meny.
 const NAV = [
   { href: "/admin", label: "Sajter" },
   { href: "/admin/alta", label: "Intake" },
   { href: "/admin/pagos", label: "Cobros" },
+  { href: "/admin/leads", label: "Leads" },
   { href: "/admin/accesos", label: "Inloggningar" },
 ];
 
