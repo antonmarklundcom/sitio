@@ -1,0 +1,69 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { businesses } from "@/db/schema";
+import { logActivity, requireRole } from "@/lib/auth";
+import { LEAD_STAGES, type LeadStage } from "@/lib/radar";
+
+function isLeadStage(v: string): v is LeadStage {
+  return (LEAD_STAGES as readonly string[]).includes(v);
+}
+
+/**
+ * Fri riktning (plan §6.3): en superadmin kan flytta en rad till vilket
+ * stadium som helst, inte bara framåt — ett felklick ska rättas med ett nytt
+ * klick, inte en databasändring.
+ */
+export async function setLeadStageAction(formData: FormData): Promise<void> {
+  const user = await requireRole("superadmin");
+  const businessId = Number(formData.get("businessId"));
+  const stage = String(formData.get("stage") ?? "");
+  if (!businessId || !isLeadStage(stage)) throw new Error("Ogiltigt stadium eller sajt.");
+
+  const [business] = await db
+    .select({ id: businesses.id, leadStage: businesses.leadStage })
+    .from(businesses)
+    .where(eq(businesses.id, businessId))
+    .limit(1);
+  if (!business) throw new Error("Sajten finns inte.");
+
+  if (business.leadStage !== stage) {
+    await db.update(businesses).set({ leadStage: stage }).where(eq(businesses.id, businessId));
+    await logActivity({
+      actorUserId: user.userId,
+      businessId,
+      action: "lead_stage_changed",
+      meta: { from: business.leadStage, to: stage },
+    });
+  }
+
+  revalidatePath("/admin/leads");
+  redirect("/admin/leads");
+}
+
+export async function saveLeadNoteAction(formData: FormData): Promise<void> {
+  const user = await requireRole("superadmin");
+  const businessId = Number(formData.get("businessId"));
+  if (!businessId) throw new Error("Ogiltig sajt.");
+
+  const notes = String(formData.get("adminNotes") ?? "")
+    .trim()
+    .slice(0, 2000);
+
+  await db
+    .update(businesses)
+    .set({ adminNotes: notes || null })
+    .where(eq(businesses.id, businessId));
+  await logActivity({
+    actorUserId: user.userId,
+    businessId,
+    action: "lead_note_saved",
+    meta: { length: notes.length },
+  });
+
+  revalidatePath("/admin/leads");
+  redirect("/admin/leads");
+}

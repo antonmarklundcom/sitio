@@ -543,6 +543,7 @@ empty; pre-push green; PR merged; log + §9 line.
 | O1 | #19 | docs/log/O1.md |
 | O2 | #20 | docs/log/O2.md |
 | O3 | #22 | docs/log/O3.md |
+| S5 | #25 | docs/log/S5.md |
 | S2 | #27 | docs/log/S2.md |
 
 (Phases append one line each: `| O1 | #nn | docs/log/O1.md |`.)
