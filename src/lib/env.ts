@@ -41,6 +41,18 @@ export const env = {
     return process.env.ANTHROPIC_API_KEY ?? "";
   },
   /**
+   * Modellen bakom AI-putsen (plan.md §1.5). Opus är default med flit: texten
+   * är sajtens SEO-försvar och anropet sker en gång per kund, inte per besök.
+   * Haiku är reservvarianten när kostnaden måste ner, inte utgångsläget.
+   */
+  get aiPolishModel() {
+    return process.env.AI_POLISH_MODEL?.trim() || "claude-opus-5";
+  },
+  /** Utan nyckel renderas putspanelen låst i stället för att knäcka sidan. */
+  get aiPolishEnabled() {
+    return this.anthropicApiKey.length > 0;
+  },
+  /**
    * Säljnumret bakom landningssidans enda CTA. Saknas det renderas knappen
    * mot ankaret `#contacto` och bygget varnar — sidan går alltid att bygga.
    * NEXT_PUBLIC_ betyder att värdet bakas in i klientbundeln vid bygget.

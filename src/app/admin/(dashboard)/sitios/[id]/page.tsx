@@ -36,6 +36,10 @@ import { MediaGrid, MediaUploader, type MediaItem } from "@/components/admin/med
 import { ModulesPanel } from "@/components/admin/modules-panel";
 import { listModuleStates } from "@/db/module-queries";
 import { toggleModuleAction } from "../module-actions";
+import { PolishPanel } from "@/components/admin/polish-panel";
+import { applyPolishAction, getPolishProposal, runPolishAction } from "../polish-actions";
+import { diffFields } from "@/lib/ai-polish";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -67,14 +71,16 @@ export default async function EditBusinessPage({
   const business = await getBusinessById(businessId);
   if (!business) notFound();
 
-  const [mediaRows, analytics, subscription, paymentRows, yearStats, moduleStates] = await Promise.all([
-    listMediaForBusiness(businessId),
-    getBusinessAnalytics(businessId),
-    getCurrentSubscription(businessId),
-    getPaymentsWithReceipts(businessId),
-    getYearStats(businessId),
-    listModuleStates(businessId),
-  ]);
+  const [mediaRows, analytics, subscription, paymentRows, yearStats, moduleStates, polishProposal] =
+    await Promise.all([
+      listMediaForBusiness(businessId),
+      getBusinessAnalytics(businessId),
+      getCurrentSubscription(businessId),
+      getPaymentsWithReceipts(businessId),
+      getYearStats(businessId),
+      listModuleStates(businessId),
+      getPolishProposal(businessId),
+    ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
   const toItem = (m: (typeof mediaRows)[number]): MediaItem => ({
@@ -334,6 +340,33 @@ export default async function EditBusinessPage({
             adminNotes: business.adminNotes,
           }}
         />
+
+      <PolishPanel
+        businessId={business.id}
+        hasApiKey={env.aiPolishEnabled}
+        model={env.aiPolishModel}
+        aiPolishedAt={business.aiPolishedAt ? business.aiPolishedAt.toISOString() : null}
+        // Diffen räknas här, på servern: panelen är en klientkomponent och ett
+        // värde ur @/lib/ai-polish hade dragit in Anthropic-SDK:n i bundeln.
+        diffs={
+          polishProposal
+            ? diffFields(
+                {
+                  description: business.description,
+                  seoTitle: business.seoTitle,
+                  seoDescription: business.seoDescription,
+                  services: Array.isArray(business.servicesJson) ? business.servicesJson : [],
+                },
+                polishProposal.result,
+              )
+            : null
+        }
+        warnings={polishProposal?.warnings ?? []}
+        usage={polishProposal?.usage ?? null}
+        proposedAt={polishProposal?.proposedAt ?? null}
+        runPolish={runPolishAction.bind(null, business.id)}
+        applyPolish={applyPolishAction.bind(null, business.id)}
+      />
     </div>
   );
 }
