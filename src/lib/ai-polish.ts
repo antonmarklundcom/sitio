@@ -172,12 +172,15 @@ export type PolishResult = {
   services: { name: string; desc: string }[];
 };
 
-export type PolishUsage = {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-};
+/** Loggas i activity_log och läses tillbaka därifrån — validera, casta inte. */
+export const polishUsageSchema = z.object({
+  model: z.string(),
+  inputTokens: z.number(),
+  outputTokens: z.number(),
+  cacheReadTokens: z.number(),
+});
+
+export type PolishUsage = z.infer<typeof polishUsageSchema>;
 
 export type PolishValidation =
   | { ok: true; value: PolishResult; warnings: string[] }

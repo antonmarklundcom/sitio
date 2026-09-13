@@ -11,6 +11,7 @@ import {
   POLISH_FIELDS,
   polishBusiness,
   polishResponseSchema,
+  polishUsageSchema,
   type PolishFieldKey,
   type PolishResult,
   type PolishUsage,
@@ -47,10 +48,13 @@ async function loadProposal(businessId: number): Promise<StoredProposal | null> 
   const parsed = polishResponseSchema.safeParse(meta.result);
   if (!parsed.success) return null;
 
+  const usage = polishUsageSchema.safeParse(meta.usage);
+
   return {
     result: parsed.data,
     warnings: Array.isArray(meta.warnings) ? meta.warnings.map(String) : [],
-    usage: (meta.usage ?? { model: "?", inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 }) as PolishUsage,
+    // En handredigerad eller äldre rad får inte rendera "undefined tokens".
+    usage: usage.success ? usage.data : { model: "okänd", inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 },
     proposedAt: row.createdAt ? new Date(row.createdAt).toISOString() : "",
   };
 }
