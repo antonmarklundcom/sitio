@@ -540,6 +540,7 @@ empty; pre-push green; PR merged; log + §9 line.
 | Phase | PR | Log |
 |---|---|---|
 | plan | this PR | — |
+| O1 | #19 | docs/log/O1.md |
 
 (Phases append one line each: `| O1 | #nn | docs/log/O1.md |`.)
 

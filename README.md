@@ -72,7 +72,15 @@ Repot har **inga** `.github/workflows/`, medvetet — se `docs/RUNNER-POLICY.md`
 Kontrollerna körs som git-hooks istället:
 
 - `.husky/pre-commit` — blockerar commits som lägger till filer under `.github/workflows/`.
-- `.husky/pre-push` — `typecheck && lint && build`. Röd build = blockerad push.
+- `.husky/pre-push` — `typecheck && lint && test && build`. Röd kontroll = blockerad push.
+
+Enhetstesterna (`npm test`, vitest) ligger i `tests/unit/` och täcker den rena
+logiken: öppettider i Asunción, telefonnormalisering, slugs, prenumerationernas
+livscykel och datummatematik, analytics-klassning och hashning, rollupens
+dygnsintervall, mediasökvägarnas traversal-skydd, statusövergångar,
+modulregistret och intake. De rör aldrig databasen — allt som behöver `db` är
+röktest. Svitten går på ett par sekunder, vilket är hela poängen: den ska gå att
+köra mitt i en redigering av `billing.ts`, inte bara före en push.
 
 Hookarna går att kringgå med `--no-verify`; de är en ledstång, inte en mur.
 
@@ -286,6 +294,12 @@ npm run db:migrate && npm run db:seed
 npm run build && PORT=3100 npm run start &
 SMOKE_BASE_URL=http://127.0.0.1:3100 npm run smoke
 ```
+
+`npm run smoke` kör `scripts/smoke-e2e.mjs` och därefter varje
+`tests/smoke/*.mjs` som inte börjar med `_`; de delade hjälparna (browserstart,
+`ok()`, admininloggning, bas-URL) ligger i `tests/smoke/_lib.mjs` så att flera
+faser kan lägga till egna sviter utan att redigera samma fil.
+`tests/smoke/README.md` har receptet för en MySQL 8 i en tom container.
 
 **Testet skriver i databasen** (byter namn och slug på business 1, laddar upp
 en bild). Kör det aldrig mot produktion.
