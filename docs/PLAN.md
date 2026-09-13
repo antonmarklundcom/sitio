@@ -18,7 +18,7 @@
 ### 1.1 Vad produkten är
 
 En foot-in-the-door-SaaS för paraguayanska småföretagare: en färdig, snygg,
-WhatsApp-first one-page-sajt på `sitio.com.py/[slug]` för 400.000 (Básico) eller
+WhatsApp-first one-page-sajt på `sitio.com.py/[slug]` för 300.000 (Básico) eller
 600.000 Gs/år (Plus) — prislistan i §1.7.
 Säljs manuellt via WhatsApp i v1. Produkten är samtidigt en upsell-radar:
 analytics per sajt (besök + WhatsApp-klick) identifierar heta kunder för CRM,
@@ -144,14 +144,13 @@ Två regler som PR-12 slog fast:
 
 ### 1.7 Pris och betalning i Paraguay (v1: manuell, inte Stripe)
 
-**Prislista (beslut 2026-09-13; siffrorna väntar på Antons godkännande i
-`docs/decisions-needed.md`, strukturen är låst).** Två sålda nivåer, samma
+**Prislista (beslut 2026-09-13, siffror godkända av Anton samma dag).** Två sålda nivåer, samma
 pris för alla branscher. Bransch ändrar aldrig priset — den ändrar bara vilken
 innehållsmodul Plus innehåller. Inga moduler à la carte.
 
 | Plan | Pris/år | Ingår | Moduler |
 |---|---|---|---|
-| **Básico** | ₲ 400.000 | one-page-sajt på `sitio.com.py/[slug]`, branschtema, logga + upp till 8 foton, WhatsApp-CTA, öppettider med "abierto ahora", karta, sociala länkar, AI-putsad text, SEO + JSON-LD, statistik i `/mi-sitio` | inga |
+| **Básico** | ₲ 300.000 | one-page-sajt på `sitio.com.py/[slug]`, branschtema, logga + upp till 8 foton, WhatsApp-CTA, öppettider med "abierto ahora", karta, sociala länkar, AI-putsad text, SEO + JSON-LD, statistik i `/mi-sitio` | inga |
 | **Plus** | ₲ 600.000 | allt i Básico | `gallery` (20 foton) + branschens innehållsmodul: `menu` (gastronomía), `products` (comercio, otro); övriga branscher får galleriet som sin modul |
 | **Pro** | reserverad (förslag ₲ 900.000) | allt i Plus | `extra_pages` och `booking` när de finns (fas 3). Säljs inte förrän då |
 
@@ -159,20 +158,20 @@ Regler:
 
 - Varför två nivåer: en flat ₲ 500.000 hade dödat modul-upsellen som radarn
   (§1.10) finns för att sälja; tre nivåer säljer sämre i ett WhatsApp-meddelande
-  än två. ₲ 400.000 är fortfarande under en timmes konsultarvode.
+  än två. ₲ 300.000 är ungefär en timmes konsultarvode.
 - Varför bransch inte påverkar priset: menyn är det som får en restaurangsajt
   att ranka och konvertera; kostar den extra väljs den bort. Kostnaden för dig
   är densamma som för produktmodulen.
-- Uppgradering mitt i året: mellanskillnaden (₲ 200.000) betalas rakt av,
+- Uppgradering mitt i året: mellanskillnaden (₲ 300.000) betalas rakt av,
   förfallodatumet ligger kvar, nästa förnyelse sker till den nya nivåns pris
   (ersätter D10:s "helår vid aktivering"; enklare att förklara och inget
   pro-rata-räknande).
 - Admin behåller fritt `priceGs` per prenumeration — du förhandlar. Listan är
   defaultvärdet (`PLAN_SUGGESTED_PRICE_GS`), inte en spärr. Landningssidan
-  säger "desde ₲ 400.000 por año".
+  säger "desde ₲ 300.000 por año".
 - D4-rabatten ("Hecho con sitio.com.py"-länk) är fortfarande av som default.
 
-- Pris i heltal Gs (`bigint`), visning `₲ 400.000` (es-PY, inga decimaler).
+- Pris i heltal Gs (`bigint`), visning `₲ 300.000` (es-PY, inga decimaler).
 - Flöde: du säljer via WhatsApp → skapar `subscription` (plan, pris, `startsAt`,
   `expiresAt` = +1 år) → kunden betalar via **transferencia/giros/Tigo Money/
   Billetera Personal/efectivo** → skickar comprobante-foto via WhatsApp → du
@@ -181,7 +180,7 @@ Regler:
 - **Förnyelse:** admin-vy "Vencen pronto" (≤45 dagar). Per kund: en
   wa.me-deeplink med förifyllt meddelande som inkluderar årets statistik —
   *"Tu página tuvo 340 visitas y 52 contactos por WhatsApp este año 📈.
-  Renovamos por ₲ 400.000?"* Det är säljargumentet, byggt in i produkten.
+  Renovamos por ₲ 300.000?"* Det är säljargumentet, byggt in i produkten.
 - Livscykel efter förfall: `active` → (förfallodatum) `grace` (15 dagar, sajten
   uppe) → `expired` ⇒ business `paused` (sajten svarar 404 + `noindex`; datat
   finns kvar). Allt manuellt bekräftat men systemet räknar ut datumen.
@@ -638,7 +637,7 @@ env-ändring, aldrig en refaktorering.
 | # | Beslut | Min rekommendation |
 |---|---|---|
 | D1 | **Owner-login: WhatsApp-OTP eller lösenord?** OTP är friktionsfritt och numret är redan verifierat, men kräver att du skickar koder manuellt tills Cloud API (PR-17) finns. | OTP; i fas 2 innan PR-17 innebär det att owner-logins går genom dig — acceptabelt vid <30 kunder |
-| D2 | **Prisplaner:** vad ingår i 200k vs 600k? Moduler per styck eller paketerade i basico/plus/pro? Schemat stödjer båda. | **Beslutat 2026-09-13 (§1.7):** två sålda nivåer, Básico ₲ 400.000 / Plus ₲ 600.000 (galleri + branschens innehållsmodul), Pro reserverad för fas 3. Aldrig à la carte, bransch påverkar inte priset. Siffrorna väntar på ditt ja i `docs/decisions-needed.md` |
+| D2 | **Prisplaner:** vad ingår i 200k vs 600k? Moduler per styck eller paketerade i basico/plus/pro? Schemat stödjer båda. | **Beslutat 2026-09-13 (§1.7):** två sålda nivåer, Básico ₲ 300.000 / Plus ₲ 600.000 (galleri + branschens innehållsmodul), Pro reserverad för fas 3. Aldrig à la carte, bransch påverkar inte priset. Siffror godkända 2026-09-13 |
 | D3 | **Grace-period efter förfall:** 15 dagar föreslaget. Kortare = kassaflöde, längre = mindre churn-friktion. | 15 dagar + påminnelse dag 45/15/3 före förfall |
 | D4 | **"Hecho con sitio.com.py"-länk i footern?** Gratis marknadsföring och interna länkar, men bryter "fristående"-känslan och avslöjar mall. | Av som default; ev. på som rabattmorot ("₲50.000 billigare med länk") |
 | D5 | **Ska roten sitio.com.py någonsin lista kunder (katalog)?** Katalog hjälper din SEO men gör kundsajterna till "profiler i en katalog". | Nej — roten är endast säljsida för SaaS:en |
@@ -646,7 +645,7 @@ env-ändring, aldrig en refaktorering.
 | D7 | **AI-puts: alltid, eller opt-in per sajt?** Alltid ger unikt innehåll överallt (SEO-skydd) men du förlorar kundens röst. | Alltid köra, men du granskar diffen före publicering (den vyn ingår i AI-puts-steget) |
 | D8 | **Trial/demo-läge:** bygga sajten gratis och visa preview-länk innan betalning (starkt säljverktyg), eller betala först? Schemat stödjer trial-status. | Bygg-först-visa-sen: preview-token kostar dig inget och stänger affärer |
 | D9 | **Hostinger-konto/slot:** vilket av de tre kontona (LATAM rimligast) och bekräfta att en slot är ledig. | — (bara du vet slot-läget) |
-| D10 | **Priser på moduler i efterhand** (kund köper meny-modul år 2): pro-rata eller helår? | **Beslutat 2026-09-13 (§1.7):** uppgradering Básico→Plus = mellanskillnaden ₲ 200.000 rakt av, samma förfallodatum, förnyelse till Plus-pris. Varken pro-rata eller nytt helår |
+| D10 | **Priser på moduler i efterhand** (kund köper meny-modul år 2): pro-rata eller helår? | **Beslutat 2026-09-13 (§1.7):** uppgradering Básico→Plus = mellanskillnaden ₲ 300.000 rakt av, samma förfallodatum, förnyelse till Plus-pris. Varken pro-rata eller nytt helår |
 
 ---
 
@@ -701,7 +700,7 @@ env-ändring, aldrig en refaktorering.
 9. **Innehållsansvar.** Du publicerar andras påståenden ("bästa priserna",
    hälsopåståenden från clínicas) på din domän. Ha användarvillkor + rätt att
    pausa i avtalet från kund #1, och ta bort-flödet finns redan (paused/archived).
-10. **Priset är lågt och supporten är inte noll.** 400.000 Gs/år ≈ en och en halv
+10. **Priset är lågt och supporten är inte noll.** 300.000 Gs/år ≈ en
     timmes konsultarvode. Varje "kan du ändra mina öppettider"-WhatsApp äter
     marginalen. Owner-admin (PR-11) är därför inte en lyxfunktion utan
     lönsamhetens förutsättning — prioritera den direkt efter MVP.

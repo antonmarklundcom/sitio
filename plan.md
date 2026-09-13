@@ -22,7 +22,7 @@
 | ~~S3 theme `belleza`~~ | — | — | — | §1.12 | **Cancelled 2026-09-13.** `belleza` renders on theme `salud` with a locked palette. Prompt file retired. | — |
 | ~~S4 theme `taller`~~ | — | — | — | §1.12 | **Cancelled 2026-09-13.** `taller` renders on theme `servicios` with a locked palette. Prompt file retired. | — |
 | S5 upsell radar (PR-16) | 2 | Sonnet | `prompts/sonnet-5-radar.md` | §6.3 | `src/lib/radar.ts`, `src/db/lead-queries.ts`, `src/app/admin/(dashboard)/leads/**`, `src/components/admin/leads-*.tsx`, `tests/unit/radar.test.ts`, `tests/smoke/radar.mjs`, `docs/log/S5.md` | O1 |
-| S7 category lock + price list | 2 | Sonnet | `prompts/sonnet-7-category-lock.md` (to be written, §7) | §6.5 | `src/lib/presentation.ts`, `tests/unit/presentation.test.ts`, `src/components/admin/theme-picker.tsx` (replace), `src/components/admin/business-form.tsx` (theme/palette block only), `src/app/admin/(dashboard)/sitios/actions.ts` (theme/variant derivation only), `src/app/admin/(dashboard)/alta/actions.ts` (theme/variant derivation only), `src/app/alta/[token]/actions.ts` (theme/variant derivation only), `PLAN_SUGGESTED_PRICE_GS` + `PLAN_LABELS` values in `src/lib/billing.ts`, `tests/smoke/presentation.mjs`, `docs/log/S7.md` | O1 |
+| S7 category lock + price list | 2 | Opus (one-off, bake-off §11.0) | `prompts/sonnet-7-category-lock.md` (to be written, §7) | §6.5 | `src/lib/presentation.ts`, `tests/unit/presentation.test.ts`, `src/components/admin/theme-picker.tsx` (replace), `src/components/admin/business-form.tsx` (theme/palette block only), `src/app/admin/(dashboard)/sitios/actions.ts` (theme/variant derivation only), `src/app/admin/(dashboard)/alta/actions.ts` (theme/variant derivation only), `src/app/alta/[token]/actions.ts` (theme/variant derivation only), `PLAN_SUGGESTED_PRICE_GS` + `PLAN_LABELS` values in `src/lib/billing.ts`, `tests/smoke/presentation.mjs`, `docs/log/S7.md` | O1 |
 | S6 link pass | — | Sonnet | `prompts/sonnet-6-link-pass.md` | §6.4 | cross-cutting only (see §6.4), `KNOWN-ISSUES.md`, `docs/log/S6.md` | S1, S2, S5, S7 |
 
 Execution order: O1 → O2 → O3 sequentially in one Opus chain (each spawns the
@@ -52,7 +52,8 @@ New decisions for this round:
    `menuItems.mediaId` all exist. A phase that thinks it needs a column writes
    the reason to `docs/decisions-needed.md` and works around it.
 2. **Model per phase is fixed in the phase table.** Opus for O1–O3, Sonnet
-   for S1, S2, S5, S6, S7. Never Fable (§4.8). Round 3 (§11) uses Astra via
+   for S1, S2, S5, S6; S7 runs on Opus as a one-off bake-off against
+   Astra (§11.0). Never Fable (§4.8). Round 3 (§11) uses Astra via
    Codex CLI as the worker and Fable only in Anton's own window.
 3. **Unit tests are vitest, live in `tests/unit/`, run in `.husky/pre-push`
    before the build.** Smoke tests stay Playwright against a real MySQL and
@@ -121,15 +122,14 @@ New decisions for this round:
     them and no row is ever written with them (S7 unit-tests that every
     category maps to a built theme). Every later cross-cutting change (S6,
     round 3) touches four theme directories, not six.
-13. **Price list (2026-09-13, pending Anton's sign-off on the numbers, see
-    `docs/decisions-needed.md`).** Two sold tiers, category never changes the
-    price: Básico ₲ 400.000/year (one-page site, everything core), Plus
+13. **Price list (2026-09-13, numbers approved by Anton the same day).** Two sold tiers, category never changes the
+    price: Básico ₲ 300.000/year (one-page site, everything core), Plus
     ₲ 600.000/year (Básico + gallery + the category's content module: `menu`
     for gastronomia, `products` for comercio/otro, gallery-only for the rest).
     `pro` stays in the enum, reserved for `extra_pages`/`booking` (fase 3,
     suggested ₲ 900.000). Upgrade mid-year = the flat difference, same expiry
     date; renewal at the new tier's price. Full table in `docs/PLAN.md` §1.7.
-    The landing (O2) says "desde ₲ 400.000 por año". `PLAN_SUGGESTED_PRICE_GS`
+    The landing (O2) says "desde ₲ 300.000 por año". `PLAN_SUGGESTED_PRICE_GS`
     is synced by S7. Admin keeps its free `priceGs` field (Anton negotiates);
     the list is the default, not a constraint.
 14. **URL structure reconfirmed:** `sitio.com.py/[slug]`, path-based. No
@@ -276,9 +276,8 @@ a phone-framed mock of a customer site built from the `servicios` theme
 markup with demo data); "Qué incluye" (one-page, WhatsApp button, horario
 with abierto-ahora, mapa, Google-ready SEO, estadísticas); "Cómo funciona"
 (three steps: hablamos por WhatsApp, cargás tus datos y fotos, publicamos en
-48 h); precio (two tiers from §1.13: "Básico desde ₲ 400.000 por año" and
-"Plus ₲ 600.000 por año" with what each includes, no per-module prices; if
-`docs/decisions-needed.md` carries a different signed-off number, use that); FAQ (5 questions, FAQ JSON-LD); footer with the
+48 h); precio (two tiers from §1.13: "Básico ₲ 300.000 por año" and "Plus
+₲ 600.000 por año" with what each includes, no per-module prices); FAQ (5 questions, FAQ JSON-LD); footer with the
 sales WhatsApp and "Hecho en Paraguay".
 
 Rules: static (`export const dynamic = "force-static"` or no dynamic APIs),
@@ -494,7 +493,7 @@ stay, they stop being chosen.
    inputs. `business-form.tsx` keeps its layout; only the picker block
    changes. The "ej byggt än" warning stays, driven by `isThemeBuilt`
    (relevant until S2 merges).
-4. `src/lib/billing.ts`: `PLAN_SUGGESTED_PRICE_GS` = basico 400 000, plus
+4. `src/lib/billing.ts`: `PLAN_SUGGESTED_PRICE_GS` = basico 300 000, plus
    600 000, pro 900 000; `PLAN_LABELS` unchanged. Nothing else in billing
    moves (O1 owns its tests; they assert lifecycle, not prices).
 5. Tests: `tests/unit/presentation.test.ts` — every `CATEGORIES` value maps
@@ -520,7 +519,7 @@ empty; pre-push green; PR merged; log + §9 line.
 |---|---|---|
 | Merge the plan PR so phases branch from a `main` that has `plan.md` | before O1 | ⬜ |
 | Sync the prompt files with §1.11–§1.13: retire `prompts/sonnet-3-theme-belleza.md` and `prompts/sonnet-4-theme-taller.md`, write `prompts/sonnet-7-category-lock.md` from §6.5 (same shape as the S5 prompt), and change `S1–S5` to `S1, S2, S5, S7` in `prompts/_handoff.md`, `prompts/_watcher.md` and `prompts/sonnet-6-link-pass.md` (also "six themes" → "four"). Ten minutes by hand or one cheap Astra dispatch; the planning session was scoped to docs only | before O1 | ⬜ |
-| Sign off (or change) the price numbers in `docs/decisions-needed.md` | before O2 opens its PR; S7 reads the same answer | ⬜ |
+| Sign off the price numbers | — | ✅ 300k / 600k, 2026-09-13 |
 | `ANTHROPIC_API_KEY` in local `.env.local` (to test O3 end to end) and in Hostinger env | O3 (degrades without) | ⬜ |
 | `NEXT_PUBLIC_SALES_WHATSAPP` (your sales number, E.164) | O2 (degrades without) | ⬜ |
 | Hostinger slot, database, env vars, `UPLOADS_DIR`, cron — deploy step A (README) | not a phase; do it whenever | ⬜ |
@@ -531,7 +530,7 @@ empty; pre-push green; PR merged; log + §9 line.
 ## 8. Open business questions (parked)
 
 - ~~Price of each module when sold separately~~ — decided §1.13: modules are
-  not sold separately; Plus bundles them. Numbers await sign-off.
+  not sold separately; Plus bundles them. Numbers approved: 300k / 600k.
 - Whether AI polish should run automatically at intake submission (D7 says
   always run, reviewed). Decide after seeing 10 polished sites.
 - Who approves when Anton is unavailable (`docs/PLAN.md` §5.8).
@@ -566,6 +565,31 @@ empty; pre-push green; PR merged; log + §9 line.
   case demands it; today the answer is no (§1.11).
 
 ## 11. Round 3: Fable-led refinement, Astra workers
+
+### 11.0 Bake-off on S7 (decided 2026-09-13, runs during round 2)
+
+Anton wants one like-for-like comparison of Opus vs Astra before round 3
+fixes the routing. S7 is the test piece: small-medium, self-contained,
+measurable exit criteria (unit + smoke), no design taste involved. Rules:
+
+- Same input: `prompts/sonnet-7-category-lock.md` (written from §6.5) for the
+  Opus session; the Astra dispatch prompt is the same file rewritten into the
+  skill's dispatch template, saved as `docs/r3/prompts/bakeoff-S7.txt`.
+- Same base: both branch off `main` after O1 has merged (S7 needs vitest and
+  `tests/smoke/_lib.mjs`). Opus on `phase/S7` (spawned by O3 as usual), Astra
+  on `phase/S7-astra` (dispatched by Anton from his PC, `gpt-6-astra` low;
+  escalate to high only if it fails the audit twice, and note it).
+- Same judge: the manager (Fable, Anton's window) runs the §6.5 exit checks on
+  both branches and reads both diffs. Record in `docs/log/S7-bakeoff.md`:
+  wall-clock from first commit to green PR, Claude usage % and Codex usage
+  consumed, exit criteria passed, defects found in review, lines changed.
+- One branch merges (the one that passes with fewer review findings; ties go
+  to the cheaper one). The other is deleted, not kept as reference.
+- The result sets round 3's default: if Astra ties or wins, §11.1 stands as
+  written; if Opus wins clearly on quality, normal-tier tickets stay on Astra
+  but lane-1-style work (new layouts, multi-file foundations) goes to Opus
+  sessions instead of Astra hard.
+
 
 Starts only after S6 has merged and Anton has read its closing report. This
 section is the design; nothing in it runs until Anton opens the first batch.
