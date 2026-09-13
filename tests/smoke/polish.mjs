@@ -25,8 +25,12 @@ await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 const panel = p.locator('[data-testid=polish-panel]');
 ok('putspanelen renderas', await panel.isVisible({ timeout: 15000 }).catch(() => false));
 
+// innerText ger den RENDERADE texten, och SectionTitle är versaliserad i css:
+// rubriker matchas därför skiftlägesokänsligt.
 const body = await p.locator('body').innerText();
-ok('rubriken Pulir textos finns', body.includes('Pulir textos'));
+const has = (needle) => body.toLowerCase().includes(needle.toLowerCase());
+
+ok('rubriken Pulir textos finns', has('Pulir textos'));
 ok('modellen står utskriven', /claude-[a-z0-9-]+/.test(body));
 
 // Knappen heter "Pulir textos" första gången och "Kör igen" när ett förslag
@@ -43,11 +47,11 @@ if (HAS_KEY) {
 } else {
   ok('utan nyckel: panelen säger vilken variabel som saknas', warns);
   ok('utan nyckel: knappen är avstängd', disabled === true);
-  ok('utan nyckel: sidan renderar ändå resten', body.includes('Status och länkar') && body.includes('Moduler'));
+  ok('utan nyckel: sidan renderar ändå resten', has('Status och länkar') && has('Bilder') && has('Moduler'));
 }
 
 // Degraderingen får inte hänga på att sidan är trasig: en 500 hade gett en
 // tom body långt innan kontrollerna ovan.
-ok('sidan är inte en felsida', !body.includes('Application error') && !body.includes('500'));
+ok('sidan är inte en felsida', !has('Application error') && !body.includes('500'));
 
 await finish(b, failed());
