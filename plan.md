@@ -567,7 +567,18 @@ empty; pre-push green; PR merged; log + §9 line.
 - PR-19 Self-service signup and self-reported payments.
 - PR-20 Renewal automation and "tu año en cifras".
 - PR-21 R2 migration (only if the uploads-persistence test fails).
-- PR-22 VenderCRM push for hot leads.
+- PR-22 VenderCRM push for hot leads (Anton's own pipeline).
+- `crm` module (decided direction 2026-09-13): business owners do not get a
+  CRM inside sitio. Their CRM is VenderCRM at clientes.com.py, sold as the
+  next step. Integration is one module: a contact/turno form section on the
+  customer's page that posts to VenderCRM's tenant-scoped `/api/v1/leads`
+  (skill `vendercrm-lead-capture`), API key per business in
+  `business_modules.settingsJson`. Needs one enum migration (`crm` in
+  `module_key`), so fase 3, together with `booking`. Two separate Node apps,
+  talking over that API; never one app on a parked domain (§11.6).
+- Alt text for customer photos: `media.altText` exists and is empty; let AI
+  polish (O3's chain) propose alt text per photo from name, category and
+  services. Round 3, normal tier.
 - Menu item and product images (`media.kind` menu_item/product through
   `/api/upload` for owner sessions).
 - Superadmin editing of owner menu/products with actor logging.
@@ -595,7 +606,8 @@ measurable exit criteria (unit + smoke), no design taste involved. Rules:
 - Same base: both branch off `main` after O1 has merged (S7 needs vitest and
   `tests/smoke/_lib.mjs`). Opus on `phase/S7` (spawned by O3 as usual), Astra
   on `phase/S7-astra` (dispatched by Anton from his PC, `gpt-6-astra` low;
-  escalate to high only if it fails the audit twice, and note it).
+  if it fails the audit twice the bake-off records that as the result and
+  asks Anton before any high-effort retry).
 - Same judge: the manager (Fable, Anton's window) runs the §6.5 exit checks on
   both branches and reads both diffs. Record in `docs/log/S7-bakeoff.md`:
   wall-clock from first commit to green PR, Claude usage % and Codex usage
@@ -626,7 +638,7 @@ rule.
 | Manager | Fable 5.1, the live session Anton started | Picks the batch, writes each dispatch prompt with a definition of done, chooses the tier, runs the revision gate, merges, writes the batch log, reports | Runs as a subagent, spawned session, Workflow, Routine or watcher (`fable-cost-guardrail`, §4.8); edits more than two tool calls of code; merges a protected-path change it has not read line by line |
 | Worker, cheap | `gpt-5.6-luna`, effort low | Renames, copy edits with the exact text, constant bumps, apply-an-existing-pattern-to-one-more-file, the `ThemePalettes` trim, AGENTS.md drop-in | Anything needing a design choice |
 | Worker, normal | `gpt-6-astra`, effort low | Default: a KNOWN-ISSUES fix with a known cause, a new admin column, a theme section tweak under the restraint rule (§6.2), a new unit or smoke test, one- or two-file changes with judgment | Protected paths (below) |
-| Worker, hard | `gpt-6-astra`, effort high | Multi-file refactors, bugs with no known cause, anything that failed twice at normal, and every protected-path ticket | Running migrations, pushing to `main`, editing `prompts/` or `plan.md` |
+| Worker, hard | `gpt-6-astra`, effort high | Multi-file refactors, bugs with no known cause, anything that failed twice at normal, and every protected-path ticket. **Only after Anton's explicit yes in the current conversation** (skill rule, 2026-09-13) | Being chosen by the manager alone; running migrations; pushing to `main`; editing `prompts/` or `plan.md` |
 | Side tools | Sonnet or Opus subagent from the manager session, model set explicitly | Only a step Codex cannot reach from the PC (browser QA of a deployed page, Drive, Notion) | Being the worker for code |
 
 Protected paths — Astra may edit them only at the hard tier, only when the
@@ -667,9 +679,10 @@ MySQL, never by the worker.
    diffs; an adversarial read of the full diff for protected paths and a
    read of the summary plus spot checks otherwise. Failure → resume the same
    session with the exact error, same tier. Escalation exactly as the skill:
-   cheap fails once → normal; normal fails twice → hard; hard fails twice →
-   the ticket goes back to the inbox with the manager's diagnosis, no third
-   dispatch in the batch.
+   cheap fails once → normal; normal fails twice → stop, show Anton both
+   failure reports and propose hard; dispatch at hard only on his yes in
+   that conversation, otherwise the ticket goes back to the inbox with the
+   manager's diagnosis. Hard fails twice → inbox, no third dispatch.
 5. **Merge.** One PR per ticket, body ≤ 15 lines naming the Codex session
    id and the model/effort read from the session log. The pre-push hook is
    the CI; a red hook is the worker's job at the same tier. The manager
@@ -723,3 +736,17 @@ category the gallery; extra pages and booking arrive as modules in fase 3.
 Presentation variety is a section decision (which sections, in which order,
 by category and enabled modules), never a new theme. A business that fits
 no section pattern is a §10 line, not a custom site.
+
+### 11.6 sitio and VenderCRM stay two apps
+
+Considered and rejected on 2026-09-13: parking `sitio.com.py` on the
+clientes.com.py Node.js app and serving both products from one process.
+Pros: one Hostinger slot, one deploy, one login. Cons that decide it: one
+bad deploy takes both products down; two release cadences and two plans in
+one repo; host-based routing in middleware for every request; session
+cookies and ISR cache keys scoped by host, easy to get subtly wrong; one Node
+process is already the scalability ceiling in `docs/PLAN.md` §5.3 and two
+products share it; the schemas couple over time. The integration surface is
+one HTTP API with a tenant key, which is exactly what two apps do well.
+Decision: separate slots, separate repos, API between them. The only cost is
+a second Hostinger Node.js slot (D9).
