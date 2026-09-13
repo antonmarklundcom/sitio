@@ -36,6 +36,9 @@ import { MediaGrid, MediaUploader, type MediaItem } from "@/components/admin/med
 import { ModulesPanel } from "@/components/admin/modules-panel";
 import { listModuleStates } from "@/db/module-queries";
 import { toggleModuleAction } from "../module-actions";
+import { PolishPanel } from "@/components/admin/polish-panel";
+import { applyPolishAction, getPolishProposal, runPolishAction } from "../polish-actions";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -67,14 +70,16 @@ export default async function EditBusinessPage({
   const business = await getBusinessById(businessId);
   if (!business) notFound();
 
-  const [mediaRows, analytics, subscription, paymentRows, yearStats, moduleStates] = await Promise.all([
-    listMediaForBusiness(businessId),
-    getBusinessAnalytics(businessId),
-    getCurrentSubscription(businessId),
-    getPaymentsWithReceipts(businessId),
-    getYearStats(businessId),
-    listModuleStates(businessId),
-  ]);
+  const [mediaRows, analytics, subscription, paymentRows, yearStats, moduleStates, polishProposal] =
+    await Promise.all([
+      listMediaForBusiness(businessId),
+      getBusinessAnalytics(businessId),
+      getCurrentSubscription(businessId),
+      getPaymentsWithReceipts(businessId),
+      getYearStats(businessId),
+      listModuleStates(businessId),
+      getPolishProposal(businessId),
+    ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
   const toItem = (m: (typeof mediaRows)[number]): MediaItem => ({
@@ -334,6 +339,22 @@ export default async function EditBusinessPage({
             adminNotes: business.adminNotes,
           }}
         />
+
+      <PolishPanel
+        businessId={business.id}
+        hasApiKey={env.aiPolishEnabled}
+        model={env.aiPolishModel}
+        aiPolishedAt={business.aiPolishedAt ? business.aiPolishedAt.toISOString() : null}
+        current={{
+          description: business.description,
+          seoTitle: business.seoTitle,
+          seoDescription: business.seoDescription,
+          services: Array.isArray(business.servicesJson) ? business.servicesJson : [],
+        }}
+        proposal={polishProposal}
+        runPolish={runPolishAction.bind(null, business.id)}
+        applyPolish={applyPolishAction.bind(null, business.id)}
+      />
     </div>
   );
 }
