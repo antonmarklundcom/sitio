@@ -1,4 +1,4 @@
-# Phase S2 — Theme `salud`. Sonnet session. Lane 2, parallel with S1–S5.
+# Phase S2 — Theme `salud` (serves categories `salud` and `belleza`). Sonnet session. Lane 2, parallel with S1, S5, S7.
 
 Read ONLY: this file, `plan.md` (phase table, §1 esp. 1.7, §4, §6.2, §9),
 `docs/log/O1.md`, `docs/PALETTE-REGISTRY.md`, `src/themes/types.ts`,
@@ -21,8 +21,11 @@ Budget: one session, ≤ 90 min. When the exit criteria pass, open the PR that t
 
 Phase rules:
 - Branch `phase/S2` off latest `main`. WIP commit every 30 min.
-- Design direction for `salud` is fixed in plan §6.2. Different section map
-  from every existing theme (read their header comments; they list theirs).
+- Design direction for `salud` is fixed in plan §6.2 (calm, appointment-first,
+  photo block after the hero, restraint rule). Different section map from
+  every existing theme (read their header comments; they list theirs).
+- Palette order matters: v1 teal (locked to `salud`), v2 rose (locked to
+  `belleza`), v3 navy, v4 sage. All four built and QA'd; two are selected.
 - Load skill `web-design-system` if available for the pattern names and the
   contrast rule; otherwise follow §6.2 and the registry table format.
 - Four palettes, hues ≥ 40° apart within the theme, text/base ≥ 4.5:1;
@@ -36,7 +39,9 @@ Phase rules:
 - Re-runnable; minor issues → `docs/log/S2.md`; stop only per §4.4.
 
 Exit: `isThemeBuilt("salud")` true; QA gate green for v1–v4; registry section
-with hue + contrast table; pre-push green; PR merged; log + §9 line.
+with hue + contrast table and v1/v2 marked as the locked variants; a unit
+test asserting `BUILT_THEMES` includes `salud`; pre-push green; PR merged;
+log + §9 line. Do not touch the admin picker (S7 replaces it).
 
 ## After this phase
 Follow `prompts/_handoff.md`. Lane 2: spawn nothing.

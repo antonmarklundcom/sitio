@@ -22,7 +22,7 @@
 | ~~S3 theme `belleza`~~ | — | — | — | §1.12 | **Cancelled 2026-09-13.** `belleza` renders on theme `salud` with a locked palette. Prompt file retired. | — |
 | ~~S4 theme `taller`~~ | — | — | — | §1.12 | **Cancelled 2026-09-13.** `taller` renders on theme `servicios` with a locked palette. Prompt file retired. | — |
 | S5 upsell radar (PR-16) | 2 | Sonnet | `prompts/sonnet-5-radar.md` | §6.3 | `src/lib/radar.ts`, `src/db/lead-queries.ts`, `src/app/admin/(dashboard)/leads/**`, `src/components/admin/leads-*.tsx`, `tests/unit/radar.test.ts`, `tests/smoke/radar.mjs`, `docs/log/S5.md` | O1 |
-| S7 category lock + price list | 2 | Opus (one-off, bake-off §11.0) | `prompts/sonnet-7-category-lock.md` (to be written, §7) | §6.5 | `src/lib/presentation.ts`, `tests/unit/presentation.test.ts`, `src/components/admin/theme-picker.tsx` (replace), `src/components/admin/business-form.tsx` (theme/palette block only), `src/app/admin/(dashboard)/sitios/actions.ts` (theme/variant derivation only), `src/app/admin/(dashboard)/alta/actions.ts` (theme/variant derivation only), `src/app/alta/[token]/actions.ts` (theme/variant derivation only), `PLAN_SUGGESTED_PRICE_GS` + `PLAN_LABELS` values in `src/lib/billing.ts`, `tests/smoke/presentation.mjs`, `docs/log/S7.md` | O1 |
+| S7 category lock + price list | 2 | Opus (one-off, bake-off §11.0) | `prompts/sonnet-7-category-lock.md` | §6.5 | `src/lib/presentation.ts`, `tests/unit/presentation.test.ts`, `src/components/admin/theme-picker.tsx` (replace), `src/components/admin/business-form.tsx` (theme/palette block only), `src/app/admin/(dashboard)/sitios/actions.ts` (theme/variant derivation only), `src/app/admin/(dashboard)/alta/actions.ts` (theme/variant derivation only), `src/app/alta/[token]/actions.ts` (theme/variant derivation only), `PLAN_SUGGESTED_PRICE_GS` + `PLAN_LABELS` values in `src/lib/billing.ts`, `tests/smoke/presentation.mjs`, `docs/log/S7.md` | O1 |
 | S6 link pass | — | Sonnet | `prompts/sonnet-6-link-pass.md` | §6.4 | cross-cutting only (see §6.4), `KNOWN-ISSUES.md`, `docs/log/S6.md` | S1, S2, S5, S7 |
 
 Execution order: O1 → O2 → O3 sequentially in one Opus chain (each spawns the
@@ -535,7 +535,7 @@ empty; pre-push green; PR merged; log + §9 line.
 | Item | Needed by | Status |
 |---|---|---|
 | Merge the plan PR so phases branch from a `main` that has `plan.md` | before O1 | ⬜ |
-| Sync the prompt files with §1.11–§1.13: retire `prompts/sonnet-3-theme-belleza.md` and `prompts/sonnet-4-theme-taller.md`, write `prompts/sonnet-7-category-lock.md` from §6.5 (same shape as the S5 prompt), and change `S1–S5` to `S1, S2, S5, S7` in `prompts/_handoff.md`, `prompts/_watcher.md` and `prompts/sonnet-6-link-pass.md` (also "six themes" → "four"). Ten minutes by hand or one cheap Astra dispatch; the planning session was scoped to docs only | before O1 | ⬜ |
+| Sync the prompt files with §1.11–§1.13 | — | ✅ done in the plan PR, 2026-09-13 |
 | Sign off the price numbers | — | ✅ 300k / 600k, 2026-09-13 |
 | `ANTHROPIC_API_KEY` in local `.env.local` (to test O3 end to end) and in Hostinger env | O3 (degrades without) | ⬜ |
 | `NEXT_PUBLIC_SALES_WHATSAPP` (your sales number, E.164) | O2 (degrades without) | ⬜ |
@@ -576,6 +576,11 @@ empty; pre-push green; PR merged; log + §9 line.
   `business_modules.settingsJson`. Needs one enum migration (`crm` in
   `module_key`), so fase 3, together with `booking`. Two separate Node apps,
   talking over that API; never one app on a parked domain (§11.6).
+- Owner-facing "contactos" and stats: stats already exist in `/mi-sitio`
+  (views, WhatsApp clicks per day); a contact list only exists once the
+  `crm` form module posts to VenderCRM, and then VenderCRM is the list.
+  sitio shows at most "últimos 5 contactos" read from the VenderCRM API plus
+  a link, never its own contacts table (§11.7).
 - Alt text for customer photos: `media.altText` exists and is empty; let AI
   polish (O3's chain) propose alt text per photo from name, category and
   services. Round 3, normal tier.
@@ -750,3 +755,30 @@ products share it; the schemas couple over time. The integration surface is
 one HTTP API with a tenant key, which is exactly what two apps do well.
 Decision: separate slots, separate repos, API between them. The only cost is
 a second Hostinger Node.js slot (D9).
+
+### 11.7 Messaging, email and CRM: one integration, in VenderCRM
+
+Decided direction 2026-09-13 (build items are fase 3, listed in §10):
+
+- **sitio.com.py sends nothing to customers' customers.** No auto-replies,
+  no marketing email, no mailboxes from this domain. Every customer site
+  shares the domain; one spam complaint hurts every site's ranking and
+  deliverability at once. sitio's own outbound is limited to WhatsApp OTPs
+  and renewal messages to the business owner.
+- **VenderCRM (clientes.com.py) is the messaging and CRM product.** Meta
+  Business verification, the WhatsApp Cloud API number and templates, the
+  email sending domain (a dedicated sending subdomain of clientes.com.py
+  with SPF, DKIM and DMARC, per-tenant reply-to, never the tenant's own
+  domain unless they verify it there), auto-replies, contact lists and
+  pipelines all live in one place and are set up once.
+- **PR-17 changes shape:** sitio does not integrate with Meta directly.
+  Its OTPs and renewal messages go through VenderCRM's messaging API with
+  a service key for the sitio tenant, so one verification serves both
+  products. If VenderCRM's API is not ready when PR-17 comes up, PR-17
+  waits; manual OTP stays until then.
+- **Upsell path inside sitio:** a "Clientes" panel in `/mi-sitio` showing
+  what the owner is missing (their contacts, auto-respuesta, seguimiento),
+  with one wa.me link to Anton. Once sold, the `crm` module turns on the
+  form section and the "últimos contactos" read-through. Owner mailboxes
+  (info@theirdomain) are not a sitio feature; if ever offered, they are
+  sold as hosting alongside "riktig hemsida", outside both products.

@@ -46,6 +46,7 @@ Exit:
 
 ## After this phase
 Follow `prompts/_handoff.md` "Last lane 1 phase": create the watcher Routine,
-then spawn S1, S2, S3, S4 (`prompts/sonnet-1-products.md`,
-`prompts/sonnet-2-theme-salud.md`, `prompts/sonnet-3-theme-belleza.md`,
-`prompts/sonnet-4-theme-taller.md`), model Sonnet. S5 is started by the watcher.
+then spawn S1, S2, S5 (`prompts/sonnet-1-products.md`,
+`prompts/sonnet-2-theme-salud.md`, `prompts/sonnet-5-radar.md`), model Sonnet,
+and S7 (`prompts/sonnet-7-category-lock.md`), model Opus (bake-off, plan
+§11.0). S3 and S4 are cancelled; do not spawn them.

@@ -28,13 +28,14 @@ the next prompt since the model is the same.
    `claude-sonnet-5`, `name` `sitio watcher`, `prompt` exactly
    `Read prompts/_watcher.md in this repo and execute it.`,
    `initiation` `human_schedule`.
-2. Spawn S1, S2, S3, S4 at once with `create_session` (`model`
+2. Spawn S1, S2, S5 at once with `create_session` (`model`
    `claude-sonnet-5`, same rules as above, prompt `Read prompts/<file>.md in
-   this repo and execute it.`). S5 is started by the watcher when a slot
-   frees. If `create_session` is unavailable, stop and report: the next
-   phases run on Sonnet in fresh windows, one per prompt file.
+   this repo and execute it.`), and S7 with `model` `claude-opus-5` (one-off
+   bake-off, plan §11.0). S3 and S4 are cancelled (plan §1.12): never spawn
+   them. If `create_session` is unavailable, stop and report: the next
+   phases run in fresh windows, one per prompt file.
 
-**Lane 2 (S1–S5):** spawn nothing. End with the phase report.
+**Lane 2 (S1, S2, S5, S7):** spawn nothing. End with the phase report.
 
 **Link pass (S6):** delete the watcher Routine (`list_triggers` →
 `delete_trigger`), then STOP with the closing report.

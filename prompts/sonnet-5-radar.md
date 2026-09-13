@@ -1,4 +1,4 @@
-# Phase S5 — Upsell radar (PR-16). Sonnet session. Lane 2, parallel with S1–S4.
+# Phase S5 — Upsell radar (PR-16). Sonnet session. Lane 2, parallel with S1, S2, S7.
 
 Read ONLY: this file, `plan.md` (phase table, §1, §4, §6.3, §9),
 `docs/log/O1.md`, `docs/PLAN.md` §1.10, `src/db/queries.ts` (listBusinesses

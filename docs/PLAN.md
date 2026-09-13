@@ -584,7 +584,7 @@ tidigare PR verifieras lokalt.)
 | **PR-14 Products-modul** | Samma mönster som PR-13 för comercio | S–M (kopierar mönstret) |
 | **PR-15 Tema 4 + branschlås** | `salud` (tjänar `salud` + `belleza`) + palettvarianter, QA-gate; `presentationFor(category)` låser tema/palett, temaväljaren tas bort, prislistans defaultvärden synkas. `belleza`/`taller` byggs inte som teman (§1.5). = S2 + S7 i `plan.md` | M |
 | **PR-16 Upsell-radar** | Nattlig score-beräkning, hot-lead-flaggning (trösklar i env), `/admin/leads`-vy med sortering, leadStage-knappar, anteckningar, wa.me-pitch-länk med förifylld statistik | M |
-| **PR-17 WhatsApp Cloud API** | Meta Business-verifiering förutsätts klar (din uppgift, ej kod). Template-baserad OTP-sändning, channel `whatsapp_api`, fallback till manuell, sändlogg i activity_log | M |
+| **PR-17 WhatsApp via VenderCRM** | Ändrad 2026-09-13 (`plan.md` §11.7): ingen direkt Meta-integration i sitio. OTP och förnyelsemeddelanden skickas via VenderCRMs meddelande-API med en tjänstenyckel; Meta-verifiering, nummer och templates sätts upp en gång i VenderCRM och delas. Channel `whatsapp_api`, fallback manuell, sändlogg i activity_log | S–M |
 
 ### Fas 3 — Skala & självbetjäning
 
