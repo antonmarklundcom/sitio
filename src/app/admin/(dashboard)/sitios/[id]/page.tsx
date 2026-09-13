@@ -342,7 +342,6 @@ export default async function EditBusinessPage({
         />
 
       <PolishPanel
-        businessId={business.id}
         hasApiKey={env.aiPolishEnabled}
         model={env.aiPolishModel}
         aiPolishedAt={business.aiPolishedAt ? business.aiPolishedAt.toISOString() : null}

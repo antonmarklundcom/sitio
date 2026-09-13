@@ -64,7 +64,6 @@ function DiffColumn({ title, text, muted }: { title: string; text: string; muted
 }
 
 export function PolishPanel({
-  businessId,
   hasApiKey,
   model,
   diffs,
@@ -75,7 +74,6 @@ export function PolishPanel({
   runPolish,
   applyPolish,
 }: {
-  businessId: number;
   hasApiKey: boolean;
   model: string;
   /** null = inget förslag finns ännu. */
@@ -121,7 +119,6 @@ export function PolishPanel({
         {applyState.ok ? <Notice tone="ok">{applyState.ok}</Notice> : null}
 
         <form action={runAction}>
-          <input type="hidden" name="businessId" value={businessId} />
           <SubmitButton
             label={diffs ? "Kör igen" : "Pulir textos"}
             pendingLabel="Putsar…"
