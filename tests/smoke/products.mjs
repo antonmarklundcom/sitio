@@ -1,0 +1,163 @@
+/**
+ * Rök för products-modulen (plan.md §6.1, PR-14).
+ *
+ * Egen fil (S1 äger inte scripts/smoke-e2e.mjs) och därför en egen inloggning
+ * hela vägen: admin-session plus en owner-OTP-inloggning, precis som e2e-filens
+ * steg 11 gör. Business 1:s owner-konto kan redan finnas (e2e-filen skapar det
+ * om den körts först i samma svit) — testet skapar det bara om det saknas.
+ *
+ * Kör av tests/smoke/_run.mjs. Kräver en byggd app och en riktig MySQL —
+ * skriver i databasen, kör aldrig mot produktion.
+ */
+import { B, adminLogin, createChecker, finish, launchBrowser } from './_lib.mjs';
+
+const b = await launchBrowser();
+const p = await b.newPage();
+const { ok, failed } = createChecker();
+
+await adminLogin(p, ok, b);
+
+// ---------- 1. modulväxeln: hitta business 1:s rad, säkerställ på ----------
+const modulesCardFor = (page) => page.locator('section').filter({ hasText: /moduler/i }).last();
+const productsRowFor = (page) => modulesCardFor(page).locator('li').filter({ hasText: 'products' }).first();
+
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+ok('products är byggd och märks inte som obyggd', !/ej byggt än/i.test(await productsRowFor(p).innerText()));
+
+if ((await productsRowFor(p).innerText()).includes('Slå på')) {
+  await productsRowFor(p).getByRole('button', { name: 'Slå på' }).click();
+  await p.waitForTimeout(2500);
+}
+
+// <SiteProducts> solo está conectado en el tema `comercio` esta fase (S6
+// conecta los demás). Business 1 usa `servicios` en la semilla — sin este
+// cambio, cualquier producto (visible u oculto) sería igualmente invisible
+// en la página pública y el chequeo de abajo no probaría nada. Se restaura
+// al final para no dejar el negocio de la semilla en un tema distinto.
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+const themeForm = p.locator('form').filter({ has: p.locator('select[name=themeKey]') });
+const originalTheme = await themeForm.locator('select[name=themeKey]').inputValue();
+await themeForm.locator('select[name=themeKey]').selectOption('comercio');
+await themeForm.getByRole('button', { name: /Spara/ }).first().click();
+await p.waitForTimeout(2500);
+
+// ---------- 2. owner-konto + OTP-inloggning (samma flöde som e2e-filens 11) ----------
+await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1200);
+if (/utan owner-konto/i.test(await p.locator('body').innerText())) {
+  await p.getByRole('button', { name: 'Skapa konto' }).first().click();
+  await p.waitForTimeout(3000);
+  await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(1200);
+}
+ok('owner-konto finns', (await p.locator('table tbody tr').count()) > 0);
+
+const ownerPhone = (await p.locator('table tbody tr').first().locator('td').nth(1).innerText()).replace(/\s/g, '');
+const owner = await b.newPage();
+await owner.goto(B + '/mi-sitio/login', { waitUntil: 'domcontentloaded' });
+await owner.fill('input[name=phone]', ownerPhone);
+await owner.getByRole('button', { name: /Pedir código/ }).click();
+await owner.waitForTimeout(2000);
+
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1200);
+await p.getByRole('button', { name: 'Generera kod' }).first().click();
+await p.waitForTimeout(2500);
+const ownerCode = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
+ok('inloggningskod genererad', Boolean(ownerCode));
+
+await owner.fill('input[name=code]', ownerCode ?? '');
+await owner.getByRole('button', { name: 'Entrar' }).click();
+await owner.waitForTimeout(3000);
+ok('owner-inloggning ok', owner.url().endsWith('/mi-sitio'));
+
+// ---------- 3. panelen dyker upp, produkter skapas ----------
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1200);
+const ownerBizId = ((await owner.locator('.panel-photos img').first().getAttribute('src').catch(() => null)) ?? '').split('/')[2] ?? null;
+ok('productlistan dyker upp med modulen', (await owner.locator('body').innerText()).includes('Tus productos'));
+
+const nombre1 = 'Silla artesanal ' + Date.now().toString().slice(-4);
+await owner.getByRole('button', { name: 'Agregar producto' }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill(nombre1);
+await owner.locator('.panel-menu-form input[name=priceGs]').first().fill('450000');
+await owner.getByRole('button', { name: 'Agregar producto' }).last().click();
+await owner.waitForTimeout(3000);
+const afterFirst = await owner.locator('body').innerText();
+ok('producto con precio guardado', afterFirst.includes(nombre1) && afterFirst.includes('450.000'));
+
+const nombre2 = 'Mesa a pedido ' + Date.now().toString().slice(-4);
+await owner.getByRole('button', { name: 'Agregar producto' }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill(nombre2);
+await owner.locator('.panel-menu-form input[name=priceGs]').first().fill('');
+await owner.getByRole('button', { name: 'Agregar producto' }).last().click();
+await owner.waitForTimeout(3000);
+ok('precio vacío se muestra como "A consultar"', (await owner.locator('body').innerText()).includes('A consultar'));
+
+const ownerSlug = ((await owner.locator('.panel-top a').first().getAttribute('href').catch(() => null)) ?? '').split('/').pop();
+if (ownerSlug) {
+  const html = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('el catálogo se ve en la página pública (ISR)', html.includes(nombre1) && html.includes(nombre2));
+  ok('sin evento de vista propio (fuera del enum, S1)', !html.includes('data-ev-view="product'));
+}
+
+// ---------- 4. ocultar: fuera del sitio, presente en el panel ----------
+await owner
+  .locator('.panel-menu-items li')
+  .filter({ hasText: nombre1 })
+  .first()
+  .getByRole('button', { name: 'Ocultar' })
+  .click();
+await owner.waitForTimeout(3000);
+ok('producto oculto sigue en el panel', (await owner.locator('body').innerText()).includes(nombre1));
+if (ownerSlug) {
+  const html = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('producto oculto no aparece en la página pública', !html.includes(nombre1));
+}
+
+// ---------- 5. módulo apagado: oculta sin borrar, rechaza el post de una pestaña vieja ----------
+await owner.getByRole('button', { name: 'Agregar producto' }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill('Producto fantasma');
+
+await p.goto(B + '/admin/sitios/' + (ownerBizId ?? '1'), { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+await productsRowFor(p).getByRole('button', { name: 'Stäng av' }).click();
+await p.waitForTimeout(2500);
+if (ownerSlug) {
+  const html = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('módulo apagado oculta el catálogo entero', !html.includes(nombre2));
+}
+
+// La acción del servidor debe rechazar el post de la pestaña vieja: el
+// control vive en productContext(), no en que el botón esté oculto.
+await owner.getByRole('button', { name: 'Agregar producto' }).last().click();
+await owner.waitForTimeout(3000);
+ok(
+  'módulo apagado rechaza el post de una pestaña vieja',
+  (await owner.locator('body').innerText()).includes('No pudimos guardar'),
+);
+
+await p.goto(B + '/admin/sitios/' + (ownerBizId ?? '1'), { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+await productsRowFor(p).getByRole('button', { name: 'Slå på' }).click();
+await p.waitForTimeout(2500);
+if (ownerSlug) {
+  const html = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('al reactivar, los datos vuelven (nada se borró)', html.includes(nombre2));
+  ok('el post rechazado nunca se escribió', !html.includes('Producto fantasma'));
+}
+
+// Deja el tema de la semilla como estaba — otros archivos de la suite (y una
+// relectura humana de business 1) no deben ver un cambio permanente.
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+await themeForm.locator('select[name=themeKey]').selectOption(originalTheme);
+await themeForm.getByRole('button', { name: /Spara/ }).first().click();
+await p.waitForTimeout(2000);
+
+await finish(b, failed());

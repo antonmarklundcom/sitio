@@ -130,3 +130,12 @@
 .site-root .com-closing .statement { color: var(--ink); margin-bottom: var(--s-6); }
 .site-root .com-closing-sub { font-size: var(--t-1); max-width: 42ch; }
 .site-root .com-closing-cta { margin-top: var(--s-4); }
+
+/* --- products (S1, PR-14): la catálogo se apoya en la misma grilla EDITORIAL
+   que "destacados" (com-items) — hairline en vez de card--accent, para no
+   competir visualmente con los servicios destacados de arriba. --- */
+.site-root.t-comercio .site-products-item {
+  border-radius: var(--r-md);
+  transition: border-color 0.15s ease;
+}
+.site-root.t-comercio .site-products-item:hover { border-color: var(--accent); }

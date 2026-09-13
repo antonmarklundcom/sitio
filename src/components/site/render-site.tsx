@@ -44,7 +44,7 @@ export function siteMetadata(site: SiteData, opts: { isPreview: boolean }): Meta
 }
 
 export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boolean }) {
-  const { business, photos, logo, hero, modules, menu } = site;
+  const { business, photos, logo, hero, modules, menu, products } = site;
   const palette = paletteFor(business.themeKey, business.paletteVariant);
   const Theme = themeComponent(business.themeKey);
 
@@ -72,6 +72,7 @@ export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boo
         hero={hero}
         modules={new Set(modules)}
         menu={menu}
+        products={products}
       />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

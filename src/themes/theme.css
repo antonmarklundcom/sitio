@@ -272,3 +272,25 @@
   font: 500 0.8125rem/1.4 system-ui, sans-serif;
   text-align: center;
 }
+
+/* == S1 == */
+/* Produkterna (products-modulen, PR-14) — delad primitiv, samma mönster som
+   .site-menu ovan: markupen är gemensam för alla teman, temat skruvar
+   utseendet med .t-<tema> .site-products … Ett rutnät i stället för menyns
+   sektionslista, eftersom produkter saknar sektionsnivå. */
+.site-root .site-products-intro { max-width: var(--measure); color: var(--ink-muted); }
+.site-root .site-products-grid {
+  list-style: none; margin: var(--s-8) 0 0; padding: 0;
+  display: grid; gap: var(--s-4);
+}
+@media (min-width: 640px) { .site-root .site-products-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .site-root .site-products-grid { grid-template-columns: repeat(3, 1fr); } }
+.site-root .site-products-item {
+  padding: var(--s-4); border: 1px solid var(--hairline); border-radius: var(--r-md, 10px);
+}
+.site-root .site-products-item p {
+  margin: var(--s-1) 0 0; font-size: var(--t--1); color: var(--ink-muted);
+}
+.site-root .site-products-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+.site-root .site-products-item-name { font-weight: 600; }
+.site-root .site-products-price { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-muted); }

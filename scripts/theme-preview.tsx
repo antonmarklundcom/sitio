@@ -310,6 +310,12 @@ const DEMO_MENU = [
   },
 ];
 
+const DEMO_PRODUCTS = [
+  { id: 1, name: "Silla de madera maciza", description: "Roble, terminación natural.", priceGs: 450000, isVisible: true, sortOrder: 0 },
+  { id: 2, name: "Mesa a medida", description: "Consultanos tamaño y madera.", priceGs: null, isVisible: true, sortOrder: 1 },
+  { id: 3, name: "Estantería modular de tres cuerpos", description: "Se arma en el local, sin herramientas.", priceGs: 980000, isVisible: true, sortOrder: 2 },
+];
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const written: string[] = [];
@@ -342,8 +348,9 @@ async function main() {
           // Demodatat kör med modulerna PÅ: QA-gaten ska se sektionerna som
           // en betalande kund ser dem, annars granskas ett utseende som ingen
           // kund har.
-          modules={new Set<string>(["gallery", "menu"])}
+          modules={new Set<string>(["gallery", "menu", "products"])}
           menu={DEMO_MENU}
+          products={DEMO_PRODUCTS}
         />,
       );
 

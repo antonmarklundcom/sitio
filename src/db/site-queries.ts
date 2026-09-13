@@ -5,6 +5,7 @@ import { db } from "./index";
 import { businesses, businessModules, media, slugRedirects } from "./schema";
 import type { Business, Media } from "./schema";
 import { getMenu, publicMenu, type MenuSectionRow } from "./menu-queries";
+import { getProducts, publicProducts, type ProductRow } from "./product-queries";
 
 export type SiteData = {
   business: Business;
@@ -14,6 +15,8 @@ export type SiteData = {
   modules: string[];
   /** Menyn, redan filtrerad: tom när modulen är av eller inget är upplagt. */
   menu: MenuSectionRow[];
+  /** Produkterna, redan filtrerade: tom när modulen är av eller inget är upplagt. */
+  products: ProductRow[];
 };
 
 async function loadSite(slug: string): Promise<SiteData | null> {
@@ -34,10 +37,12 @@ async function loadSite(slug: string): Promise<SiteData | null> {
 
   const photos = mediaRows.filter((m) => m.kind === "photo");
 
-  // Menyn hämtas bara när modulen är på: en avstängd modul ska inte kosta en
-  // extra fråga per sajt, och datat ligger kvar orört tills den slås på igen.
+  // Menyn och produkterna hämtas bara när modulen är på: en avstängd modul
+  // ska inte kosta en extra fråga per sajt, och datat ligger kvar orört tills
+  // den slås på igen.
   const moduleKeys = moduleRows.map((m) => m.moduleKey);
   const menu = moduleKeys.includes("menu") ? publicMenu(await getMenu(business.id)) : [];
+  const products = moduleKeys.includes("products") ? publicProducts(await getProducts(business.id)) : [];
 
   return {
     business,
@@ -46,6 +51,7 @@ async function loadSite(slug: string): Promise<SiteData | null> {
     hero: photos.find((m) => m.id === business.heroMediaId) ?? photos[0] ?? null,
     modules: moduleKeys,
     menu,
+    products,
   };
 }
 
