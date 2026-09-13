@@ -95,7 +95,7 @@ export const TIERS: Tier[] = [
       "Galería de hasta 20 fotos",
       "Menú con precios (gastronomía)",
       "Catálogo de productos (comercio)",
-      "Las demás rubros suman la galería",
+      "El resto de los rubros suma la galería",
     ],
   },
 ];

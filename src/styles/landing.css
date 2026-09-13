@@ -166,7 +166,7 @@
 .lp-phone-wrap { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--s-4); }
 .lp-phone {
   width: min(280px, 78vw);
-  aspect-ratio: 9 / 18.5;
+  aspect-ratio: 9 / 15.8;
   background: #22262f;
   border-radius: 34px;
   padding: 8px;
@@ -219,9 +219,9 @@
   text-align: center;
 }
 .lp-demo-url { color: var(--d-muted); font-size: 7px; letter-spacing: 0.02em; }
-.lp-demo-head { display: flex; align-items: center; gap: 6px; padding: 8px 10px 0; }
+.lp-demo .lp-demo-head { display: flex; align-items: center; gap: 6px; padding: 8px 10px 0; }
 .lp-demo-name { font-weight: 600; font-size: 10px; letter-spacing: -0.02em; }
-.lp-demo-call {
+.lp-demo .lp-demo-call {
   margin-inline-start: auto;
   border: 1px solid var(--d-hair);
   border-radius: 999px;
@@ -250,9 +250,9 @@
   text-align: center;
   margin-bottom: 8px;
 }
-.lp-demo-status { color: var(--d-muted); font-size: 7px; display: flex; align-items: center; gap: 4px; }
-.lp-demo-dot { width: 5px; height: 5px; border-radius: 999px; background: #35c184; flex: none; }
-.lp-demo-ribbon {
+.lp-demo .lp-demo-status { color: var(--d-muted); font-size: 7px; display: flex; align-items: center; gap: 4px; }
+.lp-demo .lp-demo-dot { width: 5px; height: 5px; border-radius: 999px; background: #35c184; flex: none; }
+.lp-demo .lp-demo-ribbon {
   display: flex;
   gap: 8px;
   justify-content: space-between;
@@ -268,8 +268,19 @@
 .lp-demo-card--lead { background: var(--d-accent); border-color: transparent; color: var(--d-base); }
 .lp-demo-card-title { font-weight: 600; font-size: 8.5px; letter-spacing: -0.01em; }
 .lp-demo-card-body { font-size: 7px; opacity: 0.8; margin-top: 3px; }
-.lp-demo-hours { padding: 10px 10px 0; display: grid; gap: 4px; font-size: 7px; color: var(--d-muted); }
-.lp-demo-hours-row { display: flex; justify-content: space-between; border-top: 1px solid var(--d-hair); padding-top: 4px; }
+.lp-demo-hours { padding: 11px 10px 0; display: grid; gap: 4px; font-size: 7px; color: var(--d-muted); }
+.lp-demo .lp-demo-hours-row { display: flex; justify-content: space-between; border-top: 1px solid var(--d-hair); padding-top: 4px; }
+.lp-demo-zone { padding: 9px 10px 0; font-size: 7px; color: var(--d-muted); }
+.lp-demo-zone strong { color: var(--d-ink); font-weight: 600; }
+.lp-demo .lp-demo-foot {
+  margin-top: 10px;
+  border-top: 1px solid var(--d-hair);
+  padding: 7px 10px 0;
+  font-size: 6.5px;
+  color: var(--d-muted);
+  display: flex;
+  justify-content: space-between;
+}
 .lp-demo-dock {
   position: absolute;
   inset-inline: 10px;
@@ -311,7 +322,13 @@
 .lp-card p { margin-bottom: 0; }
 .lp-card--lead { background: var(--accent-dim); border-color: rgba(47, 208, 122, 0.34); }
 .lp-card--lead p { color: var(--ink); }
-@media (min-width: 640px) { .lp-card--lead { grid-column: span 2; } }
+/* Span 2 bara i två-kolumnsläget, där ledkortet + de fem övriga går jämnt
+   ut med sista kortet också spännande två. Vid tre kolumner går sex kort upp
+   i två hela rader av sig själva — ett span skulle lämna ett ensamt kort. */
+@media (min-width: 640px) and (max-width: 899px) {
+  .lp-card--lead,
+  .lp-card:last-child { grid-column: span 2; }
+}
 
 /* ---------- 04 numbered rail ---------- */
 

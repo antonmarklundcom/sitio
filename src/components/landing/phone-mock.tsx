@@ -63,6 +63,9 @@ export function PhoneMock() {
               <div className="lp-demo-card">
                 <span className="lp-demo-card-title">Service y limpieza</span>
               </div>
+              <div className="lp-demo-card">
+                <span className="lp-demo-card-title">Mantenimiento por contrato</span>
+              </div>
             </div>
 
             <div className="lp-demo-hours">
@@ -74,6 +77,16 @@ export function PhoneMock() {
                 <span>Sábado</span>
                 <span>08:00–12:00</span>
               </span>
+            </div>
+
+            <p className="lp-demo-zone">
+              Atendemos en <strong>Lambaré, Villa Elisa y San Lorenzo</strong>.
+              Av. Cacique Lambaré 1240 · Ver en el mapa
+            </p>
+
+            <div className="lp-demo-foot">
+              <span>© 2026 Frío Sur · RUC 80012345-6</span>
+              <span>Instagram</span>
             </div>
 
             <div className="lp-demo-dock">Pedir presupuesto</div>
