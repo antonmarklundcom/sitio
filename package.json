@@ -17,7 +17,7 @@
     "prepare": "husky",
     "theme:preview": "tsx --tsconfig tsconfig.scripts.json scripts/theme-preview.tsx",
     "theme:shots": "tsx --tsconfig tsconfig.scripts.json scripts/theme-shots.ts",
-    "smoke": "node scripts/smoke-e2e.mjs"
+    "smoke": "node tests/smoke/_run.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

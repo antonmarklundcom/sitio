@@ -29,9 +29,9 @@ export const dynamic = "force-dynamic";
 function authorized(req: Request): boolean {
   const expected = env.cronSecret;
   const header = req.headers.get("authorization") ?? "";
-  const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
-  const url = new URL(req.url);
-  const provided = bearer || url.searchParams.get("key") || "";
+  // Bara bearer-headern. ?key= i query hamnar i åtkomstloggarna hos både
+  // Hostinger och varje proxy på vägen — en hemlighet får aldrig ligga där.
+  const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
 
   // Längdskillnad läcker inget mer än timingSafeEqual redan gör med
   // olika längder — men den kastar, så den måste kollas först.
