@@ -11,39 +11,14 @@
  * Testet SKRIVER i databasen (byter namn och slug på business 1, laddar upp en
  * bild). Kör det aldrig mot produktion.
  */
-import { chromium } from 'playwright';
-const B = process.env.SMOKE_BASE_URL ?? 'http://127.0.0.1:3100';
-const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'anton@sitio.com.py';
-const PASS = process.env.SEED_ADMIN_PASSWORD ?? 'sitio-dev-1234';
-import { existsSync } from 'node:fs';
-const bundled = process.env.PLAYWRIGHT_CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
-const b = await chromium.launch(existsSync(bundled) ? { executablePath: bundled } : {});
+import { B, adminLogin, createChecker, finish, launchBrowser } from '../tests/smoke/_lib.mjs';
+
+const b = await launchBrowser();
 const p = await b.newPage();
-let failed = 0;
-const ok = (n, cond, extra='') => {
-  if (!cond) failed++;
-  console.log(`${cond ? '✓' : '✗'} ${n}${extra ? ' — ' + extra : ''}`);
-};
+const { ok, failed } = createChecker();
 
 // 1. login
-await p.goto(B+'/admin/login');
-await p.fill('input[name=email]', EMAIL);
-await p.fill('input[name=password]', PASS);
-await p.click('button[type=submit]');
-await p.waitForURL((u) => !u.pathname.startsWith('/admin/login'), { timeout: 30000 }).catch(() => {});
-ok('login', !p.url().includes('/admin/login'), p.url());
-if (p.url().includes('/admin/login')) {
-  const why = await p.locator('body').innerText();
-  // Inloggningens rate limit är per process och gäller 15 minuter. Två
-  // smoke-körningar tätt inpå varandra slår i den — starta om servern.
-  if (why.includes('För många försök')) {
-    console.error('avbryter: inloggningens rate limit slog till. Starta om servern och kör igen.');
-  } else {
-    console.error('avbryter: inloggningen gick inte igenom —', why);
-  }
-  await b.close();
-  process.exit(1);
-}
+await adminLogin(p, ok, b);
 
 // 2. lista
 await p.goto(B+'/admin', { waitUntil: 'domcontentloaded' });
@@ -535,6 +510,4 @@ if (ownerSlug14) {
   ok('den nekade rätten skrevs aldrig', !html.includes('Plato fantasma'));
 }
 
-await b.close();
-console.log(failed === 0 ? '\nAllt grönt.' : `\n${failed} kontroll(er) föll.`);
-process.exit(failed === 0 ? 0 : 1);
+await finish(b, failed());

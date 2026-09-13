@@ -42,7 +42,7 @@ function isoDay(d: Date): string {
 }
 
 /** Dygnen som ska rullas upp, nyast sist. `days` räknas bakåt från idag. */
-function dayRange(days: number): string[] {
+export function dayRange(days: number): string[] {
   const today = new Date(`${dayKeyAsuncion()}T00:00:00Z`);
   const out: string[] = [];
   for (let i = days - 1; i >= 0; i--) {
