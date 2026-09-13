@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { waLink } from "@/lib/format";
 import { LEAD_STAGES, LEAD_STAGE_LABELS, leadPitchMessage, type LeadStage } from "@/lib/radar";
 import type { LeadRow } from "@/db/lead-queries";
@@ -19,9 +20,9 @@ export function LeadsRow({ lead }: { lead: LeadRow }) {
   return (
     <tr className="border-b border-admin-line last:border-0 align-top">
       <td className="px-3 py-3">
-        <a href={`/admin/sitios/${lead.id}`} className="font-medium hover:text-admin-accent">
+        <Link href={`/admin/sitios/${lead.id}`} className="font-medium hover:text-admin-accent">
           {lead.name}
-        </a>
+        </Link>
         <span className="block font-mono text-xs text-admin-muted">/{lead.slug}</span>
       </td>
       <td className="px-3 py-3 text-right">
