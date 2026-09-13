@@ -176,13 +176,68 @@ const comercio: ThemePalettes = [
 ];
 
 /**
+ * CALM: ljusdominant, sval-neutral bas med en svag blågrön ton, en djup
+ * accent som bara lever på CTA/status/länkar. v1 (teal) är låst till `salud`,
+ * v2 (rose) till `belleza` (plan §1.11); v3–v4 är verifierad reserv, ingen
+ * publicerad sajt väljer dem i den här omgången.
+ */
+const salud: ThemePalettes = [
+  {
+    hue: 174,
+    base: "#F3F8F7",
+    surface: "#E6F0EE",
+    surfaceRaised: "#FFFFFF",
+    ink: "#0E211D",
+    inkMuted: "#4E6864",
+    accent: "#0B6B62",
+    onAccent: "#F1FBF9",
+    hairline: "rgba(14,33,29,0.13)",
+  },
+  {
+    hue: 329,
+    base: "#F8F4F6",
+    surface: "#F1E5EA",
+    surfaceRaised: "#FFFFFF",
+    ink: "#251620",
+    inkMuted: "#6B5560",
+    accent: "#93275F",
+    onAccent: "#FFF1F7",
+    hairline: "rgba(37,22,32,0.13)",
+  },
+  {
+    hue: 222,
+    base: "#F4F6F9",
+    surface: "#E8EDF3",
+    surfaceRaised: "#FFFFFF",
+    ink: "#131C29",
+    inkMuted: "#4E5C6E",
+    accent: "#1A3D8C",
+    onAccent: "#F2F7FF",
+    hairline: "rgba(19,28,41,0.13)",
+  },
+  {
+    hue: 108,
+    base: "#F5F8F3",
+    surface: "#E9EFE4",
+    surfaceRaised: "#FFFFFF",
+    ink: "#1A2416",
+    inkMuted: "#546150",
+    accent: "#3F6B34",
+    onAccent: "#F2FAEE",
+    hairline: "rgba(26,36,22,0.13)",
+  },
+];
+
+/**
  * Teman utan egen palett faller tillbaka på servicios tills de byggs
- * (PR-15: salud + belleza + taller).
+ * (belleza + taller renderar på befintliga teman med låst variant, §1.12 —
+ * de får aldrig en egen post här).
  */
 export const PALETTES: Record<string, ThemePalettes> = {
   servicios,
   gastronomia,
   comercio,
+  salud,
 };
 
 export function paletteFor(themeKey: string, variant: number): Palette {
