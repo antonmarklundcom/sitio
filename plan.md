@@ -108,6 +108,15 @@ New decisions for this round:
     | `salud` | `salud` | 1 | teal (S2) |
     | `belleza` | `salud` | 2 | rose (S2) |
 
+    The category is what the customer signs up as and stays the customer's
+    word: a salón picks `belleza`, never `salud`; the theme behind it is an
+    internal detail the customer never sees or chooses. Category labels in
+    intake and admin are broad umbrellas ("Belleza y cuidado personal",
+    "Comercio y tiendas", "Servicios y oficios", "Taller y automotor",
+    "Gastronomía", "Salud", "Otro"); the customer's actual trade lives in
+    the name, description and services, and in the JSON-LD subtype. New
+    categories are a cheap enum migration plus one table row, not a theme.
+
     Seven looks in production instead of twenty-four. Variants 3–4 of every
     theme (and 3–4 of `salud`) stay in `palettes.ts` as a dormant, verified
     reserve; nothing selects them. Two neighbours in the same category look
@@ -355,7 +364,15 @@ check (`ownerContext` + module enabled, never trust the UI), `owner-menu.tsx
 → owner-products.tsx` (name, description ≤ 300, price in Gs or empty =
 "A consultar", visible toggle, move up/down, cap 60 products). Public
 rendering: `src/components/site/products-section.tsx` (`<SiteProducts>`),
-same shape as `SiteMenu`. Products have no view event in the analytics enum
+same shape as `SiteMenu`. Layout (fixed, so a ferretería and a clothing
+store both look intentional without a template each): a card grid, two
+columns from 360 px and three or four on desktop; each card is name, an
+optional one-line description, price in Gs or "Consultar", and a WhatsApp
+link prefilled "Hola, quiero consultar por {producto}" (`data-ev`
+`whatsapp_click`, the same conversion as everything else, no cart, no
+checkout, ever). Cards without an image have no image area, so the grid
+looks finished this round even though product photos come later (round 3
+first batch, §11.5). Products have no view event in the analytics enum
 (§1.1: no migrations), so render without `data-ev-view` and note it in the
 log. Styles as a
 `/* == S1 == */` block in `theme.css` plus a `.t-comercio` override in
@@ -688,6 +705,21 @@ ticket that needs one is written to `docs/decisions-needed.md` and waits.
 ### 11.5 First batch (proposed, not started)
 
 R3-0 drop the skill's `AGENTS.md` into the repo root (cheap; the repo has
-none). R3-1 trim `ThemePalettes` to the selected variants and adjust
-`theme-preview.tsx` (cheap). R3-2..5 from `KNOWN-ISSUES.md` in S6's order.
-Anton reorders freely; the manager writes the prompts.
+none). R3-1 product and menu-item images: `media.kind` `product`/`menu_item`
+through `/api/upload` for owner sessions, image slot in the product card and
+menu row, owner upload in `/mi-sitio` (hard: touches the upload route, a
+protected path). A products grid with photos is what makes a clothing store
+or ferretería page sell; it is the first customer-visible gap after round 2.
+R3-2 broaden the category labels (Spanish intake, Swedish admin) to the
+umbrellas in §1.11 (cheap). R3-3 trim `ThemePalettes` to the selected
+variants and adjust `theme-preview.tsx` (cheap). R3-4..6 from
+`KNOWN-ISSUES.md` in S6's order. Anton reorders freely; the manager writes
+the prompts.
+
+How every business type is covered without a template each: one page,
+one category theme, and content modules that add sections, not templates.
+Gastronomía gets the menu section, comercio/otro the products grid, every
+category the gallery; extra pages and booking arrive as modules in fase 3.
+Presentation variety is a section decision (which sections, in which order,
+by category and enabled modules), never a new theme. A business that fits
+no section pattern is a §10 line, not a custom site.
