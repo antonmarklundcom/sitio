@@ -46,7 +46,6 @@ export const MODULES: ModuleMeta[] = [
     label: "Produkter",
     summary: "Produktlista med pris eller “consultar”.",
     effect: "Samma mönster som menyn, renderas i comercio-temat.",
-    plannedIn: "PR-14",
   },
   {
     key: "extra_pages",

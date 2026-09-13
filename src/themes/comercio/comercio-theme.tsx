@@ -2,6 +2,7 @@ import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
 import { SiteMenu } from "@/components/site/menu-section";
+import { SiteProducts } from "@/components/site/products-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -22,7 +23,7 @@ import type { ThemeProps } from "../types";
  * Hero är medvetet INTE P1: den asymmetriska splitten bär redan `servicios`,
  * och två sajter i portföljen får inte dela sektion→mönster-karta.
  */
-export function ComercioTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
+export function ComercioTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -173,9 +174,13 @@ export function ComercioTheme({ business, photos, logo, hero, modules, menu }: T
         </section>
       ) : null}
 
+      {/* Products-modulen (PR-14): la catálogo real, con foto fuera de alcance
+          esta ronda (ver docs/log/S1.md). */}
+      <SiteProducts products={products} eyebrow="Productos" title="Nuestro catálogo" />
+
       {/* ---------- 04 CÓMO COMPRAR — P4 editorial two-column ---------- */}
-      {/* Menu-modulen. I comercio är den en prislista — `products` (PR-14) blir
-          den riktiga produktkatalogen; tills dess är det här fallbacken. */}
+      {/* Menu-modulen. Sigue siendo la lista de precios genérica cuando el
+          negocio la usa en vez de (o junto a) la catálogo de productos. */}
       <SiteMenu
         menu={menu}
         eyebrow="Precios"

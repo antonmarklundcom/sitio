@@ -1,5 +1,6 @@
 import type { Business, Media } from "@/db/schema";
 import type { MenuSectionRow } from "@/db/menu-queries";
+import type { ProductRow } from "@/db/product-queries";
 
 export type ThemeMedia = Pick<Media, "id" | "kind" | "variantsJson" | "altText" | "width" | "height" | "sortOrder">;
 
@@ -12,4 +13,6 @@ export type ThemeProps = {
   modules: Set<string>;
   /** Menyn (menu-modulen). Tom lista när modulen är av — temat behöver inte fråga. */
   menu: MenuSectionRow[];
+  /** Produkterna (products-modulen, PR-14). Tom lista när modulen är av. */
+  products: ProductRow[];
 };
