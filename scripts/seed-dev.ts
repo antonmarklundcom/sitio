@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import mysql from "mysql2/promise";
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "../src/lib/env";
+import { presentationFor } from "../src/lib/presentation";
 import * as schema from "../src/db/schema";
 import { businesses, businessModules, subscriptions, users } from "../src/db/schema";
 
@@ -53,8 +54,6 @@ const demoBusinesses = [
     slug: "electricidad-mendoza",
     name: "Electricidad Mendoza",
     category: "servicios" as const,
-    themeKey: "servicios" as const,
-    paletteVariant: 1,
     rawDescription:
       "Somos electricistas matriculados en Asunción. Trabajamos en instalaciones nuevas, " +
       "reparación de tableros, cableado de casas y comercios. Atendemos urgencias.",
@@ -85,8 +84,6 @@ const demoBusinesses = [
     slug: "pizzeria-la-nona",
     name: "Pizzería La Nona",
     category: "gastronomia" as const,
-    themeKey: "gastronomia" as const,
-    paletteVariant: 2,
     rawDescription:
       "Pizzería familiar en San Lorenzo, masa madre y horno a leña. Delivery por la zona.",
     description:
@@ -118,8 +115,6 @@ const demoBusinesses = [
     slug: "ferreteria-san-blas",
     name: "Ferretería San Blas",
     category: "comercio" as const,
-    themeKey: "comercio" as const,
-    paletteVariant: 3,
     rawDescription:
       "Ferretería de barrio en Luque. Herramientas, pinturas, electricidad y sanitarios. " +
       "Atendemos a albañiles y a vecinos.",
@@ -182,6 +177,7 @@ async function main() {
     const { plan, priceGs, ...biz } = b;
     await db.insert(businesses).values({
       ...biz,
+      ...presentationFor(biz.category),
       publishedAt: biz.status === "published" ? new Date() : null,
       whatsappVerifiedAt: new Date(),
     });
