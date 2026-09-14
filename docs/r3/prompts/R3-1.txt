@@ -1,0 +1,39 @@
+Task:
+Repo sitio (Next.js 15, TypeScript). Ticket R3-1, plan.md section 10 and 11.5. Since S7 the theme and palette variant are derived from the business category in src/lib/presentation.ts and only variants 1 and 2 of each theme are ever selected. Trim src/themes/palettes.ts so every theme carries exactly two palettes instead of four, and update the QA preview script, the unit tests and the palette registry doc to match. Variants 3 and 4 are removed, not commented out. The two kept palettes per theme keep their exact colour values and their positions (index 0 = variant 1, index 1 = variant 2).
+
+Files to touch:
+src/themes/palettes.ts
+scripts/theme-preview.tsx
+tests/unit/theme-registry.test.ts
+tests/unit/presentation.test.ts
+docs/PALETTE-REGISTRY.md
+
+Do not touch:
+src/lib/presentation.ts and its PRESENTATION_BY_CATEGORY table.
+Any file under src/themes/<theme>/ (theme markup and CSS).
+scripts/theme-shots.ts unless it fails typecheck after the trim; then the smallest fix that makes it compile, and say so in the report.
+The colour values of the kept palettes.
+Anything under .github/.
+
+Definition of done:
+ThemePalettes is a tuple of two Palette objects and each of the four theme constants has exactly two entries.
+paletteFor clamps the variant to 1..2 (a variant of 3 or 4 falls back to variant 2, a variant below 1 to variant 1).
+scripts/theme-preview.tsx loops over variants 1 and 2 only and the generated index lists eight pages, not sixteen.
+tests/unit/theme-registry.test.ts asserts two complete variants per theme and keeps the hue-distance and paletteFor tests, adjusted to two variants.
+tests/unit/presentation.test.ts bounds paletteVariant to 1..2 and its label regex to variant [1-2].
+docs/PALETTE-REGISTRY.md lists only the kept variants; the contrast and hue numbers for those variants are unchanged.
+The comment block at the top of src/lib/presentation.ts is left as is even though it mentions variants 3 and 4 (the manager updates copy).
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run theme:preview   (working directory: repo root; check that .preview/ contains eight <theme>-v<n>.html files)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.
