@@ -7,7 +7,7 @@
  * Kör: npm run theme:preview   ⇒ .preview/<tema>-v<variant>.html + index.html
  * Skärmdumpar: npm run theme:shots (kräver .preview/, se scripts/theme-shots.ts)
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import path from "node:path";
 import { readFileSync } from "node:fs";
@@ -321,6 +321,10 @@ async function main() {
   const written: string[] = [];
 
   for (const demo of demos) {
+    // Remove obsolete generated pages from earlier four-variant previews.
+    for (const variant of [3, 4]) {
+      await rm(path.join(OUT_DIR, `${demo.themeKey}-v${variant}.html`), { force: true });
+    }
     const placeholders = await writePlaceholders(demo.business.id, demo.tones);
     const photos = placeholders.map((ph, i) => ({
       id: i + 1,
@@ -332,7 +336,7 @@ async function main() {
       sortOrder: i,
     }));
 
-    for (const variant of [1, 2, 3, 4]) {
+    for (const variant of [1, 2]) {
       const palette = paletteFor(demo.themeKey, variant);
       const vars = Object.entries(paletteToCssVars(palette))
         .map(([k, v]) => `${k}:${v}`)

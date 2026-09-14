@@ -42,30 +42,37 @@ describe("temaregistret", () => {
   });
 });
 
-describe("saluds palett", () => {
-  it("har fyra kompletta varianter", () => {
-    expect(PALETTES.salud).toHaveLength(4);
-    for (const p of PALETTES.salud) {
-      expect(p.base).toMatch(/^#/);
-      expect(p.accent).toMatch(/^#/);
-      expect(typeof p.hue).toBe("number");
+describe.each(["servicios", "gastronomia", "comercio", "salud"])("%s palett", (themeKey) => {
+  it("har två kompletta varianter", () => {
+    expect(PALETTES[themeKey]).toHaveLength(2);
+    for (const p of PALETTES[themeKey]) {
+      for (const token of ["base", "surface", "surfaceRaised", "ink", "inkMuted", "accent", "onAccent"] as const) {
+        expect(p[token]).toMatch(/^#[0-9A-F]{6}$/i);
+      }
+      expect(p.hairline).toMatch(/^rgba\(.+\)$/);
+      expect(Number.isFinite(p.hue)).toBe(true);
     }
   });
 
   it("varianternas hue ligger minst 40° isär", () => {
-    const hues = PALETTES.salud.map((p) => p.hue);
-    for (let i = 0; i < hues.length; i++) {
-      for (let j = i + 1; j < hues.length; j++) {
-        const diff = Math.abs(hues[i] - hues[j]);
-        const circular = Math.min(diff, 360 - diff);
-        expect(circular).toBeGreaterThanOrEqual(40);
-      }
-    }
+    const hues = PALETTES[themeKey].map((p) => p.hue);
+    const diff = Math.abs(hues[0] - hues[1]);
+    expect(Math.min(diff, 360 - diff)).toBeGreaterThanOrEqual(40);
   });
 
-  it("paletteFor('salud', n) hämtar rätt variant", () => {
-    expect(paletteFor("salud", 1).hue).toBe(PALETTES.salud[0].hue);
-    expect(paletteFor("salud", 2).hue).toBe(PALETTES.salud[1].hue);
-    expect(paletteFor("salud", 4).hue).toBe(PALETTES.salud[3].hue);
+  it("paletteFor hämtar rätt variant och begränsar till 1–2", () => {
+    expect(paletteFor(themeKey, 1)).toBe(PALETTES[themeKey][0]);
+    expect(paletteFor(themeKey, 2)).toBe(PALETTES[themeKey][1]);
+    for (const variant of [3, 4, 99]) {
+      expect(paletteFor(themeKey, variant)).toBe(PALETTES[themeKey][1]);
+    }
+    for (const variant of [0, -1]) {
+      expect(paletteFor(themeKey, variant)).toBe(PALETTES[themeKey][0]);
+    }
   });
+});
+
+it("paletteFor använder servicios för ett okänt tema", () => {
+  expect(paletteFor("nonexistent", 1)).toBe(PALETTES.servicios[0]);
+  expect(paletteFor("nonexistent", 4)).toBe(PALETTES.servicios[1]);
 });

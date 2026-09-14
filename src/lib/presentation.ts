@@ -10,8 +10,8 @@ import { CATEGORIES, THEME_KEYS } from "./business";
  *
  * Sju utseenden i produktion i stället för tjugofyra. Två grannar i samma
  * bransch ser likadana ut med avsikt — identiteten kommer från logga, foton
- * och putsad text, inte från dekorationen. Variant 3–4 i varje tema är en
- * kontrastverifierad reserv som ingenting väljer.
+ * och putsad text, inte från dekorationen. Varje tema har exakt två
+ * varianter (src/themes/palettes.ts); båda väljs av tabellen nedan.
  *
  * Ren modul: inga importer från `db`, React eller Next. Enhetstestet låser
  * tabellen mot en literal, så en drift blir ett rött test och inte en
@@ -23,7 +23,7 @@ export type ThemeKey = (typeof THEME_KEYS)[number];
 
 export type Presentation = {
   themeKey: ThemeKey;
-  /** 1–4. Bara 1–2 används i den här omgången; 3–4 är vilande reserv. */
+  /** 1–2, index i temats palettpar (plan.md §1.11). */
   paletteVariant: number;
   /** Accentens namn på svenska, för admin-etiketten. */
   accent: string;
