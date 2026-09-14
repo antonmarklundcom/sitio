@@ -581,9 +581,9 @@ tidigare PR verifieras lokalt.)
 | **PR-11 Owner-auth + mi-sitio** | WhatsApp-OTP-login (samma verifications-flöde; koden manuell tills PR-17), owner-konto skapas vid publicering, `/mi-sitio`: redigera texter/tjänster/öppettider/socials (whitelisted fält, maxlängder), byta bilder, statistikvy. Tenant-check på varje mutation | L — dela i 11a (auth) och 11b (redigering+stats) |
 | **PR-12 Modul-infra + gallery** | business_modules-admin (slå på/av per kund), tema-sektioner renderar villkorat, gallery-modulen (owner kan sortera/byta upp till 20 foton) | M |
 | **PR-13 Menu-modul** | Sektioner + rätter + Gs-priser, owner-CRUD (idiotsäker: bara text/pris/bild/tillgänglig), rendering i gastronomia-temat + generisk fallback, `menu_view`-event | M |
-| **PR-14 Products-modul** | Samma mönster som PR-13 för comercio | S–M (kopierar mönstret) |
-| **PR-15 Tema 4 + branschlås** | `salud` (tjänar `salud` + `belleza`) + palettvarianter, QA-gate; `presentationFor(category)` låser tema/palett, temaväljaren tas bort, prislistans defaultvärden synkas. `belleza`/`taller` byggs inte som teman (§1.5). = S2 + S7 i `plan.md` | M |
-| **PR-16 Upsell-radar** | Nattlig score-beräkning, hot-lead-flaggning (trösklar i env), `/admin/leads`-vy med sortering, leadStage-knappar, anteckningar, wa.me-pitch-länk med förifylld statistik | M |
+| **PR-14 Products-modul** | Samma mönster som PR-13, delad primitiv i alla fyra teman. **Byggd** (S1 #28 + S6-länkpasset kopplade in `<SiteProducts>` i `servicios`/`gastronomia`/`salud`; `comercio` hade sin egen sedan S1) | S–M (kopierar mönstret) |
+| **PR-15 Tema 4 + branschlås** | `salud` (tjänar `salud` + `belleza`) + palettvarianter, QA-gate; `presentationFor(category)` låser tema/palett, temaväljaren tas bort, prislistans defaultvärden synkas. `belleza`/`taller` byggs inte som teman (§1.5). = S2 + S7 i `plan.md`. **Byggd** (S2 #27, S7 #30) | M |
+| **PR-16 Upsell-radar** | Nattlig score-beräkning, hot-lead-flaggning (trösklar i env), `/admin/leads`-vy med sortering, leadStage-knappar, anteckningar, wa.me-pitch-länk med förifylld statistik. **Byggd** (S5 #25) | M |
 | **PR-17 WhatsApp Cloud API** | Meta Business-verifiering förutsätts klar (din uppgift, ej kod). Template-baserad OTP-sändning, channel `whatsapp_api`, fallback till manuell, sändlogg i activity_log | M |
 
 ### Fas 3 — Skala & självbetjäning

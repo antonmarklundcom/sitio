@@ -2,6 +2,7 @@ import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
 import { SiteMenu } from "@/components/site/menu-section";
+import { SiteProducts } from "@/components/site/products-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -25,7 +26,7 @@ import type { ThemeProps } from "../types";
  * full-bleed-krav som QA-gaten ställer bärs då av 02, och överlappet av
  * kontaktkortet, som ligger utanför bildvillkoret.
  */
-export function GastronomiaTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
+export function GastronomiaTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -221,6 +222,9 @@ export function GastronomiaTheme({ business, photos, logo, hero, modules, menu }
         title="Nuestra carta"
         intro="Precios en guaraníes. Si algo se terminó por hoy, lo sacamos de acá."
       />
+
+      {/* Products-modulen (§6.4, S6): delad primitiv, byggd av S1. */}
+      <SiteProducts products={products} eyebrow="Catálogo" title="Otros productos" />
 
       {/* ---------- 05 GALERÍA — P7 sticky-side scroll ---------- */}
       {galleryPhotos.length > 0 ? (

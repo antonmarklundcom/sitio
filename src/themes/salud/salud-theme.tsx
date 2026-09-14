@@ -2,6 +2,7 @@ import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
 import { SiteMenu } from "@/components/site/menu-section";
+import { SiteProducts } from "@/components/site/products-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -30,7 +31,7 @@ import type { ThemeProps } from "../types";
  * Accenten lever på högst tre elementtyper (CTA, öppet-status, länkar);
  * hairlines separerar sektioner, inga fyllda paneler.
  */
-export function SaludTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
+export function SaludTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -192,6 +193,9 @@ export function SaludTheme({ business, photos, logo, hero, modules, menu }: Them
         title="Precios de turno"
         intro="Precios de referencia en guaraníes. Confirmamos el valor exacto al coordinar el turno."
       />
+
+      {/* Products-modulen (§6.4, S6): delad primitiv, byggd av S1. */}
+      <SiteProducts products={products} eyebrow="Productos" title="Productos que usamos" />
 
       {/* ---------- 04 CÓMO LLEGAR — P4 editorial two-column ---------- */}
       <section id="como-llegar">
