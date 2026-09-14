@@ -15,10 +15,8 @@ samma display-snitt är exakt den sameness registret finns för att stoppa.
 |---|---|---|---|---|---|
 | 1 | `#FF8A1F` | 29° | `#12100D` | 16,60:1 | 8,06:1 |
 | 2 | `#2ACADC` | 186° | `#0B1214` | 16,63:1 | 9,52:1 |
-| 3 | `#C7E63C` | 71° | `#101207` | 16,68:1 | 13,33:1 |
-| 4 | `#A78BFF` | 254° | `#0E0C14` | 16,40:1 | 7,19:1 |
 
-Minsta avstånd mellan varianternas hue: **42°** (29 → 71). Alla kontraster
+Minsta avstånd mellan varianternas hue: **157°** (29 → 186). Alla kontraster
 ligger långt över WCAG AA för brödtext (4,5:1).
 
 ### Tema `gastronomia` (WARM CRAFT, ljus-varm)
@@ -27,8 +25,6 @@ ligger långt över WCAG AA för brödtext (4,5:1).
 |---|---|---|---|---|---|---|
 | 1 | `#B23A20` | 11° | `#FBF5EE` | 15,73:1 | 5,51:1 | 6,08:1 |
 | 2 | `#7A6B10` | 52° | `#FAF7EC` | 15,34:1 | 4,97:1 | 5,90:1 |
-| 3 | `#1C7A4A` | 149° | `#F4F8F3` | 15,58:1 | 4,98:1 | 6,01:1 |
-| 4 | `#96177A` | 313° | `#FCF4F8` | 16,03:1 | 6,84:1 | 6,37:1 |
 
 Minsta avstånd mellan varianternas hue: **41°** (11 → 52). Lägsta uppmätta
 kontrast i temat är accent mot `--surface` (4,46:1 i variant 2) — över AA för
@@ -40,8 +36,6 @@ brödtext.
 |---|---|---|---|---|---|---|
 | 1 | `#0E4E96` | 212° | `#F7F8FA` | 16,77:1 | 7,75:1 | 5,93:1 |
 | 2 | `#0A6E52` | 163° | `#F5F9F7` | 16,74:1 | 5,88:1 | 6,34:1 |
-| 3 | `#7A2FBF` | 271° | `#F8F6FB` | 16,77:1 | 6,34:1 | 6,62:1 |
-| 4 | `#8C5304` | 35° | `#FAF7F2` | 16,24:1 | 5,54:1 | 6,42:1 |
 
 Minsta avstånd mellan varianternas hue: **49°** (163 → 212).
 
@@ -51,17 +45,13 @@ Minsta avstånd mellan varianternas hue: **49°** (163 → 212).
 |---|---|---|---|---|---|---|---|
 | 1 | `#0B6B62` | 174° | `#F3F8F7` | 15,62:1 | 5,95:1 | 5,61:1 | `salud` |
 | 2 | `#93275F` | 329° | `#F8F4F6` | 15,86:1 | 7,14:1 | 6,23:1 | `belleza` |
-| 3 | `#1A3D8C` | 222° | `#F4F6F9` | 15,82:1 | 9,28:1 | 6,30:1 | reserv |
-| 4 | `#3F6B34` | 108° | `#F5F8F3` | 14,99:1 | 5,83:1 | 6,12:1 | reserv |
 
-Minsta avstånd mellan varianternas hue: **42°** (174 → 222; nästa lägst är
-174 → 108 på 66°). `onAccent/accent` (text på CTA-knappen) ligger som lägst på
-5,85:1 (v4). Alla värden är beräknade (sRGB-relativluminans, WCAG-formeln),
-inte skattade. Variant 1 (teal) är låst till kategori `salud`, variant 2
-(rose) till `belleza` (plan §1.11); 3–4 är verifierad reserv och väljs aldrig
-av `presentationFor`.
+Minsta avstånd mellan varianternas hue: **155°** (174 → 329).
+Alla värden är beräknade (sRGB-relativluminans, WCAG-formeln), inte skattade.
+Variant 1 (teal) är låst till kategori `salud`, variant 2 (rose) till
+`belleza` (plan §1.11).
 
-Ljus, sval-neutral bas med en svag blågrön ton i samtliga fyra — det är
+Ljus, sval-neutral bas med en svag blågrön ton i båda varianterna — det är
 `salud`s "CALM"-spår, inte en per-variant nyans som i `gastronomia`/`comercio`.
 Ingen grain (design §6.2), 12 px basradie (`--r-md`), CTA/status/länk är de
 enda tre ställena accenten får synas.
@@ -87,18 +77,12 @@ text mot ett schemakort — så P6 förblir det enda stora bildmomentet.
 
 ### Kända avvikelser
 
-**40°-regeln kan inte hålla över hela produkten.** Sex teman × fyra varianter
-är 24 accenter; 24 hues med 40° mellanrum ryms inte i 360°. Det är en medveten
-avvikelse, dokumenterad i `PLAN.md` §1.5: regeln upprätthålls **inom** ett
-tema, och kollisioner mellan teman syns bara om två grannar i samma bransch
-får samma tema och variant — variant väljs manuellt vid publicering.
+**40°-regeln gäller inom varje tema, inte mellan teman.** Registret har
+fyra teman med två varianter vardera. Tema och variant härleds från kategori
+via `presentationFor`; de väljs inte manuellt vid publicering.
 
-Efter PR-07 är de tätaste paren **mellan** teman `servicios` v1 (29°, `#FF8A1F`)
-och `comercio` v4 (35°, `#8C5304`), samt `servicios` v4 (254°) och `comercio` v3
-(271°). Båda paren skiljer sig i spår (mörkdominant INDUSTRIAL mot ljus
-EDITORIAL) och i ljushet — accenterna delar hue-region men aldrig utseende.
-Det är avsiktligt och inte en miss; tvinga inte isär dem utan att först mäta
-kontrasterna om igen.
+Det tätaste paret **mellan** teman är `comercio` v2 (163°, `#0A6E52`) och
+`salud` v1 (174°, `#0B6B62`), med 11° avstånd. Färgvärdena är oförändrade.
 
 ## Att fylla i
 

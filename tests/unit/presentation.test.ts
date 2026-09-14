@@ -46,12 +46,12 @@ describe("presentationFor", () => {
     }
   });
 
-  it("ger en variant mellan 1 och 4 för varje bransch", () => {
+  it("ger en variant mellan 1 och 2 för varje bransch", () => {
     for (const category of CATEGORIES) {
       const { paletteVariant } = presentationFor(category);
       expect(Number.isInteger(paletteVariant)).toBe(true);
       expect(paletteVariant).toBeGreaterThanOrEqual(1);
-      expect(paletteVariant).toBeLessThanOrEqual(4);
+      expect(paletteVariant).toBeLessThanOrEqual(2);
     }
   });
 
@@ -81,7 +81,7 @@ describe("presentationLabel", () => {
 
   it("ger en etikett för varje bransch", () => {
     for (const category of CATEGORIES) {
-      expect(presentationLabel(category)).toMatch(/^[a-z]+ · variant [1-4] \(.+\)$/);
+      expect(presentationLabel(category)).toMatch(/^[a-z]+ · variant [1-2] \(.+\)$/);
     }
   });
 });

@@ -3,11 +3,9 @@
  * ingen färg härleds i runtime.
  *
  * Registret (docs/PALETTE-REGISTRY.md) håller hue-vinklar och kontrastvärden.
- * Regeln "minst 40° mellan accenter" gäller inom ett tema; över hela
- * portföljen är den matematiskt omöjlig vid 6 teman × 4 varianter (24 accenter
- * ryms inte med 40° isär i 360°). Det är en medveten avvikelse, dokumenterad
- * i planens §1.5 — kollisioner syns bara om två grannar i samma bransch får
- * samma tema och variant, och variant väljs manuellt vid publicering.
+ * Regeln "minst 40° mellan accenter" gäller inom ett tema. Varje tema har
+ * två varianter; tema och variant härleds från verksamhetens kategori via
+ * presentationFor (src/lib/presentation.ts).
  */
 export type Palette = {
   /** HSL-hue för accenten, i registret. */
@@ -23,7 +21,7 @@ export type Palette = {
   hairline: string;
 };
 
-export type ThemePalettes = [Palette, Palette, Palette, Palette];
+export type ThemePalettes = [Palette, Palette];
 
 /** INDUSTRIAL: mörkdominant, hård kant, hög krominans i accenten. */
 const servicios: ThemePalettes = [
@@ -48,28 +46,6 @@ const servicios: ThemePalettes = [
     accent: "#2ACADC",
     onAccent: "#0B1214",
     hairline: "rgba(233,242,244,0.12)",
-  },
-  {
-    hue: 71,
-    base: "#101207",
-    surface: "#191C0F",
-    surfaceRaised: "#212615",
-    ink: "#F0F2E5",
-    inkMuted: "#A3A791",
-    accent: "#C7E63C",
-    onAccent: "#101207",
-    hairline: "rgba(240,242,229,0.12)",
-  },
-  {
-    hue: 254,
-    base: "#0E0C14",
-    surface: "#171422",
-    surfaceRaised: "#1F1B2D",
-    ink: "#EEEAF6",
-    inkMuted: "#9E97AE",
-    accent: "#A78BFF",
-    onAccent: "#0E0C14",
-    hairline: "rgba(238,234,246,0.12)",
   },
 ];
 
@@ -100,28 +76,6 @@ const gastronomia: ThemePalettes = [
     onAccent: "#FFFDF0",
     hairline: "rgba(31,32,22,0.14)",
   },
-  {
-    hue: 149,
-    base: "#F4F8F3",
-    surface: "#E6EFE5",
-    surfaceRaised: "#FFFFFF",
-    ink: "#16201A",
-    inkMuted: "#4F6357",
-    accent: "#1C7A4A",
-    onAccent: "#F2FBF5",
-    hairline: "rgba(22,32,26,0.14)",
-  },
-  {
-    hue: 313,
-    base: "#FCF4F8",
-    surface: "#F6E6EF",
-    surfaceRaised: "#FFFFFF",
-    ink: "#231627",
-    inkMuted: "#685467",
-    accent: "#96177A",
-    onAccent: "#FFF2FB",
-    hairline: "rgba(35,22,39,0.14)",
-  },
 ];
 
 /**
@@ -151,35 +105,12 @@ const comercio: ThemePalettes = [
     onAccent: "#F2FBF7",
     hairline: "rgba(16,26,22,0.13)",
   },
-  {
-    hue: 271,
-    base: "#F8F6FB",
-    surface: "#EEEAF6",
-    surfaceRaised: "#FFFFFF",
-    ink: "#191424",
-    inkMuted: "#5C5470",
-    accent: "#7A2FBF",
-    onAccent: "#F9F5FF",
-    hairline: "rgba(25,20,36,0.13)",
-  },
-  {
-    hue: 35,
-    base: "#FAF7F2",
-    surface: "#F1EBE1",
-    surfaceRaised: "#FFFFFF",
-    ink: "#1D1A14",
-    inkMuted: "#63594B",
-    accent: "#8C5304",
-    onAccent: "#FFFBF2",
-    hairline: "rgba(29,26,20,0.13)",
-  },
 ];
 
 /**
  * CALM: ljusdominant, sval-neutral bas med en svag blågrön ton, en djup
  * accent som bara lever på CTA/status/länkar. v1 (teal) är låst till `salud`,
- * v2 (rose) till `belleza` (plan §1.11); v3–v4 är verifierad reserv, ingen
- * publicerad sajt väljer dem i den här omgången.
+ * v2 (rose) till `belleza` (plan §1.11).
  */
 const salud: ThemePalettes = [
   {
@@ -204,28 +135,6 @@ const salud: ThemePalettes = [
     onAccent: "#FFF1F7",
     hairline: "rgba(37,22,32,0.13)",
   },
-  {
-    hue: 222,
-    base: "#F4F6F9",
-    surface: "#E8EDF3",
-    surfaceRaised: "#FFFFFF",
-    ink: "#131C29",
-    inkMuted: "#4E5C6E",
-    accent: "#1A3D8C",
-    onAccent: "#F2F7FF",
-    hairline: "rgba(19,28,41,0.13)",
-  },
-  {
-    hue: 108,
-    base: "#F5F8F3",
-    surface: "#E9EFE4",
-    surfaceRaised: "#FFFFFF",
-    ink: "#1A2416",
-    inkMuted: "#546150",
-    accent: "#3F6B34",
-    onAccent: "#F2FAEE",
-    hairline: "rgba(26,36,22,0.13)",
-  },
 ];
 
 /**
@@ -242,7 +151,7 @@ export const PALETTES: Record<string, ThemePalettes> = {
 
 export function paletteFor(themeKey: string, variant: number): Palette {
   const set = PALETTES[themeKey] ?? PALETTES.servicios;
-  const index = Math.min(Math.max(variant, 1), 4) - 1;
+  const index = Math.min(Math.max(variant, 1), 2) - 1;
   return set[index];
 }
 
