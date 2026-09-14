@@ -45,9 +45,13 @@ SMOKE_BASE_URL=http://127.0.0.1:3100 npm run smoke
 på `http://127.0.0.1:3100`. Inloggningen tas från `SEED_ADMIN_EMAIL` /
 `SEED_ADMIN_PASSWORD`, samma värden som seeden.
 
-**Inloggningens rate limit är 5 försök per 15 minuter och lever i processen.**
-Två körningar tätt inpå varandra slår i den och `_lib.mjs` avbryter med ett
-tydligt meddelande. Starta om servern och kör igen.
+**Superadmin loggar in en gång per `npm run smoke`.** Första sviten sparar
+Playwrights storageState i `.smoke/admin-state.json` (git-ignorerad); de
+följande sviterna återanvänder sessionen och verifierar bara att `/admin`
+laddar utan omdirigering till login. Körningen raderar filen vid start, och en
+inaktuell session (omdirigering till login) ersätts av en riktig inloggning.
+Varje svit behåller sin `login`-rad och skriver ut om sessionen återanvändes
+eller hur många login-POST:ar som gjordes.
 
 ## Skriva en ny fasfil
 
