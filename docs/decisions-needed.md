@@ -4,6 +4,13 @@ Build sessions append a dated question here and end (plan §4.4). The watcher
 notifies Anton. Answer inline under the question, commit to `main`; the next
 run of the phase reads it.
 
+## Open
+
+- 2026-09-14 — **`comercio` renders both catálogo (`products`) and "Nuestra
+  lista" (`menu`)** when a business has both modules on (S1, KNOWN-ISSUES.md).
+  Options: (a) hide `menu` in the `comercio` theme once `products` is on,
+  (b) leave both. Answer here; (a) becomes an R3 ticket at normal tier.
+
 ## Answered
 
 - 2026-09-14 — §7-synken (prompt-filerna mot §1.11–§1.13). **Klar.**

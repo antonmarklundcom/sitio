@@ -1,0 +1,33 @@
+Task:
+Repo sitio (Next.js 15, TypeScript). Ticket R3-2, from KNOWN-ISSUES.md (S7 entry). Since S7 the theme and palette are derived from the business category, and the admin business form no longer reads themeKey or paletteVariant. The BusinessFormDefaults type in src/components/admin/business-form.tsx still declares both fields and the two callers still pass them. Remove the two dead fields from the type and from both callers. This is a cleanup only: no behavior changes, no new props, nothing else in the form moves.
+
+Files to touch:
+src/components/admin/business-form.tsx
+src/app/admin/(dashboard)/sitios/nuevo/page.tsx
+src/app/admin/(dashboard)/sitios/[id]/page.tsx
+
+Do not touch:
+src/lib/presentation.ts, src/lib/business.ts, src/lib/owner-form.ts.
+src/app/admin/(dashboard)/sitios/actions.ts (the server action already ignores these fields).
+src/components/admin/theme-picker.tsx (R3-3 owns it).
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, src/app/api/**, .husky/**, .env.example, anything under .github/.
+The business table columns themeKey and paletteVariant stay; only the form type and its two call sites change.
+
+Definition of done:
+BusinessFormDefaults has no themeKey and no paletteVariant member.
+nuevo/page.tsx passes defaults without themeKey and paletteVariant; the remaining defaults are unchanged.
+sitios/[id]/page.tsx passes defaults without themeKey and paletteVariant; business.themeKey and business.paletteVariant are still read wherever else that file uses them (for example the preview link or the presentation row), only the defaults object changes.
+grep for themeKey and paletteVariant inside the three touched files returns no hit in business-form.tsx and none inside the defaults objects of the two pages.
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

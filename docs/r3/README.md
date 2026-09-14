@@ -36,5 +36,17 @@ Ticket sources, in order: `KNOWN-ISSUES.md` (written by S6), `plan.md` §10,
 | Ticket | Prompt | Status |
 |---|---|---|
 | R3-0 AGENTS.md at repo root | none, done inline by the manager | done |
-| R3-1 trim palettes to variants 1–2 | `prompts/R3-1.txt` | ready — dispatch after S6 has merged (S6 owns `palettes.ts` until then) |
-| R3-2 … R3-5 | written from `KNOWN-ISSUES.md` once S6 has merged | pending S6 |
+| R3-1 trim palettes to variants 1–2 | `prompts/R3-1.txt` | ready (S6 merged as #32) |
+| R3-2 drop dead `themeKey`/`paletteVariant` from `BusinessFormDefaults` | `prompts/R3-2.txt` | ready |
+| R3-3 admin client bundle: `theme-picker.tsx` stops importing the theme registry | `prompts/R3-3.txt` | ready |
+| R3-4 `seed-dev.ts` derives palette variant via `presentationFor` | `prompts/R3-4.txt` | ready, dispatch after R3-1 has merged |
+| R3-5 shared smoke login (`storageState`) so the suite leaves the login rate-limit ceiling | `prompts/R3-5.txt` | ready |
+
+Order: R3-1 → R3-2 → R3-3 → R3-4 → R3-5. R3-2 and R3-3 touch different
+files and can run back to back without waiting for a merge. Every ticket
+`-Tier normal`.
+
+Not ticketed from `KNOWN-ISSUES.md` this batch: `comercio` menu+products
+(needs an Anton decision, see `docs/decisions-needed.md`), item images
+(migration, batch 2), `products_view` event (migration), `og:image` (image
+budget), `esbuild` audit (drizzle-kit major).
