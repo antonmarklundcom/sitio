@@ -6,7 +6,7 @@ import { CATEGORIES, CATEGORY_LABELS, type HoursMap } from "@/lib/business";
 import type { BusinessFormState } from "@/app/admin/(dashboard)/sitios/actions";
 import { Card, Notice, SectionTitle } from "./ui";
 import { Field, HoursEditor, Select, ServicesEditor, TextArea, TextInput } from "./fields";
-import { ThemePicker } from "./theme-picker";
+import { PresentationBlock } from "./theme-picker";
 
 export type BusinessFormDefaults = {
   name: string;
@@ -96,12 +96,7 @@ export function BusinessForm({
             />
           </Field>
 
-          <ThemePicker
-            defaultThemeKey={defaults.themeKey}
-            defaultVariant={defaults.paletteVariant}
-            themeError={err("themeKey")}
-            variantError={err("paletteVariant")}
-          />
+          <PresentationBlock defaultCategory={defaults.category} />
         </div>
       </Card>
 

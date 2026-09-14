@@ -34,12 +34,15 @@ if ((await productsRowFor(p).innerText()).includes('Slå på')) {
 // conecta los demás). Business 1 usa `servicios` en la semilla — sin este
 // cambio, cualquier producto (visible u oculto) sería igualmente invisible
 // en la página pública y el chequeo de abajo no probaría nada. Se restaura
-// al final para no dejar el negocio de la semilla en un tema distinto.
+// al final para no dejar el negocio de la semilla en otro rubro.
+//
+// Desde S7 (plan §1.11) el tema no se elige: lo decide el rubro. Por eso acá
+// se cambia `category`, no `themeKey` — el selector de tema ya no existe.
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-const themeForm = p.locator('form').filter({ has: p.locator('select[name=themeKey]') });
-const originalTheme = await themeForm.locator('select[name=themeKey]').inputValue();
-await themeForm.locator('select[name=themeKey]').selectOption('comercio');
+const themeForm = p.locator('form').filter({ has: p.locator('select[name=category]') }).first();
+const originalCategory = await themeForm.locator('select[name=category]').inputValue();
+await themeForm.locator('select[name=category]').selectOption('comercio');
 await themeForm.getByRole('button', { name: /Spara/ }).first().click();
 await p.waitForTimeout(2500);
 
@@ -152,11 +155,11 @@ if (ownerSlug) {
   ok('el post rechazado nunca se escribió', !html.includes('Producto fantasma'));
 }
 
-// Deja el tema de la semilla como estaba — otros archivos de la suite (y una
+// Deja el rubro de la semilla como estaba — otros archivos de la suite (y una
 // relectura humana de business 1) no deben ver un cambio permanente.
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-await themeForm.locator('select[name=themeKey]').selectOption(originalTheme);
+await themeForm.locator('select[name=category]').selectOption(originalCategory);
 await themeForm.getByRole('button', { name: /Spara/ }).first().click();
 await p.waitForTimeout(2000);
 

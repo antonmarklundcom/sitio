@@ -8,6 +8,7 @@ import { businesses, onboardingTokens, verifications } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import { normalizePyPhone } from "@/lib/format";
+import { presentationFor } from "@/lib/presentation";
 import { slugify, uniqueSlugCandidate } from "@/lib/slug";
 import {
   OTP_TTL_MINUTES,
@@ -54,7 +55,7 @@ export async function createIntakeLinkAction(
     slug,
     name: name.slice(0, 120),
     category: category as "otro",
-    themeKey: category === "otro" ? "servicios" : (category as "servicios"),
+    ...presentationFor(category),
     city,
     // Numret är obekräftat tills kunden matar in koden — men det behövs som
     // platshållare eftersom kolumnen är NOT NULL. Verifieringen är det som

@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { businesses, onboardingTokens, verifications } from "@/db/schema";
 import { getIntakeSession } from "@/db/intake-queries";
 import { logActivity } from "@/lib/auth";
+import { presentationFor } from "@/lib/presentation";
 import { rateLimit } from "@/lib/rate-limit";
 import {
   OTP_MAX_ATTEMPTS,
@@ -86,6 +87,9 @@ export async function saveIntakeDataAction(
     .set({
       name: values.name,
       category: values.category,
+      // Kunden kan byta bransch mot den du förvalde — då måste utseendet följa
+      // med. Skrivningen är idempotent: samma bransch ger samma rad (§1.11).
+      ...presentationFor(values.category),
       rawDescription: values.rawDescription,
       // description sätts av dig i admin (ev. med AI-puts). Kundens råtext
       // publiceras aldrig oredigerad.
