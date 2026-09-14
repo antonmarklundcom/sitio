@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { presentationFor, presentationLabel } from "@/lib/presentation";
-import { isThemeBuilt } from "@/themes/registry";
-import { paletteFor } from "@/themes/palettes";
+import { PALETTES, paletteFor } from "@/themes/palettes";
 
 /**
  * Härledd presentation, läsbar men inte valbar. Branschen bestämmer tema och
@@ -37,6 +36,7 @@ export function PresentationBlock({
 
   const { themeKey, paletteVariant } = presentationFor(category);
   const palette = paletteFor(themeKey, paletteVariant);
+  const built = Object.prototype.hasOwnProperty.call(PALETTES, themeKey); // Avoid importing registry theme components into the client bundle.
 
   return (
     <div className="sm:col-span-2">
@@ -54,7 +54,7 @@ export function PresentationBlock({
       </div>
       {/* Kvar som mekanism: faller ett tema bort ur registret ska raden säga
           det i stället för att sajten tyst renderas med servicios. */}
-      {!isThemeBuilt(themeKey) ? (
+      {!built ? (
         <p className="mt-1 text-xs text-admin-warn">
           Temat är inte byggt än — sajten renderas med <code>servicios</code> tills det finns.
         </p>
