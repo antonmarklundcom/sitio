@@ -46,6 +46,11 @@ Exit:
 
 ## After this phase
 Follow `prompts/_handoff.md` "Last lane 1 phase": create the watcher Routine,
-then spawn S1, S2, S3, S4 (`prompts/sonnet-1-products.md`,
-`prompts/sonnet-2-theme-salud.md`, `prompts/sonnet-3-theme-belleza.md`,
-`prompts/sonnet-4-theme-taller.md`), model Sonnet. S5 is started by the watcher.
+then spawn S1, S2, S5, S7 (`prompts/sonnet-1-products.md`,
+`prompts/sonnet-2-theme-salud.md`, `prompts/sonnet-5-radar.md`,
+`prompts/sonnet-7-category-lock.md`), model Sonnet except S7 (Opus). S3/S4
+are cancelled (§1.12) and are never spawned.
+
+(Historical note, 2026-09-13: O3 actually ran before this section was synced
+and spawned only S1, S2, S5 — `prompts/sonnet-7-category-lock.md` did not
+exist yet. See `docs/decisions-needed.md` and `docs/log/O3.md`.)
