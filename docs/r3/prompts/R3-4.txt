@@ -1,0 +1,29 @@
+Task:
+Repo sitio (Next.js 15, TypeScript). Ticket R3-4, from KNOWN-ISSUES.md (S7 entry). scripts/seed-dev.ts hardcodes themeKey and paletteVariant for its three demo businesses (variants 1, 2 and 3), which no longer matches the category table in src/lib/presentation.ts (servicios gives variant 2, gastronomia 1, comercio 1). Make the seed derive both fields from the category by calling presentationFor from src/lib/presentation.ts, so the seed can never drift from the table again. Remove the hardcoded themeKey and paletteVariant literals from the three demo rows. Everything else in the seed (users, modules, subscriptions, the other business fields, idempotency) stays exactly as it is.
+
+Files to touch:
+scripts/seed-dev.ts
+
+Do not touch:
+src/lib/presentation.ts and its PRESENTATION_BY_CATEGORY table.
+src/themes/**, tests/**.
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, src/app/api/**, .husky/**, .env.example, anything under .github/.
+
+Definition of done:
+The three demo rows in scripts/seed-dev.ts have no themeKey and no paletteVariant literal; both values come from presentationFor(row.category) at insert or update time.
+The seed still compiles under the scripts tsconfig and under npm run typecheck.
+If a local MySQL is reachable through DATABASE_URL in .env.local, npm run db:seed runs twice without error and afterwards the three businesses have palette variants 2 (electricidad-mendoza), 1 (pizzeria-la-nona) and 1 (ferreteria-san-blas). If no database is reachable, report that step as not run rather than substituting another check; the manager runs it.
+Stay within the listed file. If something outside it must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run db:seed   (working directory: repo root; only if DATABASE_URL points at a reachable local or Remote MySQL, otherwise report as not run)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

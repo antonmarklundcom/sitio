@@ -1,0 +1,30 @@
+Task:
+Repo sitio (Next.js 15, TypeScript). Ticket R3-3, from docs/log/S7.md Known issues. The admin pages sitios/nuevo and sitios/[id] grew about 7 kB First Load JS in S7 because the client component src/components/admin/theme-picker.tsx imports isThemeBuilt from src/themes/registry.ts, and that module imports the four theme components, so they land in the client bundle. Replace that check with one that does not pull the registry into the client: decide whether the theme is built by checking whether themeKey is a key of PALETTES from src/themes/palettes.ts, which the component already imports. The warning text and the rest of the component stay as they are. A short comment on the changed line should say why the registry is not imported here.
+
+Files to touch:
+src/components/admin/theme-picker.tsx
+
+Do not touch:
+src/themes/registry.ts (isThemeBuilt stays exported for the server side).
+src/themes/palettes.ts, src/lib/presentation.ts, src/components/admin/business-form.tsx.
+The two admin pages under src/app/admin/(dashboard)/sitios/.
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, src/app/api/**, .husky/**, .env.example, anything under .github/.
+
+Definition of done:
+theme-picker.tsx has no import from @/themes/registry.
+The built check reads the keys of PALETTES; a themeKey missing from PALETTES still renders the existing warning paragraph, a present key renders nothing extra.
+npm run build output shows the First Load JS for /admin/sitios/nuevo and /admin/sitios/[id] at least 5 kB lower than the main build from before the change (S7 measured 140 kB and 145 kB). Report both numbers, before and after, in the report.
+Stay within the listed file. If something outside it must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run build   (working directory: repo root, once before the change on a clean checkout and once after; note the two First Load JS values for the two admin routes)
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.
