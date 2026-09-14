@@ -12,8 +12,6 @@ export type BusinessFormDefaults = {
   name: string;
   slug: string;
   category: string;
-  themeKey: string;
-  paletteVariant: number;
   rawDescription: string | null;
   description: string | null;
   services: { name: string; desc?: string }[];

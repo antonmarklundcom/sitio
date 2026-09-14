@@ -35,8 +35,6 @@ export default async function NewBusinessPage() {
           name: "",
           slug: "",
           category: "servicios",
-          themeKey: "servicios",
-          paletteVariant: 1,
           rawDescription: null,
           description: null,
           services: [],

@@ -319,8 +319,6 @@ export default async function EditBusinessPage({
             name: business.name,
             slug: business.slug,
             category: business.category,
-            themeKey: business.themeKey,
-            paletteVariant: business.paletteVariant,
             rawDescription: business.rawDescription,
             description: business.description,
             services: Array.isArray(business.servicesJson) ? business.servicesJson : [],
