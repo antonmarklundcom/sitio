@@ -8,7 +8,11 @@
  * Allt här skriver i databasen. Kör aldrig mot produktion.
  */
 import { existsSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+
+const adminState = new URL('../../.smoke/admin-state.json', import.meta.url);
 
 export const B = process.env.SMOKE_BASE_URL ?? 'http://127.0.0.1:3100';
 export const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'anton@sitio.com.py';
@@ -38,6 +42,22 @@ export function createChecker() {
  * varje efterföljande kontroll hade annars fallit av samma orsak och dolt den.
  */
 export async function adminLogin(page, ok, browser) {
+  if (existsSync(adminState)) {
+    // Preserve the caller's page: suites ignore the helper's return value.
+    await page.context().setStorageState(fileURLToPath(adminState));
+    await page.goto(B + '/admin');
+    if (!new URL(page.url()).pathname.startsWith('/admin/login')) {
+      ok('login', true, `${page.url()} (session reused)`);
+      return page;
+    }
+  }
+  let loginPosts = 0;
+  const countLoginPost = (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/admin/login') {
+      loginPosts++;
+    }
+  };
+  page.on('request', countLoginPost);
   await page.goto(B + '/admin/login');
   await page.fill('input[name=email]', EMAIL);
   await page.fill('input[name=password]', PASS);
@@ -45,7 +65,8 @@ export async function adminLogin(page, ok, browser) {
   await page
     .waitForURL((u) => !u.pathname.startsWith('/admin/login'), { timeout: 30000 })
     .catch(() => {});
-  ok('login', !page.url().includes('/admin/login'), page.url());
+  page.off('request', countLoginPost);
+  ok('login', !page.url().includes('/admin/login'), `${page.url()} (login POSTs: ${loginPosts})`);
 
   if (page.url().includes('/admin/login')) {
     const why = await page.locator('body').innerText();
@@ -59,6 +80,8 @@ export async function adminLogin(page, ok, browser) {
     await browser.close();
     process.exit(1);
   }
+  await mkdir(new URL('../../.smoke/', import.meta.url), { recursive: true });
+  await page.context().storageState({ path: fileURLToPath(adminState) });
   return page;
 }
 

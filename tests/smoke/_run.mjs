@@ -7,12 +7,14 @@
  * sin helhet, och exitkoden blir röd om någon föll.
  */
 import { spawn } from 'node:child_process';
-import { readdir } from 'node:fs/promises';
+import { readdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..', '..');
+
+await rm(new URL('../../.smoke/admin-state.json', import.meta.url), { force: true });
 
 const phaseSuites = (await readdir(here))
   .filter((f) => f.endsWith('.mjs') && !f.startsWith('_'))
