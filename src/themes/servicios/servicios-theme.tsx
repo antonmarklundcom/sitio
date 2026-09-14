@@ -2,6 +2,7 @@ import { waLink } from "@/lib/format";
 import { groupedHours, openState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "@/components/site/primitives";
 import { SiteMenu } from "@/components/site/menu-section";
+import { SiteProducts } from "@/components/site/products-section";
 import type { ThemeProps } from "../types";
 
 /**
@@ -22,7 +23,7 @@ import type { ThemeProps } from "../types";
  * (kontaktpanelen i 07) och oversized statement (07) finns alltid — de får
  * inte hänga på att kunden har laddat upp foton.
  */
-export function ServiciosTheme({ business, photos, logo, hero, modules, menu }: ThemeProps) {
+export function ServiciosTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const hours = groupedHours(business.hoursJson);
   const status = openState(business.hoursJson);
@@ -183,6 +184,9 @@ export function ServiciosTheme({ business, photos, logo, hero, modules, menu }: 
       ) : null}
 
       {/* ---------- 04 PROCESO — P5 numbered process rail ---------- */}
+      {/* Products-modulen (§6.4, S6): delad primitiv, byggd av S1. */}
+      <SiteProducts products={products} eyebrow="Catálogo" title="Nuestros productos" />
+
       {/* Menu-modulen. `servicios` säljer inte rätter utan tjänster till pris,
           så rubriken är "Precios" — samma data, ärlig rubrik. Generisk
           fallback så att en kund med modulen på aldrig får en tom sida. */}

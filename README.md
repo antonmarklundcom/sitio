@@ -115,10 +115,14 @@ offseten måste justeras.
 ## Teman
 
 Ett tema = en komponent (`src/themes/<key>/<key>-theme.tsx`), en CSS-fil med
-sektionsmönstren, och fyra palettvarianter i `src/themes/palettes.ts`. Byggda:
-`servicios` (INDUSTRIAL), `gastronomia` (WARM CRAFT), `comercio` (EDITORIAL).
-Övriga tre faller tillbaka på `servicios` tills PR-15 — admin visar det i
-temaväljaren i stället för att låtsas att valet gäller.
+sektionsmönstren, och fyra palettvarianter i `src/themes/palettes.ts`. Fyra
+teman, alla byggda: `servicios` (INDUSTRIAL), `gastronomia` (WARM CRAFT),
+`comercio` (EDITORIAL), `salud` (CALM). `belleza` och `taller` är inga egna
+teman — de är kategorier som renderar på `salud` respektive `servicios` med en
+låst palettvariant (plan §1.12). Vilket tema och vilken variant en sajt får
+avgörs helt av branschen (`presentationFor()` i `src/lib/presentation.ts`,
+plan §1.11) — ingen väljare i admin längre, bara en läsbar rad som visar
+resultatet.
 
 Delade sektionsprimitiv (öppettidslista, adressrad, footer, statusprick) ligger
 i `src/themes/theme.css`; temafilen innehåller bara temats egna mönster.
@@ -222,11 +226,19 @@ Bas är en one-page. Modulerna (`business_modules`) är upsellen och slås på p
 kund i `/admin/sitios/<id>` → **Moduler**. Att slå på en är en flagga, aldrig en
 migrering — raden finns i schemat från dag 1 (PLAN.md §1.6).
 
+**Prislista (plan §1.13, `PLAN_SUGGESTED_PRICE_GS`):** Básico ₲ 300.000/år
+(one-page, allt i basen), Plus ₲ 600.000/år (Básico + `gallery` + branschens
+innehållsmodul — `menu` för gastronomía, `products` för comercio/otro,
+gallery-only för övriga). `pro` (₲ 900.000, reserverad för `extra_pages`/
+`booking`) säljs inte än. Branschen styr aldrig priset, bara vilken modul som
+ingår i Plus. Admin har alltid ett fritt `priceGs`-fält — listan är
+standardvärdet, inget tak.
+
 | Modul | Vad påslaget faktiskt gör | Status |
 |---|---|---|
 | `gallery` | Fototaket i `/api/upload` går från 8 till 20, och temat renderar hela fotoserien i stället för de tre till sex första. | Byggd |
 | `menu` | Menyredigerare i `/mi-sitio` och en menysektion på sajten: egen i `gastronomia`, delad primitiv i övriga teman. Läsningar mäts som `menu_view`. | Byggd |
-| `products` | Produktlista. | PR-14 |
+| `products` | Produktlista: owner-CRUD i `/mi-sitio`, delad renderingsprimitiv (`<SiteProducts>`) i alla fyra teman. Inget vy-event i analytics denna runda. | Byggd |
 | `extra_pages` | Undersidor + sitemap. | PR-18 |
 | `booking` | Turno-förfrågan via wa.me. | Fas 3 |
 
@@ -287,7 +299,10 @@ betalning → bekräftelse → förlängd period, hela intake-flödet med OTP
 (inklusive att uppladdning utan token nekas), owner-inloggningen med
 tenant-gränserna, modulväxeln (av → på → höjt fototak) med owners fotosortering
 hela vägen ut på den publika sajten, meny-modulen (CRUD, "A consultar", "no hay
-hoy", av/på utan dataförlust), samt beaconen.
+hoy", av/på utan dataförlust), AI-puts-panelen utan `ANTHROPIC_API_KEY`,
+branschlåst tema/palett (`presentationFor`, ingen väljare kvar), produkter
+(CRUD, "A consultar", katalogen i alla fyra teman, av/på utan dataförlust),
+upsell-radarens nattliga poängsättning, samt beaconen.
 
 ```bash
 npm run db:migrate && npm run db:seed
@@ -311,10 +326,17 @@ subfråga jämförde med sin EGEN id-kolumn (alla sajter fick samma statistik oc
 fel betalstatus), och att `drizzle-kit` inte läser `.env.local` — den fil
 README säger åt dig att skapa.
 
-Sviten är 75 kontroller. Utöver den är betalningarnas livscykel verifierad mot
-databasen i PR-09:
-respit håller sajten uppe, förfall pausar den (404 + ur sitemap), en andra
-körning är en no-op, och en bekräftad betalning publicerar den igen.
+Sviten är 5 filer, 123 kontroller totalt (e2e 75 + AI-puts 9 + branschlås 17 +
+produkter 16 + radar 6), alla gröna mot MySQL 8.0.46 (länkpasset, S6).
+Betalningarnas livscykel är dessutom verifierad mot databasen i PR-09: respit
+håller sajten uppe, förfall pausar den (404 + ur sitemap), en andra körning är
+en no-op, och en bekräftad betalning publicerar den igen.
+
+**Inloggningsbudgeten är trång.** Varje svit loggar in en gång och rate
+limiten är 5 försök per 15 minuter, i processen — fem sviter är precis vid
+taket. En sjätte fasfil som också loggar in gör `npm run smoke` rött på sista
+sviten utan att något är fel; fixen (delad `storageState` i `_lib.mjs`) ägs av
+O1, inte länkpasset. Se `KNOWN-ISSUES.md`.
 
 Kvar att verifiera mot Hostinger (kan inte testas här): uploads-persistens över
 redeploy, databasens tidszon, och att hPanel-cron faktiskt når rollup-routen.

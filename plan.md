@@ -547,6 +547,7 @@ empty; pre-push green; PR merged; log + §9 line.
 | S2 | #27 | docs/log/S2.md |
 | S1 | #28 | docs/log/S1.md |
 | S7 | #30 | docs/log/S7.md |
+| S6 | #32 | docs/log/S6.md |
 
 (Phases append one line each: `| O1 | #nn | docs/log/O1.md |`.)
 
@@ -570,6 +571,11 @@ empty; pre-push green; PR merged; log + §9 line.
   and the QA tool no longer needs four (round 3, cheap tier).
 - A superadmin presentation override (one flag) — only if a real customer
   case demands it; today the answer is no (§1.11).
+- Decide whether `comercio` should hide `menu` when `products` is on (both
+  render today, no conflict but duplicated info — S1, KNOWN-ISSUES.md).
+- Shared logged-in `storageState` in `tests/smoke/_lib.mjs` (O1's file) so
+  the smoke suite isn't exactly at the login rate limit's ceiling with five
+  suites (O3, S6, KNOWN-ISSUES.md).
 
 ## 11. Round 3: Fable-led refinement, Astra workers
 
