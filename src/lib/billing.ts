@@ -22,8 +22,9 @@ export const PLAN_LABELS: Record<Plan, string> = {
 /** Riktpriser per år. Det faktiska priset sätts per kund — du förhandlar. */
 export const PLAN_SUGGESTED_PRICE_GS: Record<Plan, number> = {
   basico: 300_000,
-  plus: 450_000,
-  pro: 600_000,
+  plus: 600_000,
+  // `pro` säljs inte än — reserverad för extra_pages/booking (plan §1.13).
+  pro: 900_000,
 };
 
 export const PAYMENT_METHODS = [

@@ -16,6 +16,7 @@ import {
   servicesFromFormData,
   type BusinessStatus,
 } from "@/lib/business";
+import { presentationFor } from "@/lib/presentation";
 
 export type BusinessFormState = {
   error?: string;
@@ -27,8 +28,6 @@ function parseForm(formData: FormData) {
     name: formData.get("name") ?? "",
     slug: formData.get("slug") ?? "",
     category: formData.get("category") ?? "otro",
-    themeKey: formData.get("themeKey") ?? "servicios",
-    paletteVariant: formData.get("paletteVariant") ?? 1,
     rawDescription: formData.get("rawDescription") ?? "",
     description: formData.get("description") ?? "",
     servicesJson: servicesFromFormData(formData),
@@ -91,8 +90,11 @@ export async function createBusinessAction(
     return { error: "Länken pekar redan om till en annan sajt.", fieldErrors: { slug: "Länken används av en 301-omdirigering." } };
   }
 
+  // Tema och palett kommer aldrig från formuläret: branschen bestämmer dem
+  // (plan §1.11). Ett inskickat themeKey finns inte och skulle ändå ignoreras.
   await db.insert(businesses).values({
     ...values,
+    ...presentationFor(values.category),
     socialsJson: cleanSocials(values.socialsJson),
     status: "draft",
   });
@@ -132,7 +134,7 @@ export async function updateBusinessAction(
 
   await db
     .update(businesses)
-    .set({ ...values, socialsJson: cleanSocials(values.socialsJson) })
+    .set({ ...values, ...presentationFor(values.category), socialsJson: cleanSocials(values.socialsJson) })
     .where(eq(businesses.id, businessId));
 
   if (slugChanged) {

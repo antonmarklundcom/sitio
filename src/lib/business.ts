@@ -161,8 +161,9 @@ export const businessFormSchema = z.object({
       return result.slug;
     }),
   category: z.enum(CATEGORIES),
-  themeKey: z.enum(THEME_KEYS),
-  paletteVariant: z.coerce.number().int().min(1).max(4),
+  // themeKey och paletteVariant ligger INTE här: de kommer aldrig från
+  // formuläret. Servern härleder dem ur branschen (presentationFor,
+  // src/lib/presentation.ts, plan §1.11) på varje skrivväg.
   rawDescription: emptyToNull(2000),
   description: emptyToNull(2000),
   servicesJson: servicesSchema,
