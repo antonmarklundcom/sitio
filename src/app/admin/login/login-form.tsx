@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { loginAction, type LoginState } from "./actions";
 
@@ -57,6 +58,7 @@ export function LoginForm() {
       ) : null}
 
       <SubmitButton />
+      <Link href="/admin/recuperar" className="block text-sm text-admin-accent hover:underline">¿Olvidaste tu contraseña?</Link>
     </form>
   );
 }

@@ -37,6 +37,8 @@ Alla finns dokumenterade i [`.env.example`](.env.example). De kritiska:
 
 | Variabel | Roll |
 |---|---|
+| `RESEND_API_KEY` | Valfri. Resend för lösenordsåterställning; utan nyckel loggas mejlet bara i utveckling. Krävs för utskick i produktion. |
+| `RESEND_FROM` | Valfri verifierad avsändaradress; krävs när Resend används. |
 | `DATABASE_URL` | MySQL. Lokalt: Remote MySQL-värden. På Hostinger: **localhost**-varianten. |
 | `NEXT_PUBLIC_BASE_URL` | **Enda** stället där domänen finns. Domänbyte = env-ändring, aldrig refaktorering. |
 | `SESSION_SECRET` | ≥32 tecken. `openssl rand -base64 48` |

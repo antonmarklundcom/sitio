@@ -30,7 +30,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const loginPath = isOwner ? "/mi-sitio/login" : "/admin/login";
-  if (pathname === loginPath) return NextResponse.next();
+  if (pathname === loginPath || pathname === "/admin/recuperar" || pathname.startsWith("/admin/recuperar/")) return NextResponse.next();
 
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 32) {
