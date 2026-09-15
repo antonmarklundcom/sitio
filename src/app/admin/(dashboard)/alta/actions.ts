@@ -4,17 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, onboardingTokens, verifications } from "@/db/schema";
+import { onboardingTokens, verifications } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import { normalizePyPhone } from "@/lib/format";
-import { presentationFor } from "@/lib/presentation";
-import { slugify, uniqueSlugCandidate } from "@/lib/slug";
+import { createDraftBusinessWithToken } from "@/lib/intake-create";
 import {
   OTP_TTL_MINUTES,
-  TOKEN_TTL_DAYS,
   hashOtp,
-  newIntakeToken,
   newOtpCode,
   tokenFingerprint,
 } from "@/lib/intake";
@@ -45,44 +42,7 @@ export async function createIntakeLinkAction(
     return { error: "No se pudo interpretar el número.", fieldErrors: { phone: "Ej.: 0981 123 456" } };
   }
 
-  const taken = await db.select({ slug: businesses.slug }).from(businesses);
-  const slug = uniqueSlugCandidate(
-    slugify(name) || "negocio",
-    new Set(taken.map((t) => t.slug)),
-  );
-
-  const [inserted] = await db.insert(businesses).values({
-    slug,
-    name: name.slice(0, 120),
-    category: category as "otro",
-    ...presentationFor(category),
-    city,
-    // Numret är obekräftat tills kunden matar in koden — men det behövs som
-    // platshållare eftersom kolumnen är NOT NULL. Verifieringen är det som
-    // spärrar publicering, inte fältets existens.
-    whatsappPhone: phone ?? "+595000000000",
-    status: "draft",
-  });
-
-  const businessId = Number(inserted.insertId);
-  const token = newIntakeToken();
-  const expiresAt = new Date(Date.now() + TOKEN_TTL_DAYS * 86_400_000);
-
-  await db.insert(onboardingTokens).values({
-    token,
-    businessId,
-    phone,
-    prefillJson: { name, city, category },
-    createdByUserId: user.userId,
-    expiresAt,
-  });
-
-  await logActivity({
-    actorUserId: user.userId,
-    businessId,
-    action: "intake_link_created",
-    meta: { tokenFingerprint: tokenFingerprint(token), expiresAt: expiresAt.toISOString() },
-  });
+  await createDraftBusinessWithToken({ name, phone, category, city, source: "admin", actorUserId: user.userId });
 
   revalidatePath("/admin/alta");
   revalidatePath("/admin");

@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 1,
     },
+    { url: absoluteUrl("/registro"), changeFrequency: "monthly", priority: 0.8 },
     ...slugs.map((s) => ({
       url: absoluteUrl(`/${s.slug}`),
       lastModified: s.updatedAt ?? new Date(),

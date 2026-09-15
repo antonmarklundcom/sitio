@@ -73,6 +73,7 @@ export default async function IntakeAdminPage({
                         <Link href={`/admin/sitios/${row.businessId}`} className="font-medium hover:text-admin-accent">
                           {row.businessName}
                         </Link>
+                        {row.adminNotes?.startsWith("Auto-registro") ? <Badge tone="neutral">Auto-registro</Badge> : null}
                         <span className="block text-xs text-admin-muted">
                           Creado {row.createdAt.toLocaleDateString("sv-SE")}
                         </span>

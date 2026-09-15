@@ -163,3 +163,5 @@ export function faqJsonLd(faqs: Faq[] = FAQS) {
     })),
   };
 }
+
+export const REGISTRO_CTA = { href: "/registro", label: "Crear mi página" };

@@ -1,0 +1,39 @@
+Task:
+Repo sitio (Next.js 15, TypeScript, Drizzle, MySQL/MariaDB). Ticket R3-9, from docs/r3/README.md Batch 2. Today a prospect can only get a site when the superadmin creates a draft in /admin/alta and sends the private intake link. Add public self-signup: a page /registro (Spanish, es-PY, voseo) where a business owner enters the business name, rubro and WhatsApp number, and is taken straight into the existing intake flow at /alta/<token>, where the number is verified by the existing OTP step and the data is completed. The superadmin sees these signups in /admin/alta like any other intake, with the admin notes field prefilled so they are recognisable. No new database column, no migration, no email.
+
+Files to touch:
+src/lib/intake-create.ts (new: shared function createDraftBusinessWithToken({ name, phone, category, city, source }) that does what createIntakeLinkAction does today between validation and the activity log: unique slug, insert business with presentationFor, insert onboarding token, write activity log; returns { businessId, token, expiresAt })
+src/app/admin/(dashboard)/alta/actions.ts (only: replace the duplicated block in createIntakeLinkAction with a call to the shared function; validation, messages and the rest of the file stay as they are)
+src/app/registro/layout.tsx (new: imports @/styles/panel.css and wraps in div.panel like src/app/alta/layout.tsx; metadata robots index true, title Creá tu página)
+src/app/registro/page.tsx (new: the form, server component + a small client form using useActionState like the intake forms)
+src/app/registro/actions.ts (new: server action registerAction)
+src/components/landing/content.ts and src/components/landing/sections.tsx (only: a second, ghost CTA in the hero next to the WhatsApp one, text Crear mi página, linking to /registro)
+src/app/sitemap.ts (only: add /registro)
+tests/unit/registro.test.ts (new: validation of the form schema)
+tests/smoke/registro.mjs (new suite: opens /registro, submits a valid form, asserts it lands on /alta/<token> step datos with the business name shown, asserts the honeypot submission is rejected, asserts /admin/alta lists the new draft with the auto-registro note; uses the shared adminLogin helper from tests/smoke/_lib.mjs)
+
+Do not touch:
+src/app/alta/** (the intake flow itself is unchanged), src/lib/intake.ts, src/lib/business.ts, src/lib/format.ts, src/styles/panel.css.
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, src/app/api/**, .husky/**, .env.example, anything under .github/.
+
+Behaviour and definition of done:
+The /registro form has: name (2 to 120 chars), category select built from CATEGORIES in src/lib/business.ts with Spanish labels from CATEGORY_LABELS, WhatsApp number (validated with normalizePyPhone from src/lib/format.ts, hint Ej: 0981 123 456), city (optional, default Asunción), a hidden honeypot input named website that must stay empty, and a submit button Crear mi página. Field errors are shown in Spanish under each field. Copy on the page: heading Creá tu página en sitio.com.py, one line under it saying it takes 5 minutes from the phone and you then complete photos and details, and a note that the number is verified by a code on WhatsApp in the next step.
+registerAction: rate-limited with rateLimit from src/lib/rate-limit.ts, key registro:<ip> where ip comes from the x-forwarded-for header first value or x-real-ip, limit 5 per hour, error message in Spanish when exceeded. Honeypot filled -> return a generic success-looking state without creating anything. On success it calls createDraftBusinessWithToken with source registro, which sets businesses.adminNotes to the text Auto-registro desde /registro el <YYYY-MM-DD HH:mm> (Asunción time via the existing helpers if there is one, otherwise UTC and say so), and then redirect(`/alta/${token}`) so the prospect continues without any link being sent.
+The admin path keeps its behaviour: createIntakeLinkAction still returns the token and link to the superadmin exactly as before; its activity log entry is unchanged; the shared function takes an actorUserId that is null for public signups.
+/registro is linked from the landing hero as a ghost button Crear mi página and listed in the sitemap; robots allow it.
+Rate limit and honeypot are unit-tested where pure (schema) and smoke-tested where not.
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run build   (working directory: repo root)
+npm run smoke   (working directory: repo root; only if a built server is reachable at http://127.0.0.1:3100 against a freshly seeded database; otherwise report as not run, the manager runs it)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

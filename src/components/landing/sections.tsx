@@ -1,4 +1,4 @@
-import { FAQS, FEATURES, PRICE_BAND, STEPS, TIERS } from "./content";
+import { FAQS, FEATURES, PRICE_BAND, REGISTRO_CTA, STEPS, TIERS } from "./content";
 import { PhoneMock } from "./phone-mock";
 import { SalesCta } from "./cta";
 import type { SalesContact } from "./sales-contact";
@@ -41,8 +41,8 @@ export function LandingHero({ contact }: { contact: SalesContact }) {
           </p>
           <div className="lp-hero-actions">
             <SalesCta contact={contact}>Pedir la mía por WhatsApp</SalesCta>
-            <a href="#incluye" className="lp-btn lp-btn--ghost">
-              Ver qué incluye
+            <a href={REGISTRO_CTA.href} className="lp-btn lp-btn--ghost">
+              {REGISTRO_CTA.label}
             </a>
           </div>
           <p className="lp-hero-note">
