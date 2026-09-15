@@ -80,6 +80,7 @@ export type IntakeLinkRow = {
   token: string;
   businessId: number;
   businessName: string;
+  adminNotes: string | null;
   businessStatus: string;
   phone: string | null;
   expiresAt: Date;
@@ -97,6 +98,7 @@ export async function listIntakeLinks(limit = 100): Promise<IntakeLinkRow[]> {
       token: onboardingTokens.token,
       businessId: onboardingTokens.businessId,
       businessName: businesses.name,
+      adminNotes: businesses.adminNotes,
       businessStatus: businesses.status,
       phone: onboardingTokens.phone,
       expiresAt: onboardingTokens.expiresAt,
