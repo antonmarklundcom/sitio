@@ -54,7 +54,7 @@ async function loadProposal(businessId: number): Promise<StoredProposal | null> 
     result: parsed.data,
     warnings: Array.isArray(meta.warnings) ? meta.warnings.map(String) : [],
     // En handredigerad eller äldre rad får inte rendera "undefined tokens".
-    usage: usage.success ? usage.data : { model: "okänd", inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 },
+    usage: usage.success ? usage.data : { model: "desconocido", inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 },
     proposedAt: row.createdAt ? new Date(row.createdAt).toISOString() : "",
   };
 }
@@ -77,11 +77,11 @@ export async function runPolishAction(
   const user = await requireRole("superadmin");
 
   const business = await getBusinessById(businessId);
-  if (!business) return { error: "Sajten finns inte." };
+  if (!business) return { error: "El sitio no existe." };
 
   const limit = rateLimit(`ai-polish:${user.userId}`, POLISH_LIMIT, POLISH_WINDOW_MS);
   if (!limit.ok) {
-    return { error: `För många putsningar. Försök igen om ${Math.ceil(limit.retryAfterMs / 60000)} minuter.` };
+    return { error: `Demasiadas mejoras. Probá de nuevo en ${Math.ceil(limit.retryAfterMs / 60000)} minutos.` };
   }
 
   const outcome = await polishBusiness(business);
@@ -95,7 +95,7 @@ export async function runPolishAction(
   });
 
   revalidatePath(`/admin/sitios/${businessId}`);
-  return { ok: "Förslaget är klart. Granska och välj vilka fält som ska skrivas.", warnings: outcome.warnings };
+  return { ok: "La propuesta está lista. Revisá y elegí qué campos querés guardar.", warnings: outcome.warnings };
 }
 
 /**
@@ -110,17 +110,17 @@ export async function applyPolishAction(
   const user = await requireRole("superadmin");
 
   const business = await getBusinessById(businessId);
-  if (!business) return { error: "Sajten finns inte." };
+  if (!business) return { error: "El sitio no existe." };
 
   const proposal = await loadProposal(businessId);
-  if (!proposal) return { error: "Det finns inget förslag att tillämpa. Kör putsningen först." };
+  if (!proposal) return { error: "No hay una propuesta para aplicar. Ejecutá la mejora primero." };
 
   const selected = formData
     .getAll("field")
     .map(String)
     .filter((f): f is PolishFieldKey => (POLISH_FIELDS as readonly string[]).includes(f));
 
-  if (selected.length === 0) return { error: "Inget fält var markerat." };
+  if (selected.length === 0) return { error: "No seleccionaste ningún campo." };
 
   const patch: Partial<typeof businesses.$inferInsert> = { aiPolishedAt: new Date() };
   if (selected.includes("description")) patch.description = proposal.result.description;
@@ -141,5 +141,5 @@ export async function applyPolishAction(
   revalidatePath(`/admin/sitios/${businessId}`);
   revalidatePath("/admin");
 
-  return { ok: `${selected.length} fält skrevs och sajten är märkt som putsad.` };
+  return { ok: `${selected.length} campos guardados y el sitio está marcado como mejorado.` };
 }

@@ -44,17 +44,17 @@ export default async function PaymentsPage({
         <div>
           <h1 className="text-xl font-semibold">Cobros</h1>
           <p className="mt-1 text-sm text-admin-muted">
-            {pending.length} betalning{pending.length === 1 ? "" : "ar"} att bekräfta ·{" "}
-            {expiring.length} förfaller inom {EXPIRING_SOON_DAYS} dagar
+            {pending.length} pago{pending.length === 1 ? "" : "s"} por confirmar ·{" "}
+            {expiring.length} con vencimiento en {EXPIRING_SOON_DAYS} días
           </p>
         </div>
         <form action={runLifecycleAction}>
           <button
             type="submit"
             className="rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2 text-sm hover:border-admin-muted"
-            title={`Sätter förfallna prenumerationer till respit (${GRACE_DAYS} dgr) och därefter förfallen, och pausar sajten. Körs annars av cron-jobbet varje natt.`}
+            title={`Pasa las suscripciones con vencimiento cumplido al período de gracia (${GRACE_DAYS} días) y luego a vencida, y pausa el sitio. También se ejecuta cada noche con la tarea cron.`}
           >
-            Kör förfallokontroll nu
+            Ejecutar control de vencimientos ahora
           </button>
         </form>
       </div>
@@ -62,22 +62,22 @@ export default async function PaymentsPage({
       {sp.ok ? <Notice tone="ok">{sp.ok}</Notice> : null}
 
       <Card>
-        <SectionTitle hint="En registrerad betalning förlänger ingenting förrän du bekräftar den. Bekräftelsen förlänger perioden och publicerar en sajt som pausats för utebliven betalning.">
-          Att bekräfta
+        <SectionTitle hint="Un pago registrado no extiende nada hasta que lo confirmás. La confirmación extiende el período y publica el sitio si estaba en pausa por falta de pago.">
+          Por confirmar
         </SectionTitle>
 
         {pending.length === 0 ? (
-          <EmptyState title="Inga betalningar väntar." />
+          <EmptyState title="No hay pagos pendientes." />
         ) : (
           <div className="overflow-x-auto rounded-lg border border-admin-line">
             <table className="w-full min-w-[48rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-admin-line bg-admin-surface-2 text-left text-xs tracking-wide text-admin-muted uppercase">
-                  <th className="px-3 py-2 font-medium">Sajt</th>
-                  <th className="px-3 py-2 font-medium">Belopp</th>
-                  <th className="px-3 py-2 font-medium">Metod</th>
-                  <th className="px-3 py-2 font-medium">Period</th>
-                  <th className="px-3 py-2 text-right font-medium">Åtgärd</th>
+                  <th className="px-3 py-2 font-medium">Sitio</th>
+                  <th className="px-3 py-2 font-medium">Monto</th>
+                  <th className="px-3 py-2 font-medium">Método</th>
+                  <th className="px-3 py-2 font-medium">Período</th>
+                  <th className="px-3 py-2 text-right font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,7 +103,7 @@ export default async function PaymentsPage({
                           <input type="hidden" name="paymentId" value={p.id} />
                           <input type="hidden" name="back" value="/admin/pagos" />
                           <button type="submit" className="rounded-md bg-admin-ok px-2.5 py-1.5 text-xs font-medium text-admin-bg">
-                            Bekräfta
+                            Confirmar
                           </button>
                         </form>
                         <form action={rejectPaymentAction}>
@@ -113,7 +113,7 @@ export default async function PaymentsPage({
                             type="submit"
                             className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs text-admin-muted hover:text-admin-danger"
                           >
-                            Avvisa
+                            Rechazar
                           </button>
                         </form>
                       </span>
@@ -127,23 +127,23 @@ export default async function PaymentsPage({
       </Card>
 
       <Card>
-        <SectionTitle hint="Meddelandet innehåller årets siffror — det är säljargumentet vid förnyelsen. Saknas trafik utelämnas siffrorna hellre än att skönmålas.">
-          Vencen pronto (≤ {EXPIRING_SOON_DAYS} dagar)
+        <SectionTitle hint="El mensaje incluye las cifras del año como argumento para la renovación. Si no hay tráfico, las cifras se omiten.">
+          Vencen pronto (≤ {EXPIRING_SOON_DAYS} días)
         </SectionTitle>
 
         {expiring.length === 0 ? (
-          <EmptyState title="Inget förfaller de närmaste veckorna." />
+          <EmptyState title="No hay vencimientos en las próximas semanas." />
         ) : (
           <div className="overflow-x-auto rounded-lg border border-admin-line">
             <table className="w-full min-w-[52rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-admin-line bg-admin-surface-2 text-left text-xs tracking-wide text-admin-muted uppercase">
-                  <th className="px-3 py-2 font-medium">Sajt</th>
+                  <th className="px-3 py-2 font-medium">Sitio</th>
                   <th className="px-3 py-2 font-medium">Plan</th>
-                  <th className="px-3 py-2 font-medium">Förfaller</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                  <th className="px-3 py-2 text-right font-medium">År: besök / WA</th>
-                  <th className="px-3 py-2 text-right font-medium">Förnyelse</th>
+                  <th className="px-3 py-2 font-medium">Vence</th>
+                  <th className="px-3 py-2 font-medium">Estado</th>
+                  <th className="px-3 py-2 text-right font-medium">Año: visitas / WA</th>
+                  <th className="px-3 py-2 text-right font-medium">Renovación</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,7 +169,7 @@ export default async function PaymentsPage({
                         </Link>
                         <span className="block font-mono text-xs text-admin-muted">
                           /{row.slug}
-                          {row.businessStatus === "paused" ? " · pausad" : ""}
+                          {row.businessStatus === "paused" ? " · en pausa" : ""}
                         </span>
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
@@ -179,7 +179,7 @@ export default async function PaymentsPage({
                       <td className="px-3 py-2 whitespace-nowrap">
                         {toDayString(row.expiresAt)}
                         <span className="block text-xs text-admin-muted">
-                          {left >= 0 ? `om ${left} dgr` : `${Math.abs(left)} dgr sedan`}
+                          {left >= 0 ? `en ${left} días` : `${Math.abs(left)} días atrás`}
                         </span>
                       </td>
                       <td className="px-3 py-2">

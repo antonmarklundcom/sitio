@@ -4,7 +4,7 @@ import { BusinessForm } from "@/components/admin/business-form";
 import { createBusinessAction } from "../actions";
 import { WEEKDAYS } from "@/lib/business";
 
-export const metadata = { title: "Ny sajt" };
+export const metadata = { title: "Nuevo sitio" };
 
 const defaultHours = Object.fromEntries(
   WEEKDAYS.map(({ key }) => [
@@ -20,17 +20,17 @@ export default async function NewBusinessPage() {
     <div className="space-y-6">
       <div>
         <Link href="/admin" className="text-sm text-admin-muted hover:text-admin-text">
-          ← Sajter
+          ← Sitios
         </Link>
-        <h1 className="mt-2 text-xl font-semibold">Ny sajt</h1>
+        <h1 className="mt-2 text-xl font-semibold">Nuevo sitio</h1>
         <p className="mt-1 text-sm text-admin-muted">
-          Skapas som utkast. Publicering sker i nästa steg, efter granskning.
+          Se crea como borrador. La publicación se realiza en el siguiente paso, después de la revisión.
         </p>
       </div>
 
       <BusinessForm
         action={createBusinessAction}
-        submitLabel="Skapa utkast"
+        submitLabel="Crear borrador"
         defaults={{
           name: "",
           slug: "",

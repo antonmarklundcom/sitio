@@ -38,11 +38,11 @@ export async function createIntakeLinkAction(
   const city = String(formData.get("city") ?? "").trim() || "Asunción";
   const category = String(formData.get("category") ?? "otro");
 
-  if (name.length < 2) return { error: "Ange företagets namn.", fieldErrors: { name: "Minst två tecken." } };
+  if (name.length < 2) return { error: "Ingresá el nombre del negocio.", fieldErrors: { name: "Al menos dos caracteres." } };
 
   const phone = phoneRaw ? normalizePyPhone(phoneRaw) : null;
   if (phoneRaw && !phone) {
-    return { error: "Numret går inte att tolka.", fieldErrors: { phone: "Ex: 0981 123 456" } };
+    return { error: "No se pudo interpretar el número.", fieldErrors: { phone: "Ej.: 0981 123 456" } };
   }
 
   const taken = await db.select({ slug: businesses.slug }).from(businesses);
@@ -86,7 +86,7 @@ export async function createIntakeLinkAction(
 
   revalidatePath("/admin/alta");
   revalidatePath("/admin");
-  return { ok: `Länken är skapad för ${name}.` };
+  return { ok: `Enlace creado para ${name}.` };
 }
 
 /**
@@ -104,7 +104,7 @@ export async function generateOtpAction(
   const user = await requireRole("superadmin");
 
   const business = await getBusinessById(businessId);
-  if (!business) return { error: "Sajten finns inte." };
+  if (!business) return { error: "El sitio no existe." };
 
   const code = newOtpCode();
   const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
@@ -136,7 +136,7 @@ export async function revokeIntakeLinkAction(formData: FormData): Promise<void> 
   const tokenId = Number(formData.get("tokenId"));
 
   const [row] = await db.select().from(onboardingTokens).where(eq(onboardingTokens.id, tokenId)).limit(1);
-  if (!row) throw new Error("Länken finns inte.");
+  if (!row) throw new Error("El enlace no existe.");
 
   await db
     .update(onboardingTokens)
@@ -151,5 +151,5 @@ export async function revokeIntakeLinkAction(formData: FormData): Promise<void> 
   });
 
   revalidatePath("/admin/alta");
-  redirect(`/admin/alta?ok=${encodeURIComponent("Länken är stängd.")}`);
+  redirect(`/admin/alta?ok=${encodeURIComponent("El enlace está cerrado.")}`);
 }

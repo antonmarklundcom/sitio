@@ -73,13 +73,13 @@ export async function createBusinessAction(
 ): Promise<BusinessFormState> {
   const user = await requireRole("superadmin");
   const parsed = parseForm(formData);
-  if (!parsed.success) return { error: "Formuläret innehåller fel.", fieldErrors: toFieldErrors(parsed.error.issues) };
+  if (!parsed.success) return { error: "El formulario contiene errores.", fieldErrors: toFieldErrors(parsed.error.issues) };
 
   const values = parsed.data;
 
   const slugTaken = await db.select({ id: businesses.id }).from(businesses).where(eq(businesses.slug, values.slug)).limit(1);
   if (slugTaken.length > 0) {
-    return { error: "Länken är upptagen.", fieldErrors: { slug: "En sajt använder redan den länken." } };
+    return { error: "El enlace ya está en uso.", fieldErrors: { slug: "Un sitio ya usa ese enlace." } };
   }
   const redirectTaken = await db
     .select({ id: slugRedirects.id })
@@ -87,7 +87,7 @@ export async function createBusinessAction(
     .where(eq(slugRedirects.oldSlug, values.slug))
     .limit(1);
   if (redirectTaken.length > 0) {
-    return { error: "Länken pekar redan om till en annan sajt.", fieldErrors: { slug: "Länken används av en 301-omdirigering." } };
+    return { error: "El enlace ya redirige a otro sitio.", fieldErrors: { slug: "El enlace se usa en una redirección 301." } };
   }
 
   // Tema och palett kommer aldrig från formuläret: branschen bestämmer dem
@@ -113,10 +113,10 @@ export async function updateBusinessAction(
 ): Promise<BusinessFormState> {
   const user = await requireRole("superadmin");
   const existing = await getBusinessById(businessId);
-  if (!existing) return { error: "Sajten finns inte." };
+  if (!existing) return { error: "El sitio no existe." };
 
   const parsed = parseForm(formData);
-  if (!parsed.success) return { error: "Formuläret innehåller fel.", fieldErrors: toFieldErrors(parsed.error.issues) };
+  if (!parsed.success) return { error: "El formulario contiene errores.", fieldErrors: toFieldErrors(parsed.error.issues) };
 
   const values = parsed.data;
   const slugChanged = values.slug !== existing.slug;
@@ -128,7 +128,7 @@ export async function updateBusinessAction(
       .where(and(eq(businesses.slug, values.slug), ne(businesses.id, businessId)))
       .limit(1);
     if (taken.length > 0) {
-      return { error: "Länken är upptagen.", fieldErrors: { slug: "En annan sajt använder redan den länken." } };
+      return { error: "El enlace ya está en uso.", fieldErrors: { slug: "Otro sitio ya usa ese enlace." } };
     }
   }
 
@@ -172,11 +172,11 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
   const to = String(formData.get("to")) as BusinessStatus;
 
   const business = await getBusinessById(businessId);
-  if (!business) throw new Error("Sajten finns inte.");
+  if (!business) throw new Error("El sitio no existe.");
 
   const from = business.status as BusinessStatus;
   if (!canTransition(from, to)) {
-    redirect(`/admin/sitios/${businessId}?error=${encodeURIComponent(`Övergången ${from} → ${to} är inte tillåten.`)}`);
+    redirect(`/admin/sitios/${businessId}?error=${encodeURIComponent(`La transición ${from} → ${to} no está permitida.`)}`);
   }
 
   if (to === "published") {
@@ -186,7 +186,7 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
       .where(and(eq(media.businessId, businessId), eq(media.kind, "photo")));
     const blockers = publishBlockers(business, Number(photoCount));
     if (blockers.length > 0) {
-      redirect(`/admin/sitios/${businessId}?error=${encodeURIComponent(`Kan inte publicera: ${blockers.join(" ")}`)}`);
+      redirect(`/admin/sitios/${businessId}?error=${encodeURIComponent(`No se puede publicar: ${blockers.join(" ")}`)}`);
     }
   }
 
@@ -217,8 +217,8 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
     } else {
       ownerNote = `&ownerWarning=${encodeURIComponent(
         owner.reason === "phone_taken"
-          ? "Sajten är publicerad, men numret hör redan till ett annat owner-konto. Lös det i Inloggningar."
-          : "Sajten är publicerad, men WhatsApp-numret är inte verifierat — inget owner-konto skapades.",
+          ? "El sitio está publicado, pero el número ya pertenece a otra cuenta de dueño. Resolvelo en Accesos."
+          : "El sitio está publicado, pero el número de WhatsApp no está verificado — no se creó una cuenta de dueño.",
       )}`;
     }
   }
@@ -242,7 +242,7 @@ export async function verifyWhatsappManuallyAction(formData: FormData): Promise<
   const user = await requireRole("superadmin");
   const businessId = Number(formData.get("businessId"));
   const business = await getBusinessById(businessId);
-  if (!business) throw new Error("Sajten finns inte.");
+  if (!business) throw new Error("El sitio no existe.");
 
   await db.update(businesses).set({ whatsappVerifiedAt: new Date() }).where(eq(businesses.id, businessId));
   await logActivity({

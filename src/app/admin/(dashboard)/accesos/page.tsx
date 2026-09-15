@@ -8,7 +8,7 @@ import { OwnerCodeButton } from "@/components/admin/owner-code-button";
 import { ensureOwnerAccountAction, generateOwnerCodeAction, setOwnerStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Inloggningar" };
+export const metadata = { title: "Accesos" };
 
 export default async function AccesosPage({ searchParams }: { searchParams: Promise<{ ok?: string }> }) {
   await requireRole("superadmin");
@@ -27,10 +27,10 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Inloggningar</h1>
+        <h1 className="text-xl font-semibold">Accesos</h1>
         <p className="mt-1 text-sm text-admin-muted">
-          Owner loggar in på /mi-sitio med en kod du skickar från din egen WhatsApp. Koden visas en gång och
-          lagras aldrig i klartext. Automatiseras i PR-17.
+          El dueño inicia sesión en /mi-sitio con un código que enviás desde tu propio WhatsApp. El código se muestra una sola vez y
+          nunca se guarda como texto legible. Se automatiza en PR-17.
         </p>
       </div>
 
@@ -38,15 +38,15 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
 
       {waiting.length > 0 ? (
         <Notice tone="warn">
-          {waiting.length} kund{waiting.length === 1 ? "" : "er"} väntar på en kod:{" "}
+          {waiting.length} cliente{waiting.length === 1 ? "" : "s"} en espera de un código:{" "}
           {waiting.map((w) => w.businessName).join(", ")}.
         </Notice>
       ) : null}
 
       {missingAccount.length > 0 ? (
         <Card>
-          <SectionTitle hint="Publicering skapar kontot automatiskt. De här sajterna publicerades innan owner-inloggningen fanns, eller saknar verifierat nummer.">
-            Publicerade sajter utan owner-konto
+          <SectionTitle hint="La cuenta se crea automáticamente al publicar. Estos sitios se publicaron antes de que existiera el acceso de dueños o no tienen un número verificado.">
+            Sitios publicados sin cuenta de dueño
           </SectionTitle>
           <ul className="space-y-2">
             {missingAccount.map((b) => (
@@ -55,9 +55,9 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
                   {b.name}
                 </Link>
                 {b.whatsappVerifiedAt ? (
-                  <Badge tone="ok">Nummer verifierat</Badge>
+                  <Badge tone="ok">Número verificado</Badge>
                 ) : (
-                  <Badge tone="warn">Overifierat nummer</Badge>
+                  <Badge tone="warn">Número sin verificar</Badge>
                 )}
                 <form action={ensureOwnerAccountAction} className="ml-auto">
                   <input type="hidden" name="businessId" value={b.id} />
@@ -65,7 +65,7 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
                     type="submit"
                     className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs hover:border-admin-muted"
                   >
-                    Skapa konto
+                    Crear cuenta
                   </button>
                 </form>
               </li>
@@ -75,21 +75,21 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
       ) : null}
 
       <Card>
-        <SectionTitle hint="En kod lever 10 minuter och tål fem försök.">Owner-konton</SectionTitle>
+        <SectionTitle hint="El código dura 10 minutos y permite cinco intentos.">Cuentas de dueños</SectionTitle>
 
         {owners.length === 0 ? (
-          <EmptyState title="Inga owner-konton ännu. De skapas när en sajt publiceras." />
+          <EmptyState title="Todavía no hay cuentas de dueños. Se crean al publicar un sitio." />
         ) : (
           <div className="overflow-x-auto rounded-lg border border-admin-line">
             <table className="w-full min-w-[48rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-admin-line bg-admin-surface-2 text-left text-xs tracking-wide text-admin-muted uppercase">
-                  <th className="px-3 py-2 font-medium">Sajt</th>
-                  <th className="px-3 py-2 font-medium">Nummer</th>
-                  <th className="px-3 py-2 font-medium">Senaste inloggning</th>
-                  <th className="px-3 py-2 font-medium">Läge</th>
-                  <th className="px-3 py-2 text-right font-medium">Kod</th>
-                  <th className="px-3 py-2 text-right font-medium">Konto</th>
+                  <th className="px-3 py-2 font-medium">Sitio</th>
+                  <th className="px-3 py-2 font-medium">Número</th>
+                  <th className="px-3 py-2 font-medium">Último acceso</th>
+                  <th className="px-3 py-2 font-medium">Estado</th>
+                  <th className="px-3 py-2 text-right font-medium">Código</th>
+                  <th className="px-3 py-2 text-right font-medium">Cuenta</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,13 +103,13 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">{o.phone ? displayPhone(o.phone) : "—"}</td>
                     <td className="px-3 py-2 text-xs whitespace-nowrap text-admin-muted">
-                      {o.lastLoginAt ? new Date(o.lastLoginAt).toLocaleString("sv-SE") : "Aldrig"}
+                      {o.lastLoginAt ? new Date(o.lastLoginAt).toLocaleString("sv-SE") : "Nunca"}
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-1.5">
-                        {o.status === "active" ? <Badge tone="ok">Aktiv</Badge> : <Badge tone="danger">Avstängd</Badge>}
-                        {o.pendingCode ? <Badge tone="warn">Kod skickad</Badge> : null}
-                        {o.requestedAt && !o.pendingCode ? <Badge tone="warn">Väntar på kod</Badge> : null}
+                        {o.status === "active" ? <Badge tone="ok">Activa</Badge> : <Badge tone="danger">Desactivada</Badge>}
+                        {o.pendingCode ? <Badge tone="warn">Código enviado</Badge> : null}
+                        {o.requestedAt && !o.pendingCode ? <Badge tone="warn">En espera de código</Badge> : null}
                       </div>
                     </td>
                     <td className="px-3 py-2 text-right">
@@ -131,7 +131,7 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
                           type="submit"
                           className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs text-admin-muted hover:text-admin-text"
                         >
-                          {o.status === "active" ? "Stäng av" : "Aktivera"}
+                          {o.status === "active" ? "Desactivar" : "Activar"}
                         </button>
                       </form>
                     </td>
@@ -145,15 +145,15 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
 
       {unknown.length > 0 ? (
         <Card>
-          <SectionTitle hint="Nummer som bett om en kod men inte hör till något owner-konto. Oftast fel nummer — men värt att se om det blir många.">
-            Okända inloggningsförsök (24 h)
+          <SectionTitle hint="Números que solicitaron un código pero no pertenecen a ninguna cuenta de dueño. Suelen ser números incorrectos, pero conviene revisar si se acumulan.">
+            Intentos de acceso desconocidos (24 h)
           </SectionTitle>
           <ul className="space-y-1 text-sm text-admin-muted">
             {unknown.map((row) => {
               const meta = (row.metaJson ?? {}) as { phone?: string };
               return (
                 <li key={row.id} className="flex justify-between gap-4">
-                  <span className="font-mono">{meta.phone ? displayPhone(meta.phone) : "okänt"}</span>
+                  <span className="font-mono">{meta.phone ? displayPhone(meta.phone) : "desconocido"}</span>
                   <span className="text-xs">{new Date(row.createdAt).toLocaleString("sv-SE")}</span>
                 </li>
               );

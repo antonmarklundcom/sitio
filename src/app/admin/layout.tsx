@@ -4,7 +4,7 @@ import { ADMIN_THEME_COOKIE, parseAdminTheme } from "@/lib/admin-theme";
 import { AdminThemeProvider } from "@/components/admin/theme-toggle";
 
 export const metadata: Metadata = {
-  title: { default: "sitio admin", template: "%s – sitio admin" },
+  title: { default: "Administración de sitio", template: "%s – Administración de sitio" },
   robots: { index: false, follow: false },
 };
 
