@@ -5,7 +5,8 @@
  * Kundsajterna under /[slug] bär sina egna tema-tokens och ärver inget
  * härifrån utom typsnittsvariablerna — de ska upplevas som fristående sajter.
  */
-:root {
+:root,
+.admin-theme {
   --admin-bg: #0f1115;
   --admin-surface: #171a21;
   --admin-surface-2: #1e222b;
@@ -18,6 +19,51 @@
   --admin-warn: #e8b33a;
   --admin-danger: #f2545b;
 }
+
+.admin-theme {
+  color-scheme: dark;
+  --admin-show-dark: inline-block;
+  --admin-show-light: none;
+}
+
+.admin-theme[data-admin-theme="light"] {
+  color-scheme: light;
+  --admin-bg: #f6f7f9;
+  --admin-surface: #ffffff;
+  --admin-surface-2: #eef0f4;
+  --admin-line: #d9dde5;
+  --admin-text: #15181e;
+  --admin-muted: #5b6472;
+  --admin-accent: #2f5fe0;
+  --admin-accent-ink: #ffffff;
+  --admin-ok: #1f8f5f;
+  --admin-warn: #b07a10;
+  --admin-danger: #c9353c;
+  --admin-show-dark: none;
+  --admin-show-light: inline-block;
+}
+
+@media (prefers-color-scheme: light) {
+  .admin-theme:not([data-admin-theme]) {
+    color-scheme: light;
+    --admin-bg: #f6f7f9;
+    --admin-surface: #ffffff;
+    --admin-surface-2: #eef0f4;
+    --admin-line: #d9dde5;
+    --admin-text: #15181e;
+    --admin-muted: #5b6472;
+    --admin-accent: #2f5fe0;
+    --admin-accent-ink: #ffffff;
+    --admin-ok: #1f8f5f;
+    --admin-warn: #b07a10;
+    --admin-danger: #c9353c;
+    --admin-show-dark: none;
+    --admin-show-light: inline-block;
+  }
+}
+
+.admin-theme-when-dark { display: var(--admin-show-dark); }
+.admin-theme-when-light { display: var(--admin-show-light); }
 
 @theme inline {
   --color-admin-bg: var(--admin-bg);

@@ -1,0 +1,41 @@
+Task:
+Repo sitio (Next.js 15, TypeScript, Tailwind 4). Ticket R3-8, from docs/r3/README.md Batch 2. The superadmin panel under /admin (including /admin/login) is dark only: its colours are the --admin-* tokens in src/app/globals.css, mapped to Tailwind colours by the @theme inline block and applied by the wrapper div in src/app/admin/layout.tsx. Add a light palette and a theme toggle so the admin follows the system preference by default and remembers an explicit choice in a cookie, rendered server-side so there is no flash of the wrong theme. The owner panel (/mi-sitio, panel.css) and the customer sites are out of scope and stay as they are.
+
+Files to touch:
+src/app/globals.css
+src/app/admin/layout.tsx
+src/app/admin/theme-actions.ts (new, server actions)
+src/components/admin/theme-toggle.tsx (new, client component)
+src/app/admin/(dashboard)/layout.tsx (only: import and mount the toggle in the header next to the user name; do not change any other line, another ticket is translating the labels in this file)
+src/lib/admin-theme.ts (new: cookie name, allowed values, parse helper; pure module, no React or Next imports)
+tests/unit/admin-theme.test.ts (new)
+
+Do not touch:
+src/styles/panel.css, src/app/mi-sitio/**, src/app/alta/**, src/app/[slug]/**, src/themes/**, src/components/admin/*.tsx other than the new toggle file.
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, src/app/api/**, .husky/**, .env.example, anything under .github/.
+The dark token values: they stay exactly as they are.
+
+Light palette, use exactly these values:
+--admin-bg #f6f7f9, --admin-surface #ffffff, --admin-surface-2 #eef0f4, --admin-line #d9dde5, --admin-text #15181e, --admin-muted #5b6472, --admin-accent #2f5fe0, --admin-accent-ink #ffffff, --admin-ok #1f8f5f, --admin-warn #b07a10, --admin-danger #c9353c.
+
+Definition of done:
+The admin wrapper div in src/app/admin/layout.tsx carries a data-admin-theme attribute read from the cookie on the server: light, dark, or absent when no cookie. Tokens are defined so that: with data-admin-theme=dark the current dark values apply; with data-admin-theme=light the light values apply; with the attribute absent the system preference decides via prefers-color-scheme (dark values by default, light values under prefers-color-scheme light). Tailwind classes such as bg-admin-bg keep working unchanged because only the variable values move; if the tokens must live on the wrapper instead of :root for that to work, do that and keep the @theme inline mapping.
+The wrapper also sets color-scheme (light or dark) so native form controls and scrollbars match.
+src/components/admin/theme-toggle.tsx is a small button in the header showing the current mode with an accessible label (aria-label in Spanish: Cambiar a modo claro / Cambiar a modo oscuro); clicking calls a server action that writes the cookie (httpOnly false is fine, sameSite lax, path /, max-age one year) and calls revalidatePath('/admin', 'layout') so the page re-renders in the new theme without a manual reload.
+src/lib/admin-theme.ts exports the cookie name, the union type, and parseAdminTheme(value: string | undefined) returning light, dark or null; tests/unit/admin-theme.test.ts covers the three outcomes and a garbage value.
+Text contrast in the light palette: --admin-text on --admin-bg and --admin-muted on --admin-surface both at least 4.5:1 (the given values satisfy this; do not change them).
+npm run build passes; no hydration warning is introduced (the toggle must not read the cookie on the client during render, it receives the current value as a prop).
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run build   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.
