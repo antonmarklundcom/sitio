@@ -1,8 +1,10 @@
 import "server-only";
 import { z } from "zod";
+import { getPromoSettings } from "@/lib/settings";
+import { addDays, parseDay, PLAN_SUGGESTED_PRICE_GS } from "@/lib/billing";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, onboardingTokens, users } from "@/db/schema";
+import { businesses, onboardingTokens, subscriptions, users } from "@/db/schema";
 import { logActivity } from "@/lib/auth";
 import { CATEGORIES } from "@/lib/business";
 import { normalizePyPhone } from "@/lib/format";
@@ -75,6 +77,20 @@ export async function createDraftBusinessWithToken({ name, phone, category, city
   });
 
   const businessId = Number(inserted.insertId);
+  if (actorUserId === null) {
+    const promo = await getPromoSettings();
+    if (promo.trialEnabled) {
+      const startsAt = parseDay(new Date());
+      const trialExpiresAt = addDays(startsAt, promo.trialDays);
+      await db.insert(subscriptions).values({
+        businessId, status: "trial", plan: promo.trialPlan,
+        priceGs: PLAN_SUGGESTED_PRICE_GS[promo.trialPlan], startsAt, expiresAt: trialExpiresAt,
+      });
+      await logActivity({ actorUserId, businessId, action: "trial_iniciado", meta: {
+        plan: promo.trialPlan, days: promo.trialDays, expiresAt: trialExpiresAt.toISOString(),
+      } });
+    }
+  }
   const token = newIntakeToken();
   const expiresAt = new Date(Date.now() + TOKEN_TTL_DAYS * 86_400_000);
 

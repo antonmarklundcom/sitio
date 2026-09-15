@@ -29,6 +29,12 @@ const timestamps = {
 /** FK-kolumn som matchar primärnyckeln (bigint unsigned auto_increment). */
 const fk = (name: string) => bigint(name, { mode: "number", unsigned: true });
 
+export const settings = mysqlTable("settings", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: datetime("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`).$onUpdate(() => new Date()),
+});
+
 // ---------- users ----------
 export const users = mysqlTable(
   "users",

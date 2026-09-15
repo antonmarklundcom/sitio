@@ -1,0 +1,40 @@
+Task:
+Repo sitio (Next.js 15, TypeScript, Drizzle, MySQL/MariaDB). Ticket R3-10, from docs/r3/README.md Batch 2. Add a free-trial promotion that the superadmin switches on and off. When it is on, a business that signs up through /registro (ticket R3-9, merged) gets a trial subscription automatically, the landing page shows a promotion banner, and the existing subscription lifecycle (grace, then paused) takes over when the trial ends. Settings live in a new key/value table. Decisions taken by the manager: default trial length 30 days, default plan plus, normal grace after expiry, only active while the switch is on, price recorded as the suggested price of the plan with status trial.
+
+Files to touch:
+src/db/schema.ts (only: add table settings with columns key varchar(64) primary key, value text not null, updated_at datetime; use the existing timestamps helper if it fits, otherwise a single updatedAt column)
+src/lib/settings.ts (new: typed getters/setters getPromoSettings() and savePromoSettings(); shape { trialEnabled: boolean, trialDays: number 7..90, trialPlan: basico or plus, bannerText: string max 140 }; stored as one JSON value under key promo; defaults when the row is missing; a pure parsePromoSettings(json) that is unit-testable)
+src/db/settings-queries.ts (new: read/upsert of one key)
+src/app/admin/(dashboard)/promociones/page.tsx and actions.ts (new admin page Promociones: switch, days, plan, banner text, save; es-PY voseo; a line that shows how many trial subscriptions are currently active)
+src/app/admin/(dashboard)/layout.tsx (only: add the NAV entry Promociones after Cobros)
+src/lib/intake-create.ts (only: after creating the business, if actorUserId is null and the trial is enabled, insert a subscription with status trial, plan from settings, priceGs = PLAN_SUGGESTED_PRICE_GS[plan], startsAt today, expiresAt today + trialDays; write an activity log line trial_iniciado)
+src/components/landing/content.ts, src/components/landing/sections.tsx and src/app/page.tsx (only: when the promo is on, render a slim banner above the hero with the banner text and a link to /registro; the page must keep working with the database unreachable at build time, so read settings at request time with dynamic rendering or a try/catch that falls back to no banner)
+src/app/registro/page.tsx (only: when the promo is on, one line under the heading with the trial offer, for example Probá Plus gratis 30 días)
+tests/unit/settings.test.ts (new: parsePromoSettings defaults, clamping and rejection cases)
+tests/smoke/promo.mjs (new: as superadmin enable the promo with 14 days and plus, sign up via /registro, assert the new business has a trial subscription expiring in 14 days and that / shows the banner; then disable and assert the banner is gone)
+
+Do not touch:
+drizzle/** and drizzle/meta/**: do NOT write migration files; the manager generates them with drizzle-kit after your schema change and applies them. Do not run drizzle-kit.
+src/lib/billing.ts, src/lib/billing-lifecycle.ts (the lifecycle already treats trial like active), src/app/api/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, .husky/**, .env.example, anything under .github/.
+src/app/alta/**, src/app/mi-sitio/**, src/themes/**.
+
+Definition of done:
+Superadmin can open /admin/promociones, toggle the trial, set days (7 to 90), plan (basico or plus) and banner text, and save; the values persist in the settings table under key promo as JSON; invalid input returns Spanish field errors.
+With the promo on, a /registro signup produces a subscriptions row with status trial, the chosen plan, the suggested price of that plan, and expiresAt = startsAt + days; with the promo off, no subscription is created (the current behaviour).
+Landing shows the banner only while the promo is on; /registro shows the offer line only while on.
+No build-time database access: npm run build must pass with no database reachable.
+Unit tests cover parsePromoSettings; the smoke suite covers the end-to-end path (the manager runs it).
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run build   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.
