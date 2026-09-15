@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
   mysqlTable,
-  serial,
   bigint,
   int,
   tinyint,
@@ -17,6 +16,8 @@ import {
   char,
 } from "drizzle-orm/mysql-core";
 
+const id = () => bigint("id", { mode: "number", unsigned: true }).autoincrement().primaryKey();
+
 const timestamps = {
   createdAt: datetime("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: datetime("updated_at")
@@ -25,14 +26,14 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-/** FK-kolumn som matchar `serial` (bigint unsigned auto_increment). */
+/** FK-kolumn som matchar primärnyckeln (bigint unsigned auto_increment). */
 const fk = (name: string) => bigint(name, { mode: "number", unsigned: true });
 
 // ---------- users ----------
 export const users = mysqlTable(
   "users",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     role: mysqlEnum("role", ["superadmin", "owner"]).notNull().default("owner"),
     name: varchar("name", { length: 120 }).notNull(),
     email: varchar("email", { length: 190 }), // superadmin-login
@@ -49,7 +50,7 @@ export const users = mysqlTable(
 export const businesses = mysqlTable(
   "businesses",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     ownerUserId: fk("owner_user_id"), // FK users, null tills owner-konto finns
     slug: varchar("slug", { length: 60 }).notNull(),
     name: varchar("name", { length: 120 }).notNull(),
@@ -120,7 +121,7 @@ export const businesses = mysqlTable(
 export const slugRedirects = mysqlTable(
   "slug_redirects",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     oldSlug: varchar("old_slug", { length: 60 }).notNull(),
     businessId: fk("business_id").notNull(),
     ...timestamps,
@@ -132,7 +133,7 @@ export const slugRedirects = mysqlTable(
 export const media = mysqlTable(
   "media",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     kind: mysqlEnum("kind", ["logo", "photo", "menu_item", "product", "receipt"]).notNull(),
     fileKey: varchar("file_key", { length: 120 }).notNull(), // "<bizId>/<hash>" — path ELLER R2-nyckel
@@ -152,7 +153,7 @@ export const media = mysqlTable(
 export const pages = mysqlTable(
   "pages",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     pageSlug: varchar("page_slug", { length: 60 }).notNull(), // "servicios", "nosotros"…
     type: mysqlEnum("type", [
@@ -177,7 +178,7 @@ export const pages = mysqlTable(
 export const businessModules = mysqlTable(
   "business_modules",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     moduleKey: mysqlEnum("module_key", [
       "gallery",
@@ -197,7 +198,7 @@ export const businessModules = mysqlTable(
 export const menuSections = mysqlTable(
   "menu_sections",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     name: varchar("name", { length: 80 }).notNull(),
     sortOrder: int("sort_order").notNull().default(0),
@@ -209,7 +210,7 @@ export const menuSections = mysqlTable(
 export const menuItems = mysqlTable(
   "menu_items",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     sectionId: fk("section_id").notNull(),
     name: varchar("name", { length: 120 }).notNull(),
@@ -226,7 +227,7 @@ export const menuItems = mysqlTable(
 export const products = mysqlTable(
   "products",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     name: varchar("name", { length: 120 }).notNull(),
     description: varchar("description", { length: 300 }),
@@ -243,7 +244,7 @@ export const products = mysqlTable(
 export const verifications = mysqlTable(
   "verifications",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     phone: varchar("phone", { length: 20 }).notNull(),
     businessId: fk("business_id"),
     userId: fk("user_id"),
@@ -262,7 +263,7 @@ export const verifications = mysqlTable(
 export const subscriptions = mysqlTable(
   "subscriptions",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     plan: mysqlEnum("plan", ["basico", "plus", "pro"]).notNull().default("basico"),
     priceGs: bigint("price_gs", { mode: "number" }).notNull(), // årsavgift i heltals-Gs
@@ -279,7 +280,7 @@ export const subscriptions = mysqlTable(
 export const payments = mysqlTable(
   "payments",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     subscriptionId: fk("subscription_id").notNull(),
     amountGs: bigint("amount_gs", { mode: "number" }).notNull(),
@@ -310,7 +311,7 @@ export const payments = mysqlTable(
 export const analyticsEvents = mysqlTable(
   "analytics_events",
   {
-    id: bigint("id", { mode: "number", unsigned: true }).autoincrement().primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     type: mysqlEnum("type", [
       "page_view",
@@ -338,7 +339,7 @@ export const analyticsEvents = mysqlTable(
 export const analyticsDaily = mysqlTable(
   "analytics_daily",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     businessId: fk("business_id").notNull(),
     day: date("day").notNull(),
     views: int("views").notNull().default(0),
@@ -355,7 +356,7 @@ export const analyticsDaily = mysqlTable(
 export const onboardingTokens = mysqlTable(
   "onboarding_tokens",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     token: char("token", { length: 32 }).notNull(),
     businessId: fk("business_id"), // sätts när utkast skapas
     phone: varchar("phone", { length: 20 }),
@@ -371,7 +372,7 @@ export const onboardingTokens = mysqlTable(
 export const activityLog = mysqlTable(
   "activity_log",
   {
-    id: serial("id").primaryKey(),
+    id: id(),
     actorUserId: fk("actor_user_id"),
     businessId: fk("business_id"),
     action: varchar("action", { length: 80 }).notNull(), // "publish","confirm_payment","lead_contactado"…

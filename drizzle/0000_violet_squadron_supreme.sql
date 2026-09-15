@@ -1,5 +1,5 @@
 CREATE TABLE `activity_log` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`actor_user_id` bigint unsigned,
 	`business_id` bigint unsigned,
 	`action` varchar(80) NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE `activity_log` (
 );
 --> statement-breakpoint
 CREATE TABLE `analytics_daily` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`day` date NOT NULL,
 	`views` int NOT NULL DEFAULT 0,
@@ -35,7 +35,7 @@ CREATE TABLE `analytics_events` (
 );
 --> statement-breakpoint
 CREATE TABLE `business_modules` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`module_key` enum('gallery','menu','products','extra_pages','booking') NOT NULL,
 	`is_enabled` boolean NOT NULL DEFAULT false,
@@ -48,7 +48,7 @@ CREATE TABLE `business_modules` (
 );
 --> statement-breakpoint
 CREATE TABLE `businesses` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`owner_user_id` bigint unsigned,
 	`slug` varchar(60) NOT NULL,
 	`name` varchar(120) NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE `businesses` (
 );
 --> statement-breakpoint
 CREATE TABLE `media` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`kind` enum('logo','photo','menu_item','product','receipt') NOT NULL,
 	`file_key` varchar(120) NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE `media` (
 );
 --> statement-breakpoint
 CREATE TABLE `menu_items` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`section_id` bigint unsigned NOT NULL,
 	`name` varchar(120) NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE `menu_items` (
 );
 --> statement-breakpoint
 CREATE TABLE `menu_sections` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`name` varchar(80) NOT NULL,
 	`sort_order` int NOT NULL DEFAULT 0,
@@ -130,7 +130,7 @@ CREATE TABLE `menu_sections` (
 );
 --> statement-breakpoint
 CREATE TABLE `onboarding_tokens` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`token` char(32) NOT NULL,
 	`business_id` bigint unsigned,
 	`phone` varchar(20),
@@ -145,7 +145,7 @@ CREATE TABLE `onboarding_tokens` (
 );
 --> statement-breakpoint
 CREATE TABLE `pages` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`page_slug` varchar(60) NOT NULL,
 	`type` enum('servicios','nosotros','galeria','menu','productos','contacto','custom') NOT NULL,
@@ -160,7 +160,7 @@ CREATE TABLE `pages` (
 );
 --> statement-breakpoint
 CREATE TABLE `payments` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`subscription_id` bigint unsigned NOT NULL,
 	`amount_gs` bigint NOT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE `payments` (
 );
 --> statement-breakpoint
 CREATE TABLE `products` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`name` varchar(120) NOT NULL,
 	`description` varchar(300),
@@ -193,7 +193,7 @@ CREATE TABLE `products` (
 );
 --> statement-breakpoint
 CREATE TABLE `slug_redirects` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`old_slug` varchar(60) NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -203,7 +203,7 @@ CREATE TABLE `slug_redirects` (
 );
 --> statement-breakpoint
 CREATE TABLE `subscriptions` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`business_id` bigint unsigned NOT NULL,
 	`plan` enum('basico','plus','pro') NOT NULL DEFAULT 'basico',
 	`price_gs` bigint NOT NULL,
@@ -216,7 +216,7 @@ CREATE TABLE `subscriptions` (
 );
 --> statement-breakpoint
 CREATE TABLE `users` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`role` enum('superadmin','owner') NOT NULL DEFAULT 'owner',
 	`name` varchar(120) NOT NULL,
 	`email` varchar(190),
@@ -232,7 +232,7 @@ CREATE TABLE `users` (
 );
 --> statement-breakpoint
 CREATE TABLE `verifications` (
-	`id` serial AUTO_INCREMENT NOT NULL,
+	`id` bigint unsigned AUTO_INCREMENT NOT NULL,
 	`phone` varchar(20) NOT NULL,
 	`business_id` bigint unsigned,
 	`user_id` bigint unsigned,
