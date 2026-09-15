@@ -3,6 +3,14 @@ import { PhoneMock } from "./phone-mock";
 import { SalesCta } from "./cta";
 import type { SalesContact } from "./sales-contact";
 
+export function LandingPromo({ text }: { text: string }) {
+  return <aside data-testid="promo-banner" className="lp-ribbon" aria-label="Promoción">
+    <div className="lp-wrap py-3 text-center text-sm">{text}{" "}
+      <a href={REGISTRO_CTA.href} className="inline-block p-2 font-semibold underline">{REGISTRO_CTA.label}</a>
+    </div>
+  </aside>;
+}
+
 /* ---------- header ---------- */
 
 export function LandingHeader({ contact }: { contact: SalesContact }) {

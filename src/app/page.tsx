@@ -1,3 +1,4 @@
+import { getPromoSettings } from "@/lib/settings";
 import type { Metadata } from "next";
 import { absoluteUrl, env } from "@/lib/env";
 import { displayFont, textFont } from "@/themes/fonts";
@@ -12,17 +13,14 @@ import {
   LandingHeader,
   LandingHero,
   LandingPricing,
+  LandingPromo,
   LandingRibbon,
   LandingSteps,
 } from "@/components/landing/sections";
 import "@/styles/landing.css";
 
-/**
- * Säljsidan för sitio.com.py. Statisk och databaslös (plan.md §1.4): inga
- * dynamiska API:er, ingen `db`-import någonstans i trädet — `next build` ska
- * lista `/` som `○`. Roten listar aldrig kunder (docs/PLAN.md D5).
- */
-export const dynamic = "force-static";
+// Cache the public page for 60 seconds; unavailable settings render no banner.
+export const revalidate = 60;
 
 const TITLE = "Páginas web para negocios de Paraguay | sitio.com.py";
 const DESCRIPTION =
@@ -46,7 +44,8 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const promo = await getPromoSettings().catch(() => null);
   const contact = salesContact(env.salesWhatsapp);
   if (contact.display === null) {
     // Byggvarning, aldrig ett krasch: CTA:n pekar på #contacto i stället.
@@ -75,6 +74,7 @@ export default function LandingPage() {
 
       <LandingHeader contact={contact} />
       <main>
+        {promo?.trialEnabled && <LandingPromo text={promo.bannerText} />}
         <LandingHero contact={contact} />
         <LandingRibbon />
         <LandingFeatures />
