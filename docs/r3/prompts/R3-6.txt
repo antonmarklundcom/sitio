@@ -1,0 +1,39 @@
+Task:
+Repo sitio (Next.js 15, TypeScript, Drizzle ORM, mysql2). Ticket R3-6, from docs/r3/inbox.md (deploy step A findings). Production runs on Hostinger whose database server is MariaDB 11.8, not MySQL 8. Drizzle's serial() column type emits the SQL 'serial AUTO_INCREMENT NOT NULL', which MariaDB rejects, and drizzle-kit migrate exits without printing the error. Make the schema and the existing migration MariaDB-safe without changing the shape of any table, and make the migrate command fail loudly. The production database already has the 0000 migration recorded as applied (created_at 1787239954719), so migration 0000 must keep its journal entry and its when-timestamp; only its SQL text and snapshot change.
+
+Files to touch:
+src/db/schema.ts
+drizzle/0000_violet_squadron_supreme.sql
+drizzle/meta/0000_snapshot.json
+scripts/migrate.ts (new)
+package.json (only the db:migrate script line)
+README.md (only the Databas section and Deploy step A list)
+tests/unit/schema-sql.test.ts (new)
+
+Do not touch:
+drizzle/meta/_journal.json (the idx 0 entry, tag and when stay exactly as they are).
+Any query file under src/db/*-queries.ts, src/lib/**, src/app/**, src/components/**.
+drizzle.config.ts, .husky/**, .env.example, anything under .github/.
+Column names, types other than the id/FK integer type, indexes, enums, defaults: the tables must stay identical for the app.
+
+Definition of done:
+src/db/schema.ts no longer imports or uses serial. Every primary key id is bigint('id', { mode: 'number', unsigned: true }).autoincrement().primaryKey() via one shared helper at the top of the file, and the existing FK helper matches it (bigint unsigned). TypeScript types of the inferred rows are unchanged (id is number).
+drizzle/0000_violet_squadron_supreme.sql contains no occurrence of the word serial; every former serial column reads bigint unsigned AUTO_INCREMENT NOT NULL. Nothing else in that file changes. drizzle/meta/0000_snapshot.json is updated to match (type bigint unsigned, autoincrement true) so that npx drizzle-kit generate reports no schema changes afterwards.
+scripts/migrate.ts uses the drizzle-orm/mysql2 migrator with migrationsFolder ./drizzle, loads .env.local then .env like scripts/seed-dev.ts does, prints each applied migration tag, and on any error prints the error message and SQL and exits with code 1. package.json db:migrate runs tsx scripts/migrate.ts. drizzle-kit stays installed for generate.
+tests/unit/schema-sql.test.ts reads drizzle/0000_violet_squadron_supreme.sql and src/db/schema.ts and asserts neither contains the token serial, and that the journal idx 0 when is 1787239954719.
+README.md Databas section explains: Hostinger is MariaDB, serial is forbidden in this schema, use the bigint helper; Deploy step A notes that Remote MySQL from a PC must whitelist the IPv4 the server reports and connect to the server IP rather than the hostname to avoid IPv6.
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npx drizzle-kit generate   (working directory: repo root; must print that there are no changes to generate; if it creates a new migration file, delete it and fix the snapshot instead)
+npm run db:migrate   (working directory: repo root; only if DATABASE_URL points at a reachable local MySQL, otherwise report as not run, the manager runs it against MySQL 8.4 and against MariaDB)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

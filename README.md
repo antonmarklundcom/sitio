@@ -60,11 +60,18 @@ npm run db:push       # snabbsynk under utveckling
 npm run db:studio     # drizzle studio
 ```
 
-`drizzle-kit` laddar `.env` själv. **`tsx` gör det inte** — därför importerar
-`scripts/*.ts` `src/lib/env.ts` först av allt, som laddar `.env.local` + `.env`.
+Hostinger kör **MariaDB 11.8**, inte MySQL 8. `serial` är förbjudet i detta
+schema: använd den delade `id()`-hjälparen med `bigint unsigned`, autoincrement
+och `mode: "number"`. FK-hjälparen använder samma heltalstyp.
 
-DB-init mot Hostinger körs **lokalt** via Remote MySQL (IP måste vitlistas i
-hPanel), inte på noden.
+`db:migrate` kör `scripts/migrate.ts` med Drizzle ORM:s mysql2-migrator och
+laddar `.env.local` före `.env`, precis som utvecklingsseeden. Kommandot
+skriver applicerade migreringstaggar och rapporterar felmeddelande och SQL
+med exitkod 1 vid fel. `drizzle-kit` används fortfarande för `db:generate`.
+
+DB-init mot Hostinger körs lokalt via Remote MySQL, inte på noden.
+Migration 0000 behåller sin journalpost och tidsstämpel `1787239954719`;
+en redan applicerad migration ska inte köras igen.
 
 ## CI och git-hooks
 
@@ -352,6 +359,8 @@ redeploy, databasens tidszon, och att hPanel-cron faktiskt når rollup-routen.
 4. Skapa `UPLOADS_DIR` via SSH: `mkdir -p /home/<user>/uploads/sitio`.
    Katalogen **måste** ligga utanför appkatalogen — git-deployen skriver om den.
 5. Kör migreringarna lokalt mot Remote MySQL, inte på noden.
+   Vitlista datorns publika IPv4 som servern rapporterar i hPanel. Anslut
+   till serverns IP-adress i stället för värdnamnet för att undvika IPv6.
 
 Temp-domänen är för intern validering. **Ingen kund får någonsin en temp-URL.**
 
