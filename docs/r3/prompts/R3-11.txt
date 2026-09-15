@@ -1,0 +1,40 @@
+Task:
+Repo sitio (Next.js 15, TypeScript, Drizzle, bcryptjs, iron-session). Ticket R3-11, from docs/r3/README.md Batch 2. Superadmin accounts log in with email and password at /admin/login and today there is no way to reset or change the password. Add (1) a password reset by email through the Resend HTTP API, and (2) a change-password screen inside the admin. No new table: the reset token is stateless, signed with SESSION_SECRET. No new npm dependency: call Resend with fetch.
+
+Files to touch:
+src/lib/env.ts (only: add optional RESEND_API_KEY and RESEND_FROM getters, following the existing pattern for optional vars)
+.env.example (only: document RESEND_API_KEY and RESEND_FROM as optional, in Swedish like the rest of the file)
+src/lib/password-reset.ts (new, pure: createResetToken(userId, email, now) and verifyResetToken(token, now) using HMAC-SHA256 over userId, email and expiry with SESSION_SECRET from env, 30 minute validity, base64url; constant-time compare; also validatePassword(value) that requires at least 10 characters)
+src/lib/email.ts (new: sendEmail({ to, subject, text, html }) posting to https://api.resend.com/emails with the bearer key; when RESEND_API_KEY is missing it logs the message to the server console in development and throws a clear error in production; never logs the key)
+src/app/admin/login/login-form.tsx (only: a link with the text ¿Olvidaste tu contraseña? to /admin/recuperar)
+src/app/admin/recuperar/page.tsx and actions.ts (new: form with email; the action always returns the same neutral Spanish message whether or not the email exists, is rate-limited 3 per 15 minutes per email and 10 per 15 minutes per IP with rateLimit from src/lib/rate-limit.ts, and when a superadmin with that email exists sends the reset link absoluteUrl('/admin/recuperar/' + token) via sendEmail)
+src/app/admin/recuperar/[token]/page.tsx and actions.ts (new: verify token; form new password + repeat; on success update users.passwordHash with bcrypt at the same cost the seed uses, write an activity log line contrasena_restablecida, and redirect to /admin/login with a success notice)
+src/app/admin/(dashboard)/cuenta/page.tsx and actions.ts (new: Mi cuenta: shows the email, form current password + new + repeat; verifies the current password with bcrypt.compare, validates the new one, updates the hash, logs contrasena_cambiada; Spanish messages)
+src/app/admin/(dashboard)/layout.tsx (only: the user name in the header becomes a link to /admin/cuenta)
+tests/unit/password-reset.test.ts (new: token round trip, expiry, tampering, wrong email, validatePassword)
+README.md (only: the Miljövariabler table gets the two new rows)
+
+Do not touch:
+src/lib/auth.ts, src/lib/session.ts, src/middleware.ts, src/app/admin/login/actions.ts (login logic unchanged), src/app/api/**, src/db/schema.ts, drizzle/**, src/lib/billing.ts, .husky/**, anything under .github/.
+src/app/mi-sitio/** (owners keep WhatsApp OTP, no email there).
+
+Definition of done:
+The three new routes render in es-PY voseo, sentence case, with the same panel styling as the admin login page.
+Recovery never reveals whether an email exists; the token is single-purpose, expires after 30 minutes, and a tampered token is rejected; tests prove it.
+Changing the password from /admin/cuenta works and requires the current password.
+With RESEND_API_KEY unset, requesting a reset in development prints the link to the server console and still shows the neutral message; nothing crashes.
+npm run build passes.
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run build   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

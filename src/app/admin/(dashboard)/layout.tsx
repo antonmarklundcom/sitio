@@ -34,7 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <span className="text-admin-muted">{user.name}</span>
+            <Link href="/admin/cuenta" className="text-admin-muted hover:text-admin-text">{user.name}</Link>
             <ThemeToggle />
             <form action={logoutAction}>
               <button

@@ -23,6 +23,12 @@ function int(name: string, fallback: number): number {
 }
 
 export const env = {
+  get resendApiKey() {
+    return process.env.RESEND_API_KEY ?? "";
+  },
+  get resendFrom() {
+    return process.env.RESEND_FROM ?? "";
+  },
   get databaseUrl() {
     return required("DATABASE_URL");
   },
