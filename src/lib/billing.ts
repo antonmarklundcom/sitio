@@ -47,18 +47,18 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   billetera_personal: "Billetera Personal",
   zimple: "Zimple",
   tarjeta: "Tarjeta",
-  otro: "Annat",
+  otro: "Otro",
 };
 
 export const SUBSCRIPTION_STATUSES = ["trial", "active", "grace", "expired", "canceled"] as const;
 export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
 
 export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
-  trial: "Trial",
-  active: "Betald",
-  grace: "Respit",
-  expired: "Förfallen",
-  canceled: "Avslutad",
+  trial: "Prueba",
+  active: "Pagado",
+  grace: "Gracia",
+  expired: "Vencida",
+  canceled: "Cancelada",
 };
 
 /** Dagar efter förfall då sajten står kvar uppe (PLAN.md §1.7). */

@@ -40,7 +40,7 @@ export function PresentationBlock({
 
   return (
     <div className="sm:col-span-2">
-      <span className="mb-1.5 block text-sm text-admin-muted">Presentation</span>
+      <span className="mb-1.5 block text-sm text-admin-muted">Presentación</span>
       <div className="flex items-center gap-3 rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2.5">
         <span
           aria-hidden
@@ -49,17 +49,17 @@ export function PresentationBlock({
         />
         <span className="text-sm text-admin-text">{presentationLabel(category)}</span>
         <span className="text-xs text-admin-muted">
-          accent {palette.accent} · hue {palette.hue}°
+          acento {palette.accent} · tono {palette.hue}°
         </span>
       </div>
       {/* Kvar som mekanism: faller ett tema bort ur registret ska raden säga
           det i stället för att sajten tyst renderas med servicios. */}
       {!built ? (
         <p className="mt-1 text-xs text-admin-warn">
-          Temat är inte byggt än — sajten renderas med <code>servicios</code> tills det finns.
+          El tema todavía no está; el sitio se muestra con <code>servicios</code> hasta que esté disponible.
         </p>
       ) : null}
-      <p className="mt-1 text-xs text-admin-muted">Tema och palett följer branschen (plan §1.11).</p>
+      <p className="mt-1 text-xs text-admin-muted">El tema y la paleta siguen al rubro (plan §1.11).</p>
     </div>
   );
 }

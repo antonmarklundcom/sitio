@@ -175,7 +175,7 @@ describe("validateProposal — tjänsteantalet", () => {
   it("avvisar när modellen returnerar färre tjänster än indata", () => {
     const result = validateProposal(input, proposal({ services: proposal().services.slice(0, 2) }));
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error).toContain("2 tjänster men sajten har 3");
+    expect(result.ok === false && result.error).toContain("2 servicios, pero el sitio tiene 3");
   });
 
   it("avvisar när modellen hittar på en extra tjänst", () => {
@@ -211,7 +211,7 @@ describe("validateProposal — längder", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.seoTitle.length).toBeLessThanOrEqual(POLISH_LIMITS.seoTitleMaxChars);
-      expect(result.warnings.join(" ")).toContain("Seo-titeln kortades");
+      expect(result.warnings.join(" ")).toContain("El título SEO se acortó");
     }
   });
 
@@ -234,7 +234,7 @@ describe("validateProposal — längder", () => {
   it("avvisar ett fält som är mer än dubbelt så långt som taket", () => {
     const result = validateProposal(input, proposal({ seoDescription: "x".repeat(POLISH_LIMITS.seoDescriptionMaxChars * 2 + 1) }));
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error).toContain("dubbelt så långa");
+    expect(result.ok === false && result.error).toContain("el doble del largo permitido");
   });
 
   it("avvisar en beskrivning som är absurt kort eller absurt lång", () => {
@@ -245,7 +245,7 @@ describe("validateProposal — längder", () => {
   it("varnar men släpper igenom en beskrivning strax utanför 80–160 ord", () => {
     const result = validateProposal(input, proposal({ description: words(60) }));
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.warnings.join(" ")).toContain("60 ord");
+    if (result.ok) expect(result.warnings.join(" ")).toContain("60 palabras");
   });
 
   it("avvisar tomma fält", () => {
@@ -257,7 +257,7 @@ describe("validateProposal — längder", () => {
   it("avvisar ett svar som inte matchar schemat alls", () => {
     const result = validateProposal(input, { description: 5 });
     expect(result.ok).toBe(false);
-    expect(result.ok === false && result.error).toContain("fel format");
+    expect(result.ok === false && result.error).toContain("formato incorrecto");
   });
 
   it("varnar när seo-titeln inte nämner staden", () => {
@@ -304,7 +304,7 @@ describe("diffFields", () => {
   });
 
   it("visar tjänster som en rad per tjänst", () => {
-    expect(servicesToText([{ name: "Tableros" }])).toBe("Tableros — (ingen text)");
+    expect(servicesToText([{ name: "Tableros" }])).toBe("Tableros — (sin texto)");
     expect(servicesToText([{ name: "Tableros", desc: "Armado" }])).toBe("Tableros — Armado");
   });
 });
@@ -323,7 +323,7 @@ describe("supportsEffort", () => {
 
 describe("felmeddelandet utan nyckel", () => {
   it("är den sträng panelen och röktestet letar efter", () => {
-    expect(MISSING_KEY_MESSAGE).toBe("ANTHROPIC_API_KEY saknas i miljön");
+    expect(MISSING_KEY_MESSAGE).toBe("Falta ANTHROPIC_API_KEY en el entorno");
   });
 
   /**

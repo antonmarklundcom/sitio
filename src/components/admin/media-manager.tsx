@@ -41,7 +41,7 @@ export function MediaUploader({
     try {
       for (const file of Array.from(files)) {
         if (file.size > MAX_UPLOAD_BYTES) {
-          setError(`${file.name} är större än 10 MB.`);
+          setError(`${file.name} supera los 10 MB.`);
           continue;
         }
         const body = new FormData();
@@ -52,7 +52,7 @@ export function MediaUploader({
         const res = await fetch("/api/upload", { method: "POST", body });
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as { error?: string };
-          setError(data.error ?? `Uppladdningen misslyckades (${res.status}).`);
+          setError(data.error ?? `No se pudo subir el archivo (${res.status}).`);
           break;
         }
       }
@@ -66,7 +66,7 @@ export function MediaUploader({
   return (
     <div>
       <label className="inline-flex cursor-pointer items-center rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2 text-sm hover:border-admin-muted">
-        {busy ? "Laddar upp…" : label}
+        {busy ? "Subiendo…" : label}
         <input
           ref={inputRef}
           // Namnet postas aldrig (uppladdningen går via fetch) men gör kontrollen
@@ -104,7 +104,7 @@ export function MediaGrid({
   onAltText: (formData: FormData) => Promise<void>;
 }) {
   if (items.length === 0) {
-    return <p className="text-sm text-admin-muted">Inga bilder ännu.</p>;
+    return <p className="text-sm text-admin-muted">Todavía no hay imágenes.</p>;
   }
 
   return (
@@ -123,7 +123,7 @@ export function MediaGrid({
               ) : null}
               {isHero ? (
                 <span className="absolute top-2 left-2 rounded-full bg-admin-accent px-2 py-0.5 text-xs text-white">
-                  Hero
+                  Foto principal
                 </span>
               ) : null}
             </div>
@@ -139,12 +139,12 @@ export function MediaGrid({
                 <input
                   name="altText"
                   defaultValue={item.altText ?? ""}
-                  placeholder="Alt-text (es)"
+                  placeholder="Texto alternativo (es)"
                   maxLength={160}
                   className="w-full rounded-md border border-admin-line bg-admin-surface px-2 py-1.5 text-xs outline-none focus:border-admin-accent"
                 />
                 <button type="submit" className="rounded-md border border-admin-line px-2 py-1.5 text-xs hover:border-admin-muted">
-                  Spara
+                  Guardar
                 </button>
               </form>
 
@@ -153,7 +153,7 @@ export function MediaGrid({
                   <form action={onSetHero}>
                     <input type="hidden" name="mediaId" value={item.id} />
                     <button type="submit" className="rounded-md border border-admin-line px-2 py-1.5 text-xs hover:border-admin-accent">
-                      Gör till hero
+                      Usar como foto principal
                     </button>
                   </form>
                 ) : null}
@@ -167,7 +167,7 @@ export function MediaGrid({
                         type="submit"
                         disabled={i === 0}
                         className="rounded-md border border-admin-line px-2 py-1.5 text-xs hover:border-admin-muted disabled:opacity-30"
-                        aria-label="Flytta upp"
+                        aria-label="Subir"
                       >
                         ↑
                       </button>
@@ -179,7 +179,7 @@ export function MediaGrid({
                         type="submit"
                         disabled={i === items.length - 1}
                         className="rounded-md border border-admin-line px-2 py-1.5 text-xs hover:border-admin-muted disabled:opacity-30"
-                        aria-label="Flytta ner"
+                        aria-label="Bajar"
                       >
                         ↓
                       </button>
@@ -193,7 +193,7 @@ export function MediaGrid({
                     type="submit"
                     className="rounded-md border border-admin-line px-2 py-1.5 text-xs text-admin-muted hover:border-admin-danger hover:text-admin-danger"
                   >
-                    Ta bort
+                    Eliminar
                   </button>
                 </form>
               </div>

@@ -16,7 +16,7 @@ function Submit({ label }: { label: string }) {
       disabled={pending}
       className="rounded-lg bg-admin-accent px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
-      {pending ? "Skapar…" : label}
+      {pending ? "Creando…" : label}
     </button>
   );
 }
@@ -30,24 +30,24 @@ export function CreateIntakeLinkForm({
 
   return (
     <Card>
-      <SectionTitle hint="Skapar ett utkast och en länk som gäller i 14 dagar. Kunden fyller i sina uppgifter själv — du behöver bara namnet för att komma igång.">
-        Ny intake-länk
+      <SectionTitle hint="Crea un borrador y un enlace válido por 14 días. El cliente completa sus datos; solo necesitás el nombre para empezar.">
+        Nuevo enlace de Altas
       </SectionTitle>
 
       {state.error ? <Notice tone="danger">{state.error}</Notice> : null}
       {state.ok ? <Notice tone="ok">{state.ok}</Notice> : null}
 
       <form action={formAction} className="grid gap-4 sm:grid-cols-4">
-        <Field label="Företagsnamn" name="name" required error={state.fieldErrors?.name}>
+        <Field label="Nombre del negocio" name="name" required error={state.fieldErrors?.name}>
           <TextInput name="name" required maxLength={120} placeholder="Pizzería La Nona" />
         </Field>
-        <Field label="WhatsApp (valfritt)" name="phone" error={state.fieldErrors?.phone}>
+        <Field label="WhatsApp (opcional)" name="phone" error={state.fieldErrors?.phone}>
           <TextInput name="phone" placeholder="0981 123 456" />
         </Field>
-        <Field label="Stad" name="city">
+        <Field label="Ciudad" name="city">
           <TextInput name="city" defaultValue="Asunción" maxLength={80} />
         </Field>
-        <Field label="Bransch" name="category">
+        <Field label="Rubro" name="category">
           <Select
             name="category"
             defaultValue="otro"
@@ -55,7 +55,7 @@ export function CreateIntakeLinkForm({
           />
         </Field>
         <div className="sm:col-span-4">
-          <Submit label="Skapa länk" />
+          <Submit label="Crear enlace" />
         </div>
       </form>
     </Card>
@@ -87,9 +87,9 @@ export function OtpButton({
       <div className="text-right">
         <div className="font-mono text-lg tracking-[0.3em] tabular-nums">{state.code}</div>
         <a href={waHref} target="_blank" rel="noreferrer" className="text-xs text-admin-accent hover:underline">
-          Skicka till {businessName} →
+          Enviar a {businessName} →
         </a>
-        <p className="text-[11px] text-admin-muted">Visas bara nu. Tappad kod = generera en ny.</p>
+        <p className="text-[11px] text-admin-muted">Se muestra solo ahora. Si perdés el código, generá uno nuevo.</p>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export function OtpButton({
         disabled={pending}
         className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs hover:border-admin-muted"
       >
-        Generera kod
+        Generar código
       </button>
     </form>
   );
@@ -116,7 +116,7 @@ export function CopyLink({ url }: { url: string }) {
       title={url}
       className="font-mono text-xs text-admin-muted hover:text-admin-text"
     >
-      Kopiera länk
+      Copiar enlace
     </button>
   );
 }

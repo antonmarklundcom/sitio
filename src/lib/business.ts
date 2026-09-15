@@ -32,12 +32,12 @@ export const BUSINESS_STATUSES = [
 export type BusinessStatus = (typeof BUSINESS_STATUSES)[number];
 
 export const CATEGORY_LABELS: Record<(typeof CATEGORIES)[number], string> = {
-  comercio: "Comercio / butik",
-  servicios: "Servicios / hantverk",
-  gastronomia: "Gastronomía / mat",
-  salud: "Salud / vård",
-  belleza: "Belleza / skönhet",
-  taller: "Taller / verkstad",
+  comercio: "Comercio",
+  servicios: "Servicios",
+  gastronomia: "Gastronomía",
+  salud: "Salud",
+  belleza: "Belleza",
+  taller: "Taller",
   otro: "Otro",
 };
 
@@ -51,11 +51,11 @@ export const THEME_LABELS: Record<(typeof THEME_KEYS)[number], string> = {
 };
 
 export const STATUS_LABELS: Record<BusinessStatus, string> = {
-  draft: "Utkast",
-  pending_review: "Väntar granskning",
-  published: "Publicerad",
-  paused: "Pausad",
-  archived: "Arkiverad",
+  draft: "Borrador",
+  pending_review: "Pendiente de revisión",
+  published: "Publicada",
+  paused: "Pausada",
+  archived: "Archivada",
 };
 
 /**
@@ -75,13 +75,13 @@ export function canTransition(from: BusinessStatus, to: BusinessStatus): boolean
 }
 
 export const WEEKDAYS = [
-  { key: "mon", label: "Måndag", short: "Lun" },
-  { key: "tue", label: "Tisdag", short: "Mar" },
-  { key: "wed", label: "Onsdag", short: "Mié" },
-  { key: "thu", label: "Torsdag", short: "Jue" },
-  { key: "fri", label: "Fredag", short: "Vie" },
-  { key: "sat", label: "Lördag", short: "Sáb" },
-  { key: "sun", label: "Söndag", short: "Dom" },
+  { key: "mon", label: "Lunes", short: "Lun" },
+  { key: "tue", label: "Martes", short: "Mar" },
+  { key: "wed", label: "Miércoles", short: "Mié" },
+  { key: "thu", label: "Jueves", short: "Jue" },
+  { key: "fri", label: "Viernes", short: "Vie" },
+  { key: "sat", label: "Sábado", short: "Sáb" },
+  { key: "sun", label: "Domingo", short: "Dom" },
 ] as const;
 
 export type WeekdayKey = (typeof WEEKDAYS)[number]["key"];

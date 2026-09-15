@@ -29,37 +29,37 @@ export type ModuleMeta = {
 export const MODULES: ModuleMeta[] = [
   {
     key: "gallery",
-    label: "Galleri",
-    summary: "Upp till 20 foton i stället för 8, och alla visas på sajten.",
+    label: "Galería",
+    summary: "Hasta 20 fotos en lugar de 8, y todas se muestran en el sitio.",
     effect:
-      "Höjer fototaket i /api/upload från 8 till 20 och gör att temat renderar hela fotoserien i stället för de tre till sex första.",
+      "Aumenta el límite de fotos en /api/upload de 8 a 20 y hace que el tema muestre toda la serie de fotos en lugar de las primeras tres a seis.",
   },
   {
     key: "menu",
-    label: "Meny",
-    summary: "Meny med sektioner, rätter och priser i guaraníes.",
+    label: "Menú",
+    summary: "Menú con secciones, platos y precios en guaraníes.",
     effect:
-      "Ger owner en menyredigerare i /mi-sitio och renderar menyn på sajten — egen sektion i gastronomia, delad primitiv i övriga teman. Läsningar mäts som menu_view.",
+      "Le da al dueño un editor de menú en /mi-sitio y muestra el menú en el sitio: una sección propia en gastronomia y un componente compartido en los demás temas. Las lecturas se registran como menu_view.",
   },
   {
     key: "products",
-    label: "Produkter",
-    summary: "Produktlista med pris eller “consultar”.",
-    effect: "Samma mönster som menyn, renderas i comercio-temat.",
+    label: "Productos",
+    summary: "Lista de productos con precio o “consultar”.",
+    effect: "Sigue el mismo patrón que el menú y se muestra en el tema comercio.",
   },
   {
     key: "extra_pages",
-    label: "Extra sidor",
-    summary: "3–6 undersidor: /servicios, /nosotros …",
-    effect: "pages-tabellen, navigering i temat och utökad sitemap.",
+    label: "Páginas adicionales",
+    summary: "3–6 páginas internas: /servicios, /nosotros …",
+    effect: "Tabla pages, navegación en el tema y mapa del sitio ampliado.",
     plannedIn: "PR-18",
   },
   {
     key: "booking",
-    label: "Bokning",
-    summary: "Turno-förfrågan med förifyllt WhatsApp-meddelande.",
-    effect: "Formulär i temat som bygger en wa.me-länk.",
-    plannedIn: "fas 3",
+    label: "Reservas",
+    summary: "Solicitud de turno con un mensaje de WhatsApp precompletado.",
+    effect: "Formulario en el tema que genera un enlace wa.me.",
+    plannedIn: "fase 3",
   },
 ];
 

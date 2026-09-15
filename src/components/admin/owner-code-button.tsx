@@ -29,9 +29,9 @@ export function OwnerCodeButton({
       <div className="text-right">
         <div className="font-mono text-lg tracking-[0.3em] tabular-nums">{state.code}</div>
         <a href={href} target="_blank" rel="noreferrer" className="text-xs text-admin-accent hover:underline">
-          Skicka till {businessName} →
+          Enviar a {businessName} →
         </a>
-        <p className="text-[11px] text-admin-muted">Visas bara nu.</p>
+        <p className="text-[11px] text-admin-muted">Se muestra solo ahora.</p>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export function OwnerCodeButton({
         disabled={pending}
         className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs hover:border-admin-muted"
       >
-        Generera kod
+        Generar código
       </button>
     </form>
   );

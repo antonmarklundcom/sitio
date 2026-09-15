@@ -63,14 +63,14 @@ export function LeadsRow({ lead }: { lead: LeadRow }) {
             name="adminNotes"
             defaultValue={lead.adminNotes ?? ""}
             rows={2}
-            placeholder="Anteckning…"
+            placeholder="Nota…"
             className="w-56 rounded-md border border-admin-line bg-admin-surface px-2 py-1 text-xs outline-none focus:border-admin-accent"
           />
           <button
             type="submit"
             className="rounded-md border border-admin-line bg-admin-surface-2 px-2 py-1 text-xs hover:border-admin-muted"
           >
-            Spara
+            Guardar
           </button>
         </form>
       </td>

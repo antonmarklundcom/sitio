@@ -26,16 +26,16 @@ export function ModulesPanel({
 
   return (
     <Card>
-      <SectionTitle hint="Modulerna är upsellen. Att slå på en är en flagga, inte en migrering — och den syns på kundsajten så fort ISR-cachen släppt.">
-        Moduler
+      <SectionTitle hint="Los módulos son servicios adicionales. Se activan con una opción, sin migraciones, y aparecen en el sitio del cliente cuando se actualiza la caché ISR.">
+        Módulos
       </SectionTitle>
 
       {overBaseLimit ? (
         <div className="mb-4">
           <Notice tone="warn">
-            Sajten har {photoCount} foton men galleriet är av: temat visar bara de första, och nya
-            uppladdningar nekas tills antalet är under {MAX_PHOTOS_BASE}. Slå på galleriet eller
-            rensa bland bilderna.
+            El sitio tiene {photoCount} fotos pero la galería está desactivada: el tema muestra solo las primeras y las nuevas
+            cargas se rechazan hasta que la cantidad sea menor a {MAX_PHOTOS_BASE}. Activá la galería o
+            eliminá algunas imágenes.
           </Notice>
         </div>
       ) : null}
@@ -52,19 +52,19 @@ export function ModulesPanel({
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-sm font-medium">{meta.label}</h3>
                   <code className="text-xs text-admin-muted">{meta.key}</code>
-                  {enabled ? <Badge tone="ok">På</Badge> : <Badge>Av</Badge>}
-                  {built ? null : <Badge tone="warn">ej byggt än ({meta.plannedIn})</Badge>}
+                  {enabled ? <Badge tone="ok">Activado</Badge> : <Badge>Desactivado</Badge>}
+                  {built ? null : <Badge tone="warn">Todavía no está ({meta.plannedIn})</Badge>}
                 </div>
                 <p className="mt-1 text-sm text-admin-muted">{meta.summary}</p>
                 <p className="mt-0.5 text-xs text-admin-muted">{meta.effect}</p>
                 {enabled && state?.enabledAt ? (
                   <p className="mt-1 text-xs text-admin-muted">
-                    Aktiverad {new Date(state.enabledAt).toLocaleDateString("sv-SE")} — perioden räknas därifrån.
+                    Activado {new Date(state.enabledAt).toLocaleDateString("sv-SE")} — el período se cuenta desde esa fecha.
                   </p>
                 ) : null}
                 {meta.key === "gallery" ? (
                   <p className="mt-1 text-xs text-admin-muted">
-                    Fototak just nu: {photoCount}/{enabled ? MAX_PHOTOS_GALLERY : MAX_PHOTOS_BASE}.
+                    Límite actual de fotos: {photoCount}/{enabled ? MAX_PHOTOS_GALLERY : MAX_PHOTOS_BASE}.
                   </p>
                 ) : null}
               </div>
@@ -81,7 +81,7 @@ export function ModulesPanel({
                       : "bg-admin-accent text-white hover:opacity-90"
                   }`}
                 >
-                  {enabled ? "Stäng av" : "Slå på"}
+                  {enabled ? "Desactivar" : "Activar"}
                 </button>
               </form>
             </li>

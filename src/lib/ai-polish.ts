@@ -17,7 +17,7 @@ import { env } from "./env";
 import { groupedHours } from "./hours";
 
 /** Visas i panelen och som actionfel när nyckeln inte finns i miljön. */
-export const MISSING_KEY_MESSAGE = "ANTHROPIC_API_KEY saknas i miljön";
+export const MISSING_KEY_MESSAGE = "Falta ANTHROPIC_API_KEY en el entorno";
 
 /**
  * Gränserna kommer från plan.md §5.3.1. De är snävare än databasens kolumner
@@ -113,9 +113,9 @@ export function buildPolishInput(business: PolishBusiness): PolishInput {
 /** Kravet på indata innan vi bränner ett API-anrop. */
 export function polishInputBlockers(input: PolishInput): string[] {
   const blockers: string[] = [];
-  if (input.rawDescription.length < 20) blockers.push("Kundens råtext är för kort (minst 20 tecken).");
-  if (input.services.length === 0) blockers.push("Sajten har inga tjänster att beskriva.");
-  if (!input.city) blockers.push("Staden saknas — seo-titeln ska sluta med den.");
+  if (input.rawDescription.length < 20) blockers.push("El texto original del cliente es demasiado corto (mínimo 20 caracteres).");
+  if (input.services.length === 0) blockers.push("El sitio no tiene servicios para describir.");
+  if (!input.city) blockers.push("Falta la ciudad; el título SEO debe terminar con ella.");
   return blockers;
 }
 
@@ -209,7 +209,7 @@ export function clampText(text: string, max: number): string {
  */
 export function validateProposal(input: PolishInput, raw: unknown): PolishValidation {
   const parsed = polishResponseSchema.safeParse(raw);
-  if (!parsed.success) return { ok: false, error: "Modellen svarade i fel format. Försök igen." };
+  if (!parsed.success) return { ok: false, error: "El modelo respondió con un formato incorrecto. Probá de nuevo." };
 
   const proposed = parsed.data;
   const warnings: string[] = [];
@@ -217,29 +217,29 @@ export function validateProposal(input: PolishInput, raw: unknown): PolishValida
   if (proposed.services.length !== input.services.length) {
     return {
       ok: false,
-      error: `Modellen returnerade ${proposed.services.length} tjänster men sajten har ${input.services.length}. Förslaget slängdes.`,
+      error: `El modelo devolvió ${proposed.services.length} servicios, pero el sitio tiene ${input.services.length}. Se descartó la propuesta.`,
     };
   }
 
   const description = proposed.description.trim();
   const words = wordCount(description);
-  if (description.length === 0) return { ok: false, error: "Modellen lämnade beskrivningen tom." };
+  if (description.length === 0) return { ok: false, error: "El modelo dejó la descripción vacía." };
   if (words < DESCRIPTION_ABSURD_MIN_WORDS || words > DESCRIPTION_ABSURD_MAX_WORDS) {
     return {
       ok: false,
-      error: `Beskrivningen blev ${words} ord (kravet är ${POLISH_LIMITS.descriptionMinWords}–${POLISH_LIMITS.descriptionMaxWords}). Förslaget slängdes.`,
+      error: `La descripción quedó con ${words} palabras (se requieren ${POLISH_LIMITS.descriptionMinWords}–${POLISH_LIMITS.descriptionMaxWords}). Se descartó la propuesta.`,
     };
   }
   if (description.length > POLISH_LIMITS.descriptionMaxChars) {
-    return { ok: false, error: "Beskrivningen är längre än fältet rymmer. Förslaget slängdes." };
+    return { ok: false, error: "La descripción supera la capacidad del campo. Se descartó la propuesta." };
   }
   if (words < POLISH_LIMITS.descriptionMinWords || words > POLISH_LIMITS.descriptionMaxWords) {
-    warnings.push(`Beskrivningen blev ${words} ord, utanför ${POLISH_LIMITS.descriptionMinWords}–${POLISH_LIMITS.descriptionMaxWords}.`);
+    warnings.push(`La descripción quedó con ${words} palabras, fuera del rango de ${POLISH_LIMITS.descriptionMinWords}–${POLISH_LIMITS.descriptionMaxWords}.`);
   }
 
   const seoTitle = proposed.seoTitle.trim();
   const seoDescription = proposed.seoDescription.trim();
-  if (!seoTitle || !seoDescription) return { ok: false, error: "Modellen lämnade ett seo-fält tomt." };
+  if (!seoTitle || !seoDescription) return { ok: false, error: "El modelo dejó un campo SEO vacío." };
 
   const overLong = (value: string, max: number) => value.length > max * HARD_REJECT_FACTOR;
   if (
@@ -247,24 +247,24 @@ export function validateProposal(input: PolishInput, raw: unknown): PolishValida
     overLong(seoDescription, POLISH_LIMITS.seoDescriptionMaxChars) ||
     proposed.services.some((s) => overLong(s.desc.trim(), POLISH_LIMITS.serviceDescMaxChars))
   ) {
-    return { ok: false, error: "Ett eller flera fält var mer än dubbelt så långa som tillåtet. Förslaget slängdes." };
+    return { ok: false, error: "Uno o más campos superaron el doble del largo permitido. Se descartó la propuesta." };
   }
 
-  if (seoTitle.length > POLISH_LIMITS.seoTitleMaxChars) warnings.push("Seo-titeln kortades till 60 tecken.");
+  if (seoTitle.length > POLISH_LIMITS.seoTitleMaxChars) warnings.push("El título SEO se acortó a 60 caracteres.");
   if (seoDescription.length > POLISH_LIMITS.seoDescriptionMaxChars) {
-    warnings.push("Seo-beskrivningen kortades till 155 tecken.");
+    warnings.push("La descripción SEO se acortó a 155 caracteres.");
   }
 
   const services = input.services.map((service, i) => {
     const desc = proposed.services[i].desc.trim();
     if (desc.length > POLISH_LIMITS.serviceDescMaxChars) {
-      warnings.push(`Texten för "${service.name}" kortades till 140 tecken.`);
+      warnings.push(`El texto de "${service.name}" se acortó a 140 caracteres.`);
     }
     return { name: service.name, desc: clampText(desc, POLISH_LIMITS.serviceDescMaxChars) };
   });
 
   if (input.city && !seoTitle.toLowerCase().includes(input.city.toLowerCase())) {
-    warnings.push(`Seo-titeln nämner inte ${input.city} — kontrollera den innan du tillämpar.`);
+    warnings.push(`El título SEO no menciona ${input.city}; revisalo antes de aplicar los cambios.`);
   }
 
   return {
@@ -285,10 +285,10 @@ export const POLISH_FIELDS = ["description", "seoTitle", "seoDescription", "serv
 export type PolishFieldKey = (typeof POLISH_FIELDS)[number];
 
 export const POLISH_FIELD_LABELS: Record<PolishFieldKey, string> = {
-  description: "Beskrivning",
-  seoTitle: "Seo-titel",
-  seoDescription: "Seo-beskrivning",
-  services: "Tjänstetexter",
+  description: "Descripción",
+  seoTitle: "Título SEO",
+  seoDescription: "Descripción SEO",
+  services: "Textos de servicios",
 };
 
 export type PolishCurrent = {
@@ -308,7 +308,7 @@ export type FieldDiff = {
 
 /** Tjänstelistan visas som en rad per tjänst — en textdiff räcker för granskningen. */
 export function servicesToText(services: { name: string; desc?: string }[]): string {
-  return services.map((s) => `${s.name} — ${(s.desc ?? "").trim() || "(ingen text)"}`).join("\n");
+  return services.map((s) => `${s.name} — ${(s.desc ?? "").trim() || "(sin texto)"}`).join("\n");
 }
 
 /** Ren funktion för panelen: vad skiljer det sparade från förslaget? */
@@ -384,11 +384,11 @@ export async function polishBusiness(business: PolishBusiness): Promise<PolishOu
   // stop_reason läses FÖRE innehållet: ett avböjt eller avklippt svar har ett
   // content-fält som ser normalt ut men inte är ett komplett förslag.
   if (message.stop_reason === "refusal") {
-    const why = message.stop_details?.explanation ?? message.stop_details?.category ?? "utan angiven orsak";
-    return { ok: false, error: `Modellen avböjde att svara (${why}). Se över kundens råtext.` };
+    const why = message.stop_details?.explanation ?? message.stop_details?.category ?? "sin motivo indicado";
+    return { ok: false, error: `El modelo rechazó responder (${why}). Revisá el texto original del cliente.` };
   }
   if (message.stop_reason === "max_tokens") {
-    return { ok: false, error: "Svaret klipptes av (max_tokens). Korta ner kundens råtext och kör igen." };
+    return { ok: false, error: "La respuesta se cortó (max_tokens). Acortá el texto original del cliente y probá de nuevo." };
   }
 
   const validation = validateProposal(input, message.parsed_output);
@@ -409,10 +409,10 @@ export async function polishBusiness(business: PolishBusiness): Promise<PolishOu
 
 /** SDK:ns typade felklasser — aldrig strängmatchning på felmeddelanden. */
 function describeApiError(error: unknown): string {
-  if (error instanceof Anthropic.AuthenticationError) return "ANTHROPIC_API_KEY avvisades av API:t.";
-  if (error instanceof Anthropic.RateLimitError) return "API:t rate-limitade anropet. Försök om en stund.";
-  if (error instanceof Anthropic.BadRequestError) return `API:t avvisade anropet: ${error.message}`;
-  if (error instanceof Anthropic.APIConnectionError) return "Kunde inte nå Claude API (nätverk).";
-  if (error instanceof Anthropic.APIError) return `Claude API svarade ${error.status}: ${error.message}`;
-  return "Okänt fel mot Claude API.";
+  if (error instanceof Anthropic.AuthenticationError) return "La API rechazó ANTHROPIC_API_KEY.";
+  if (error instanceof Anthropic.RateLimitError) return "Se alcanzó el límite de solicitudes de la API. Probá de nuevo en un rato.";
+  if (error instanceof Anthropic.BadRequestError) return `La API rechazó la solicitud: ${error.message}`;
+  if (error instanceof Anthropic.APIConnectionError) return "No se pudo conectar con Claude API (red).";
+  if (error instanceof Anthropic.APIError) return `Claude API respondió ${error.status}: ${error.message}`;
+  return "Error desconocido al contactar Claude API.";
 }

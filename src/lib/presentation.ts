@@ -30,12 +30,12 @@ export type Presentation = {
 };
 
 export const PRESENTATION_BY_CATEGORY: Record<Category, Presentation> = {
-  servicios: { themeKey: "servicios", paletteVariant: 2, accent: "cyan" },
-  taller: { themeKey: "servicios", paletteVariant: 1, accent: "orange" },
-  comercio: { themeKey: "comercio", paletteVariant: 1, accent: "blå" },
-  otro: { themeKey: "comercio", paletteVariant: 2, accent: "grön" },
-  gastronomia: { themeKey: "gastronomia", paletteVariant: 1, accent: "rödbrun" },
-  salud: { themeKey: "salud", paletteVariant: 1, accent: "teal" },
+  servicios: { themeKey: "servicios", paletteVariant: 2, accent: "cian" },
+  taller: { themeKey: "servicios", paletteVariant: 1, accent: "naranja" },
+  comercio: { themeKey: "comercio", paletteVariant: 1, accent: "azul" },
+  otro: { themeKey: "comercio", paletteVariant: 2, accent: "verde" },
+  gastronomia: { themeKey: "gastronomia", paletteVariant: 1, accent: "marrón rojizo" },
+  salud: { themeKey: "salud", paletteVariant: 1, accent: "verde azulado" },
   belleza: { themeKey: "salud", paletteVariant: 2, accent: "rosa" },
 };
 
@@ -53,5 +53,5 @@ export function presentationFor(category: string): { themeKey: ThemeKey; palette
 /** Admin-etikett, svenska: `servicios · variant 2 (cyan)`. */
 export function presentationLabel(category: string): string {
   const { themeKey, paletteVariant, accent } = entryFor(category);
-  return `${themeKey} · variant ${paletteVariant} (${accent})`;
+  return `${themeKey} · variante ${paletteVariant} (${accent})`;
 }

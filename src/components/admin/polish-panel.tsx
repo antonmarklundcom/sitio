@@ -19,7 +19,7 @@ import { Badge, Card, Notice, SectionTitle } from "./ui";
  */
 
 /** Måste ordagrant matcha MISSING_KEY_MESSAGE i src/lib/ai-polish.ts. */
-const MISSING_KEY_NOTICE = "ANTHROPIC_API_KEY saknas i miljön";
+const MISSING_KEY_NOTICE = "Falta ANTHROPIC_API_KEY en el entorno";
 
 function SubmitButton({
   label,
@@ -92,7 +92,7 @@ export function PolishPanel({
 
   return (
     <Card>
-      <SectionTitle hint="Kundens råtext går till Claude API och kommer tillbaka putsad. Ingenting skrivs förrän du kryssar i fälten och trycker Aplicera — råtexten skrivs aldrig över.">
+      <SectionTitle hint="El texto original del cliente se envía a Claude API para pulirlo. Para guardar los cambios, marcá los campos y presioná Aplicar; el texto original nunca se sobrescribe.">
         Pulir textos
       </SectionTitle>
 
@@ -100,16 +100,16 @@ export function PolishPanel({
         <div className="flex flex-wrap items-center gap-2 text-sm text-admin-muted">
           <code className="text-xs">{model}</code>
           {aiPolishedAt ? (
-            <Badge tone="ok">Putsad {new Date(aiPolishedAt).toLocaleDateString("sv-SE")}</Badge>
+            <Badge tone="ok">Textos pulidos el {new Date(aiPolishedAt).toLocaleDateString("sv-SE")}</Badge>
           ) : (
-            <Badge>Aldrig putsad</Badge>
+            <Badge>Textos sin pulir</Badge>
           )}
         </div>
 
         {hasApiKey ? null : (
           <Notice tone="warn">
-            {MISSING_KEY_NOTICE}. Putsningen är avstängd tills nyckeln finns i .env.local — allt annat på
-            sidan fungerar som vanligt.
+            {MISSING_KEY_NOTICE}. Pulir textos está desactivado hasta que la clave esté en .env.local; el resto de
+            la página funciona normalmente.
           </Notice>
         )}
 
@@ -120,8 +120,8 @@ export function PolishPanel({
 
         <form action={runAction}>
           <SubmitButton
-            label={diffs ? "Kör igen" : "Pulir textos"}
-            pendingLabel="Putsar…"
+            label={diffs ? "Volver a ejecutar" : "Pulir textos"}
+            pendingLabel="Puliendo textos…"
             disabled={!hasApiKey}
           />
         </form>
@@ -129,9 +129,9 @@ export function PolishPanel({
         {diffs ? (
           <form action={applyAction} className="space-y-4 border-t border-admin-line pt-4">
             <p className="text-sm text-admin-muted">
-              Förslag från {proposedAt ? new Date(proposedAt).toLocaleString("sv-SE") : "okänd tid"} —{" "}
-              {changed.length} av {diffs.length} fält skiljer sig
-              {usage ? ` (${usage.inputTokens} in / ${usage.outputTokens} ut tokens, ${usage.model})` : ""}.
+              Propuesta del {proposedAt ? new Date(proposedAt).toLocaleString("sv-SE") : "fecha desconocida"} —{" "}
+              {changed.length} de {diffs.length} campos tienen cambios
+              {usage ? ` (${usage.inputTokens} tokens de entrada / ${usage.outputTokens} tokens de salida, ${usage.model})` : ""}.
             </p>
 
             {warnings.length > 0 ? (
@@ -157,19 +157,19 @@ export function PolishPanel({
                       className="h-4 w-4 accent-[var(--admin-accent)]"
                     />
                     {diff.label}
-                    {diff.changed ? null : <Badge>oförändrat</Badge>}
+                    {diff.changed ? null : <Badge>Sin cambios</Badge>}
                   </label>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                    <DiffColumn title="Nu" text={diff.current} muted />
-                    <DiffColumn title="Förslag" text={diff.proposed} />
+                    <DiffColumn title="Actual" text={diff.current} muted />
+                    <DiffColumn title="Propuesta" text={diff.proposed} />
                   </div>
                 </li>
               ))}
             </ul>
 
             <SubmitButton
-              label="Aplicera valda"
-              pendingLabel="Skriver…"
+              label="Aplicar seleccionados"
+              pendingLabel="Guardando…"
               disabled={changed.length === 0}
               tone="plain"
             />
