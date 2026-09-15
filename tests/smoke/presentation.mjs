@@ -41,25 +41,25 @@ ok('ingen temaväljare i formuläret', (await p.locator('select[name=themeKey]')
 ok('inget dolt paletteVariant-fält', (await p.locator('input[name=paletteVariant]').count()) === 0);
 ok(
   'raden säger att branschen styr',
-  (await p.locator('body').innerText()).includes('Tema och palett följer branschen'),
+  (await p.locator('body').innerText()).includes('El tema y la paleta siguen al rubro'),
 );
 ok(
   'servicios visar variant 2 (cyan)',
-  (await p.locator('body').innerText()).includes('servicios · variant 2 (cyan)'),
+  (await p.locator('body').innerText()).includes('servicios · variante 2 (cian)'),
 );
 
 await p.selectOption('select[name=category]', 'taller');
 await p.waitForTimeout(400);
 ok(
   'taller härleds till servicios · variant 1 (orange) direkt, före spar',
-  (await p.locator('body').innerText()).includes('servicios · variant 1 (orange)'),
+  (await p.locator('body').innerText()).includes('servicios · variante 1 (naranja)'),
 );
 
 await p.fill('input[name=name]', `Taller Presentación ${suffix}`);
 await p.fill('input[name=slug]', slug);
 await p.fill('input[name=whatsappPhone]', '0981 555 123');
 await p.fill('input[name=city]', 'Asunción');
-await p.getByRole('button', { name: 'Skapa utkast' }).click();
+await p.getByRole('button', { name: 'Crear borrador' }).click();
 await p.waitForURL(/\/admin\/sitios\/\d+/, { timeout: 30000 }).catch(() => {});
 ok('utkastet skapades', /\/admin\/sitios\/\d+/.test(p.url()), p.url());
 
@@ -67,7 +67,7 @@ ok('utkastet skapades', /\/admin\/sitios\/\d+/.test(p.url()), p.url());
 await p.waitForTimeout(1500);
 ok(
   'admin visar den härledda presentationen för taller',
-  (await p.locator('body').innerText()).includes('servicios · variant 1 (orange)'),
+  (await p.locator('body').innerText()).includes('servicios · variante 1 (naranja)'),
 );
 
 const tallerHtml = await previewHtml(p);
@@ -87,16 +87,16 @@ await form.locator('select[name=category]').selectOption('comercio');
 await p.waitForTimeout(400);
 ok(
   'comercio härleds till variant 1 (blå) i formuläret',
-  (await p.locator('body').innerText()).includes('comercio · variant 1 (blå)'),
+  (await p.locator('body').innerText()).includes('comercio · variante 1 (azul)'),
 );
 
-await form.getByRole('button', { name: /Spara/ }).first().click();
+await form.getByRole('button', { name: /Guardar/ }).first().click();
 await p.waitForTimeout(3000);
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 ok(
   'admin visar comercio efter spar',
-  (await p.locator('body').innerText()).includes('comercio · variant 1 (blå)'),
+  (await p.locator('body').innerText()).includes('comercio · variante 1 (azul)'),
 );
 
 const comercioHtml = await previewHtml(p);

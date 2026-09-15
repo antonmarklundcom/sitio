@@ -8,8 +8,8 @@ import { establishSession, findActiveSuperadminByEmail, logActivity } from "@/li
 import { pruneRateLimits, rateLimit } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Ogiltig e-postadress."),
-  password: z.string().min(1, "Lösenord krävs."),
+  email: z.string().trim().toLowerCase().email("Correo no válido."),
+  password: z.string().min(1, "La contraseña es obligatoria."),
 });
 
 export type LoginState = { error?: string };
@@ -21,7 +21,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter." };
+    return { error: parsed.error.issues[0]?.message ?? "Datos no válidos." };
   }
 
   const { email, password } = parsed.data;
@@ -34,7 +34,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     !rateLimit(`login:email:${email}`, 5, 15 * 60_000).ok;
 
   if (limited) {
-    return { error: "För många försök. Vänta 15 minuter och försök igen." };
+    return { error: "Demasiados intentos. Esperá 15 minutos y probá de nuevo." };
   }
 
   const user = await findActiveSuperadminByEmail(email);
@@ -46,7 +46,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   if (!user || !ok) {
     await logActivity({ action: "login_failed", meta: { email, ip } });
-    return { error: "Fel e-post eller lösenord." };
+    return { error: "Correo o contraseña incorrectos." };
   }
 
   await establishSession({ userId: user.id, role: "superadmin", name: user.name });

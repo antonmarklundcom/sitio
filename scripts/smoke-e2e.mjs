@@ -29,8 +29,8 @@ ok('lista renderar', listText.includes('Electricidad'));
 
 // 3. detaljsida + statistikpanel
 await p.goto(B+'/admin/sitios/1');
-ok('statistikpanel', await p.getByText('Statistik').first().isVisible());
-ok('statistik har siffror', (await p.locator('body').innerText()).includes('Besök, 30 dgr'));
+ok('statistikpanel', await p.getByText('Estadísticas').first().isVisible());
+ok('statistik har siffror', (await p.locator('body').innerText()).includes('Visitas, 30 días'));
 
 // 4. CRUD: byt namn, verifiera ISR-invalidering på publika sajten
 // Slugen läses ur formuläret: testet har kanske bytt den i en tidigare körning.
@@ -38,7 +38,7 @@ const currentSlug = await p.locator('input[name=slug]').inputValue();
 // Spara-knappen måste sökas INUTI businessformuläret: mediarutnätet har egna
 // spara-knappar för alt-texter, och de dyker upp först när en bild finns.
 const businessForm = p.locator('form').filter({ has: p.locator('input[name=slug]') });
-const save = () => businessForm.getByRole('button', { name: /Spara/ }).first().click();
+const save = () => businessForm.getByRole('button', { name: /Guardar/ }).first().click();
 const newName = 'Electricidad Mendoza '+Date.now().toString().slice(-5);
 await p.fill('input[name=name]', newName);
 await save();
@@ -82,7 +82,7 @@ await p.waitForTimeout(1500);
 await p.locator('input[name=photo]').first().setInputFiles({ name: 'smoke.jpg', mimeType: 'image/jpeg', buffer: jpeg });
 await p.waitForTimeout(5000);
 const detail = await p.locator('body').innerText();
-ok('uppladdning syns i admin', /Logga|Foton/.test(detail));
+ok('uppladdning syns i admin', /Logo|Fotos/.test(detail));
 const imgSrc = await p.locator('img[src^="/media/"]').first().getAttribute('src').catch(() => null);
 ok('media-URL genererad', Boolean(imgSrc), imgSrc ?? 'ingen');
 if (imgSrc) {
@@ -105,7 +105,7 @@ await subForm.locator('select[name=plan]').selectOption('plus');
 await subForm.locator('input[name=priceGs]').fill('450000');
 await subForm.locator('input[name=startsAt]').fill(day(-355));
 await subForm.locator('input[name=expiresAt]').fill(day(10));
-await subForm.getByRole('button', { name: /Spara prenumeration/ }).click();
+await subForm.getByRole('button', { name: /Guardar suscripción/ }).click();
 await p.waitForTimeout(2500);
 ok('prenumeration sparad', (await p.locator('body').innerText()).includes('450.000'));
 
@@ -117,27 +117,27 @@ await payForm.locator('input[name=reference]').fill(ref);
 await payForm.locator('input[name=periodStart]').fill(day(10));
 await payForm.locator('input[name=periodEnd]').fill(day(375));
 await payForm.locator('input[name=receipt]').setInputFiles({ name: 'comprobante.jpg', mimeType: 'image/jpeg', buffer: jpeg });
-await payForm.getByRole('button', { name: /Registrera betalning/ }).click();
+await payForm.getByRole('button', { name: /Registrar pago/ }).click();
 await p.waitForTimeout(3500);
 const afterPay = await p.locator('body').innerText();
-ok('betalning registrerad som rapporterad', afterPay.includes(ref) && afterPay.includes('Rapporterad'));
+ok('betalning registrerad som rapporterad', afterPay.includes(ref) && afterPay.includes('Reportado'));
 
 await p.goto(B + '/admin/pagos', { waitUntil: 'domcontentloaded' });
 const cobros = await p.locator('body').innerText();
 ok('betalningen syns i Cobros-kön', cobros.includes(ref));
 // Rubriken renderas versaliserad av CSS, så innerText ger "VENCEN PRONTO".
-ok('sajten syns i Vencen pronto', /vencen pronto/i.test(cobros) && /om \d+ dgr/.test(cobros));
+ok('sajten syns i Vencen pronto', /vencen pronto/i.test(cobros) && /en \d+ días/.test(cobros));
 
 await p.locator('form').filter({ has: p.locator(`input[value="/admin/pagos"]`) }).first()
-  .getByRole('button', { name: 'Bekräfta' }).click();
+  .getByRole('button', { name: 'Confirmar' }).click();
 await p.waitForTimeout(3000);
 const confirmed = await p.locator('body').innerText();
-ok('bekräftelse kvitteras', confirmed.includes('Betalningen är bekräftad'));
+ok('bekräftelse kvitteras', confirmed.includes('El pago está confirmado'));
 
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 const afterConfirm = await p.locator('body').innerText();
 ok('prenumerationen förlängd till betalningens periodslut', afterConfirm.includes(day(375)));
-ok('betalningen står som bekräftad', afterConfirm.includes('Bekräftad'));
+ok('betalningen står som bekräftad', afterConfirm.includes('Confirmado'));
 
 // 9. analytics: beacon på publicerad sajt, avvisad på opublicerad
 const send = (bid, ua) => fetch(B+'/api/ev', {method:'POST', headers:{'content-type':'application/json','user-agent':ua}, body: JSON.stringify({b:bid,t:'whatsapp_click',p:'/smoke'})});
@@ -149,7 +149,7 @@ await p.waitForTimeout(1000);
 const negocio = 'Panadería Smoke ' + Date.now().toString().slice(-4);
 await p.fill('input[name=name]', negocio);
 await p.fill('input[name=phone]', '0985 334 221');
-await p.getByRole('button', { name: /Skapa länk/ }).click();
+await p.getByRole('button', { name: /Crear enlace/ }).click();
 await p.waitForTimeout(2500);
 ok('intake-länk skapad', (await p.locator('body').innerText()).includes(negocio));
 
@@ -200,7 +200,7 @@ await cust.waitForTimeout(2000);
 
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);
-await p.getByRole('button', { name: 'Generera kod' }).first().click();
+await p.getByRole('button', { name: 'Generar código' }).first().click();
 await p.waitForTimeout(2500);
 const code = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
 ok('OTP-kod genererad och visad en gång för admin', Boolean(code));
@@ -229,8 +229,8 @@ await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);
 // Rubrikerna är versaliserade med CSS, och innerText följer text-transform —
 // en skiftlägeskänslig jämförelse här missade knappen helt och tyst.
-if (/utan owner-konto/i.test(await p.locator('body').innerText())) {
-  await p.getByRole('button', { name: 'Skapa konto' }).first().click();
+if (/sin cuenta de dueño/i.test(await p.locator('body').innerText())) {
+  await p.getByRole('button', { name: 'Crear cuenta' }).first().click();
   await p.waitForTimeout(3000);
   await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1200);
@@ -262,8 +262,8 @@ await stranger.close();
 
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-ok('admin ser att kunden väntar på kod', (await p.locator('body').innerText()).includes('väntar på en kod'));
-await p.getByRole('button', { name: 'Generera kod' }).first().click();
+ok('admin ser att kunden väntar på kod', (await p.locator('body').innerText()).includes('en espera de un código'));
+await p.getByRole('button', { name: 'Generar código' }).first().click();
 await p.waitForTimeout(2500);
 const ownerCode = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
 ok('inloggningskod genererad', Boolean(ownerCode));
@@ -323,32 +323,32 @@ ok(
 // seeden gav owner-kontot.
 const ownerSlug12 = (await owner.locator('.panel-top a').first().getAttribute('href').catch(() => null))?.split('/').pop() ?? null;
 
-const modulesCardFor = (page) => page.locator('section').filter({ hasText: /moduler/i }).last();
+const modulesCardFor = (page) => page.locator('section').filter({ hasText: /módulos/i }).last();
 const galleryRowFor = (page) => modulesCardFor(page).locator('li').filter({ hasText: 'gallery' }).first();
 
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 ok('modulpanelen finns i admin', await modulesCardFor(p).getByText('gallery').first().isVisible());
-ok('obyggda moduler flaggas som obyggda', /ej byggt än/i.test(await modulesCardFor(p).innerText()));
+ok('obyggda moduler flaggas som obyggda', /todavía no está/i.test(await modulesCardFor(p).innerText()));
 
 // Utgångsläget beror på seeden och på tidigare körningar — nolla det först.
-if ((await galleryRowFor(p).innerText()).includes('Stäng av')) {
-  await galleryRowFor(p).getByRole('button', { name: 'Stäng av' }).click();
+if ((await galleryRowFor(p).innerText()).includes('Desactivar')) {
+  await galleryRowFor(p).getByRole('button', { name: 'Desactivar' }).click();
   await p.waitForTimeout(2500);
   await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1500);
 }
 const galleryOffText = await galleryRowFor(p).innerText();
-ok('galleriet är av', galleryOffText.includes('Slå på'));
+ok('galleriet är av', galleryOffText.includes('Activar'));
 ok('fototaket visar basplanen', galleryOffText.includes('/8'), galleryOffText.replace(/\n/g, ' | '));
 
-await galleryRowFor(p).getByRole('button', { name: 'Slå på' }).click();
+await galleryRowFor(p).getByRole('button', { name: 'Activar' }).click();
 await p.waitForTimeout(2500);
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 const galleryOnText = await galleryRowFor(p).innerText();
-ok('galleriet slås på', galleryOnText.includes('Stäng av'));
-ok('aktiveringsdatum registreras', galleryOnText.includes('Aktiverad'));
+ok('galleriet slås på', galleryOnText.includes('Desactivar'));
+ok('aktiveringsdatum registreras', galleryOnText.includes('Activado'));
 ok('fototaket höjs till 20', galleryOnText.includes('/20'), galleryOnText.replace(/\n/g, ' | '));
 
 // 13. owner-vyn: sortering av egna foton, och inga modulväxlar
@@ -423,9 +423,9 @@ ok('menyn syns inte utan modulen', !(await owner.locator('body').innerText()).in
 await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 const menuRow = () => modulesCardFor(p).locator('li').filter({ hasText: 'menu' }).first();
-ok('menyn är byggd och märks inte som obyggd', !/ej byggt än/i.test(await menuRow().innerText()));
-if ((await menuRow().innerText()).includes('Slå på')) {
-  await menuRow().getByRole('button', { name: 'Slå på' }).click();
+ok('menyn är byggd och märks inte som obyggd', !/todavía no está/i.test(await menuRow().innerText()));
+if ((await menuRow().innerText()).includes('Activar')) {
+  await menuRow().getByRole('button', { name: 'Activar' }).click();
   await p.waitForTimeout(2500);
 }
 
@@ -484,7 +484,7 @@ await owner.locator('.panel-menu-form input[name=name]').first().fill('Plato fan
 
 await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-await menuRow().getByRole('button', { name: 'Stäng av' }).click();
+await menuRow().getByRole('button', { name: 'Desactivar' }).click();
 await p.waitForTimeout(2500);
 if (ownerSlug14) {
   const html = await (await fetch(B + '/' + ownerSlug14)).text();
@@ -502,7 +502,7 @@ ok(
 
 await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-await menuRow().getByRole('button', { name: 'Slå på' }).click();
+await menuRow().getByRole('button', { name: 'Activar' }).click();
 await p.waitForTimeout(2500);
 if (ownerSlug14) {
   const html = await (await fetch(B + '/' + ownerSlug14)).text();

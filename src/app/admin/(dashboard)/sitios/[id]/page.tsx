@@ -46,7 +46,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const business = await getBusinessById(Number(id));
-  return { title: business ? business.name : "Sajt" };
+  return { title: business ? business.name : "Sitio" };
 }
 
 export default async function EditBusinessPage({
@@ -103,26 +103,26 @@ export default async function EditBusinessPage({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link href="/admin" className="text-sm text-admin-muted hover:text-admin-text">
-            ← Sajter
+            ← Sitios
           </Link>
           <h1 className="mt-2 flex flex-wrap items-center gap-3 text-xl font-semibold">
             {business.name}
             <StatusBadge status={status} />
-            {business.whatsappVerifiedAt ? <Badge tone="ok">WhatsApp verifierad</Badge> : <Badge tone="warn">Overifierad</Badge>}
+            {business.whatsappVerifiedAt ? <Badge tone="ok">WhatsApp verificado</Badge> : <Badge tone="warn">Sin verificar</Badge>}
           </h1>
           <p className="mt-1 font-mono text-sm text-admin-muted">/{business.slug}</p>
         </div>
       </div>
 
       {sp.error ? <Notice tone="danger">{sp.error}</Notice> : null}
-      {sp.created ? <Notice tone="ok">Utkastet är skapat. Fyll på och publicera när det är klart.</Notice> : null}
-      {sp.status ? <Notice tone="ok">Statusen är uppdaterad.</Notice> : null}
+      {sp.created ? <Notice tone="ok">El borrador está creado. Completalo y publicalo cuando esté listo.</Notice> : null}
+      {sp.status ? <Notice tone="ok">El estado está actualizado.</Notice> : null}
       {sp.ownerWarning ? <Notice tone="warn">{sp.ownerWarning}</Notice> : null}
-      {sp.verified ? <Notice tone="ok">WhatsApp-numret är markerat som verifierat.</Notice> : null}
+      {sp.verified ? <Notice tone="ok">El número de WhatsApp está marcado como verificado.</Notice> : null}
 
       <Card>
-        <SectionTitle hint="Förhandsvisningen fungerar oavsett status. Den publika länken svarar 404 tills sajten är publicerad.">
-          Status och länkar
+        <SectionTitle hint="La vista previa funciona en cualquier estado. El enlace público devuelve 404 hasta que el sitio esté publicado.">
+          Estado y enlaces
         </SectionTitle>
 
         <div className="space-y-4">
@@ -141,7 +141,7 @@ export default async function EditBusinessPage({
                       : "border border-admin-line bg-admin-surface-2 text-admin-text hover:border-admin-muted"
                   }`}
                 >
-                  {to === "published" ? "Publicera" : `Sätt till ${STATUS_LABELS[to].toLowerCase()}`}
+                  {to === "published" ? "Publicar" : `Cambiar a ${STATUS_LABELS[to].toLowerCase()}`}
                 </button>
               </form>
             ))}
@@ -153,7 +153,7 @@ export default async function EditBusinessPage({
                   type="submit"
                   className="rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2 text-sm hover:border-admin-muted"
                 >
-                  Markera WhatsApp som verifierad
+                  Marcar WhatsApp como verificado
                 </button>
               </form>
             )}
@@ -161,7 +161,7 @@ export default async function EditBusinessPage({
 
           {blockers.length > 0 ? (
             <Notice tone="warn">
-              <p className="font-medium">Kan inte publiceras ännu:</p>
+              <p className="font-medium">Todavía no se puede publicar:</p>
               <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
                 {blockers.map((b) => (
                   <li key={b}>{b}</li>
@@ -172,7 +172,7 @@ export default async function EditBusinessPage({
 
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-admin-muted">Förhandsvisning</dt>
+              <dt className="text-admin-muted">Vista previa</dt>
               <dd className="mt-0.5 break-all">
                 <a href={preview} target="_blank" rel="noreferrer" className="text-admin-accent hover:underline">
                   {preview}
@@ -180,14 +180,14 @@ export default async function EditBusinessPage({
               </dd>
             </div>
             <div>
-              <dt className="text-admin-muted">Publik länk</dt>
+              <dt className="text-admin-muted">Enlace público</dt>
               <dd className="mt-0.5 break-all">
                 {status === "published" ? (
                   <a href={liveUrl} target="_blank" rel="noreferrer" className="text-admin-accent hover:underline">
                     {liveUrl}
                   </a>
                 ) : (
-                  <span className="text-admin-muted">{liveUrl} (404 tills publicerad)</span>
+                  <span className="text-admin-muted">{liveUrl} (404 hasta su publicación)</span>
                 )}
               </dd>
             </div>
@@ -205,7 +205,7 @@ export default async function EditBusinessPage({
               </dd>
             </div>
             <div>
-              <dt className="text-admin-muted">Publicerad</dt>
+              <dt className="text-admin-muted">Publicado</dt>
               <dd className="mt-0.5">
                 {business.publishedAt ? new Date(business.publishedAt).toLocaleDateString("sv-SE") : "—"}
               </dd>
@@ -270,15 +270,15 @@ export default async function EditBusinessPage({
       />
 
       <Card>
-        <SectionTitle hint="Bilderna processas vid uppladdning: EXIF strippas, orienteringen bakas in och varianterna 400/800/1600 px sparas som webp. Originalet sparas aldrig.">
-          Bilder
+        <SectionTitle hint="Las imágenes se procesan al subirlas: se eliminan los datos EXIF, se aplica la orientación y se guardan versiones de 400/800/1600 px en webp. El original nunca se guarda.">
+          Imágenes
         </SectionTitle>
 
         <div className="space-y-6">
           <div>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-sm font-medium">Logga</h3>
-              <MediaUploader businessId={business.id} kind="logo" label="Ladda upp logga" />
+              <h3 className="text-sm font-medium">Logo</h3>
+              <MediaUploader businessId={business.id} kind="logo" label="Subir logo" />
             </div>
             <MediaGrid
               businessId={business.id}
@@ -294,9 +294,9 @@ export default async function EditBusinessPage({
           <div>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-sm font-medium">
-                Foton <span className="text-admin-muted">({photos.length})</span>
+                Fotos <span className="text-admin-muted">({photos.length})</span>
               </h3>
-              <MediaUploader businessId={business.id} kind="photo" label="Ladda upp foton" />
+              <MediaUploader businessId={business.id} kind="photo" label="Subir fotos" />
             </div>
             <MediaGrid
               businessId={business.id}
@@ -313,7 +313,7 @@ export default async function EditBusinessPage({
 
         <BusinessForm
           action={updateBusinessAction.bind(null, business.id)}
-          submitLabel="Spara ändringar"
+          submitLabel="Guardar cambios"
           slugLocked={status === "published"}
           defaults={{
             name: business.name,

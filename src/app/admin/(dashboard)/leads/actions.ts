@@ -21,14 +21,14 @@ export async function setLeadStageAction(formData: FormData): Promise<void> {
   const user = await requireRole("superadmin");
   const businessId = Number(formData.get("businessId"));
   const stage = String(formData.get("stage") ?? "");
-  if (!businessId || !isLeadStage(stage)) throw new Error("Ogiltigt stadium eller sajt.");
+  if (!businessId || !isLeadStage(stage)) throw new Error("Etapa o sitio no válidos.");
 
   const [business] = await db
     .select({ id: businesses.id, leadStage: businesses.leadStage })
     .from(businesses)
     .where(eq(businesses.id, businessId))
     .limit(1);
-  if (!business) throw new Error("Sajten finns inte.");
+  if (!business) throw new Error("El sitio no existe.");
 
   if (business.leadStage !== stage) {
     await db.update(businesses).set({ leadStage: stage }).where(eq(businesses.id, businessId));
@@ -47,7 +47,7 @@ export async function setLeadStageAction(formData: FormData): Promise<void> {
 export async function saveLeadNoteAction(formData: FormData): Promise<void> {
   const user = await requireRole("superadmin");
   const businessId = Number(formData.get("businessId"));
-  if (!businessId) throw new Error("Ogiltig sajt.");
+  if (!businessId) throw new Error("Sitio no válido.");
 
   const notes = String(formData.get("adminNotes") ?? "")
     .trim()

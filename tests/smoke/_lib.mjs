@@ -72,7 +72,7 @@ export async function adminLogin(page, ok, browser) {
     const why = await page.locator('body').innerText();
     // Inloggningens rate limit är per process och gäller 15 minuter. Två
     // smoke-körningar tätt inpå varandra slår i den — starta om servern.
-    if (why.includes('För många försök')) {
+    if (why.includes('Demasiados intentos')) {
       console.error('avbryter: inloggningens rate limit slog till. Starta om servern och kör igen.');
     } else {
       console.error('avbryter: inloggningen gick inte igenom —', why);

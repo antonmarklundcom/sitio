@@ -25,8 +25,8 @@ export async function generateOwnerCodeAction(
   const admin = await requireRole("superadmin");
 
   const [owner] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!owner || owner.role !== "owner" || !owner.phone) return { error: "Kontot finns inte." };
-  if (owner.status !== "active") return { error: "Kontot är avstängt." };
+  if (!owner || owner.role !== "owner" || !owner.phone) return { error: "La cuenta no existe." };
+  if (owner.status !== "active") return { error: "La cuenta está desactivada." };
 
   const code = newOtpCode();
   await db.insert(verifications).values({
@@ -59,16 +59,16 @@ export async function ensureOwnerAccountAction(formData: FormData): Promise<void
   const businessId = Number(formData.get("businessId"));
 
   const business = await getBusinessById(businessId);
-  if (!business) throw new Error("Sajten finns inte.");
+  if (!business) throw new Error("El sitio no existe.");
 
   const result = await ensureOwnerAccount(business);
   const message = result.ok
     ? result.created
-      ? `Owner-konto skapat för ${business.name}.`
-      : `${business.name} hade redan ett konto — kopplingen är uppdaterad.`
+      ? `Cuenta de dueño creada para ${business.name}.`
+      : `${business.name} ya tenía una cuenta — se actualizó la vinculación.`
     : result.reason === "not_verified"
-      ? `${business.name} har inget verifierat WhatsApp-nummer. Verifiera först.`
-      : `Numret används redan av ett annat owner-konto. Lös det för hand.`;
+      ? `${business.name} no tiene un número de WhatsApp verificado. Verificalo primero.`
+      : `El número ya está en uso en otra cuenta de dueño. Resolvelo manualmente.`;
 
   if (result.ok) {
     await logActivity({
@@ -98,5 +98,5 @@ export async function setOwnerStatusAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/accesos");
-  redirect(`/admin/accesos?ok=${encodeURIComponent(status === "disabled" ? "Kontot är avstängt." : "Kontot är aktivt igen.")}`);
+  redirect(`/admin/accesos?ok=${encodeURIComponent(status === "disabled" ? "La cuenta está desactivada." : "La cuenta está activa de nuevo.")}`);
 }

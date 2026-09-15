@@ -12,7 +12,7 @@ function SubmitButton() {
       disabled={pending}
       className="w-full rounded-lg bg-admin-accent px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
-      {pending ? "Loggar in…" : "Logga in"}
+      {pending ? "Iniciando sesión…" : "Iniciar sesión"}
     </button>
   );
 }
@@ -24,7 +24,7 @@ export function LoginForm() {
     <form action={formAction} className="space-y-4">
       <div>
         <label htmlFor="email" className="mb-1.5 block text-sm text-admin-muted">
-          E-post
+          Correo
         </label>
         <input
           id="email"
@@ -38,7 +38,7 @@ export function LoginForm() {
 
       <div>
         <label htmlFor="password" className="mb-1.5 block text-sm text-admin-muted">
-          Lösenord
+          Contraseña
         </label>
         <input
           id="password"

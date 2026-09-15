@@ -10,7 +10,7 @@ import { CopyLink, CreateIntakeLinkForm, OtpButton } from "@/components/admin/in
 import { createIntakeLinkAction, generateOtpAction, revokeIntakeLinkAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Intake" };
+export const metadata = { title: "Altas" };
 
 export default async function IntakeAdminPage({
   searchParams,
@@ -25,10 +25,10 @@ export default async function IntakeAdminPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Intake-länkar</h1>
+        <h1 className="text-xl font-semibold">Enlaces de altas</h1>
         <p className="mt-1 text-sm text-admin-muted">
-          Kunden fyller i sina uppgifter på /alta/&lt;token&gt;. Länken gäller {TOKEN_TTL_DAYS} dagar och stängs
-          när formuläret skickas in.
+          El cliente completa sus datos en /alta/&lt;token&gt;. El enlace dura {TOKEN_TTL_DAYS} días y se cierra
+          cuando se envía el formulario.
         </p>
       </div>
 
@@ -37,23 +37,23 @@ export default async function IntakeAdminPage({
       <CreateIntakeLinkForm action={createIntakeLinkAction} />
 
       <Card>
-        <SectionTitle hint="Koden skickar du från din egen WhatsApp tills Cloud API finns (PR-17). Den visas en gång och lagras aldrig i klartext.">
-          Länkar
+        <SectionTitle hint="Enviás el código desde tu propio WhatsApp hasta que esté disponible Cloud API (PR-17). Se muestra una sola vez y nunca se guarda como texto legible.">
+          Enlaces
         </SectionTitle>
 
         {links.length === 0 ? (
-          <EmptyState title="Inga intake-länkar ännu." />
+          <EmptyState title="Todavía no hay enlaces de altas." />
         ) : (
           <div className="overflow-x-auto rounded-lg border border-admin-line">
             <table className="w-full min-w-[54rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-admin-line bg-admin-surface-2 text-left text-xs tracking-wide text-admin-muted uppercase">
-                  <th className="px-3 py-2 font-medium">Sajt</th>
-                  <th className="px-3 py-2 font-medium">Länk</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 font-medium">Sitio</th>
+                  <th className="px-3 py-2 font-medium">Enlace</th>
+                  <th className="px-3 py-2 font-medium">Estado</th>
                   <th className="px-3 py-2 font-medium">WhatsApp</th>
-                  <th className="px-3 py-2 text-right font-medium">Kod</th>
-                  <th className="px-3 py-2 text-right font-medium">Åtgärd</th>
+                  <th className="px-3 py-2 text-right font-medium">Código</th>
+                  <th className="px-3 py-2 text-right font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -63,7 +63,7 @@ export default async function IntakeAdminPage({
                   const shareHref = row.phone
                     ? waLink(
                         row.phone,
-                        `Hola! Te paso el link para cargar los datos de tu página: ${url} — cualquier duda, escribime por acá.`,
+                        `¡Hola! Te paso el link para cargar los datos de tu página: ${url} — cualquier duda, escribime por acá.`,
                       )
                     : null;
 
@@ -74,7 +74,7 @@ export default async function IntakeAdminPage({
                           {row.businessName}
                         </Link>
                         <span className="block text-xs text-admin-muted">
-                          Skapad {row.createdAt.toLocaleDateString("sv-SE")}
+                          Creado {row.createdAt.toLocaleDateString("sv-SE")}
                         </span>
                       </td>
                       <td className="px-3 py-2">
@@ -82,10 +82,10 @@ export default async function IntakeAdminPage({
                           <CopyLink url={url} />
                           {shareHref ? (
                             <a href={shareHref} target="_blank" rel="noreferrer" className="text-xs text-admin-accent hover:underline">
-                              Dela på WhatsApp →
+                              Compartir por WhatsApp →
                             </a>
                           ) : (
-                            <span className="text-xs text-admin-muted">Inget nummer sparat</span>
+                            <span className="text-xs text-admin-muted">No hay número guardado</span>
                           )}
                         </div>
                       </td>
@@ -93,21 +93,21 @@ export default async function IntakeAdminPage({
                         <div className="flex flex-wrap items-center gap-1.5">
                           <StatusBadge status={row.businessStatus as BusinessStatus} />
                           {row.usedAt ? (
-                            <Badge tone="ok">Inskickad</Badge>
+                            <Badge tone="ok">Enviado</Badge>
                           ) : expired ? (
-                            <Badge tone="danger">Utgången</Badge>
+                            <Badge tone="danger">Vencido</Badge>
                           ) : (
-                            <Badge tone="warn">Öppen</Badge>
+                            <Badge tone="warn">Abierto</Badge>
                           )}
                         </div>
                       </td>
                       <td className="px-3 py-2">
                         {row.verifiedAt ? (
-                          <Badge tone="ok">Verifierad</Badge>
+                          <Badge tone="ok">Verificado</Badge>
                         ) : row.pendingCode ? (
-                          <Badge tone="warn">Kod skickad</Badge>
+                          <Badge tone="warn">Código enviado</Badge>
                         ) : (
-                          <Badge tone="neutral">Overifierad</Badge>
+                          <Badge tone="neutral">Sin verificar</Badge>
                         )}
                         {row.phone ? (
                           <span className="mt-0.5 block text-xs text-admin-muted">{displayPhone(row.phone)}</span>
@@ -127,7 +127,7 @@ export default async function IntakeAdminPage({
                       <td className="px-3 py-2 text-right">
                         {row.usedAt || expired ? (
                           <span className="text-xs text-admin-muted">
-                            {row.usedAt ? STATUS_LABELS[row.businessStatus as BusinessStatus] : "Stängd"}
+                            {row.usedAt ? STATUS_LABELS[row.businessStatus as BusinessStatus] : "Cerrado"}
                           </span>
                         ) : (
                           <form action={revokeIntakeLinkAction}>
@@ -136,7 +136,7 @@ export default async function IntakeAdminPage({
                               type="submit"
                               className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs text-admin-muted hover:text-admin-danger"
                             >
-                              Stäng
+                              Cerrar
                             </button>
                           </form>
                         )}

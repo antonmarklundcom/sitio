@@ -26,11 +26,11 @@ function subscriptionTone(status: string | null): "ok" | "warn" | "danger" | "ne
 }
 
 const SUB_LABELS: Record<string, string> = {
-  trial: "Trial",
-  active: "Betald",
-  grace: "Respit",
-  expired: "Förfallen",
-  canceled: "Avslutad",
+  trial: "Prueba",
+  active: "Pagada",
+  grace: "Período de gracia",
+  expired: "Vencida",
+  canceled: "Cancelada",
 };
 
 export default async function AdminSitesPage({
@@ -52,13 +52,13 @@ export default async function AdminSitesPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Sajter</h1>
+          <h1 className="text-xl font-semibold">Sitios</h1>
           <p className="mt-1 text-sm text-admin-muted">
-            {total} totalt · {counts.published ?? 0} publicerade · {counts.pending_review ?? 0} väntar granskning
+            {total} en total · {counts.published ?? 0} publicados · {counts.pending_review ?? 0} pendientes de revisión
           </p>
         </div>
         <ButtonLink href="/admin/sitios/nuevo" variant="primary">
-          Ny sajt
+          Nuevo sitio
         </ButtonLink>
       </div>
 
@@ -66,7 +66,7 @@ export default async function AdminSitesPage({
         <input
           name="q"
           defaultValue={q}
-          placeholder="Sök namn, länk eller stad…"
+          placeholder="Buscá por nombre, enlace o ciudad…"
           className="min-w-56 flex-1 rounded-lg border border-admin-line bg-admin-surface px-3 py-2 text-sm outline-none focus:border-admin-accent"
         />
         <select
@@ -74,7 +74,7 @@ export default async function AdminSitesPage({
           defaultValue={status}
           className="rounded-lg border border-admin-line bg-admin-surface px-3 py-2 text-sm outline-none focus:border-admin-accent"
         >
-          <option value="all">Alla statusar</option>
+          <option value="all">Todos los estados</option>
           {BUSINESS_STATUSES.map((s) => (
             <option key={s} value={s}>
               {STATUS_LABELS[s]} ({counts[s] ?? 0})
@@ -85,14 +85,14 @@ export default async function AdminSitesPage({
           type="submit"
           className="rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2 text-sm hover:border-admin-muted"
         >
-          Filtrera
+          Filtrar
         </button>
       </form>
 
       {rows.length === 0 ? (
-        <EmptyState title={q || status !== "all" ? "Inga sajter matchar filtret." : "Inga sajter ännu."}>
+        <EmptyState title={q || status !== "all" ? "Ningún sitio coincide con el filtro." : "Todavía no hay sitios."}>
           <Link href="/admin/sitios/nuevo" className="text-admin-accent hover:underline">
-            Skapa den första
+            Creá el primero
           </Link>
         </EmptyState>
       ) : (
@@ -100,17 +100,17 @@ export default async function AdminSitesPage({
           <table className="w-full min-w-[60rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-admin-line bg-admin-surface text-left text-xs tracking-wide text-admin-muted uppercase">
-                <th className="px-4 py-3 font-medium">Sajt</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Betalning</th>
+                <th className="px-4 py-3 font-medium">Sitio</th>
+                <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Pago</th>
                 <th className="px-4 py-3 font-medium">WhatsApp</th>
-                <th className="px-4 py-3 text-right font-medium" title="Besök senaste 30 dygnen">
-                  Besök 30d
+                <th className="px-4 py-3 text-right font-medium" title="Visitas en los últimos 30 días">
+                  Visitas, 30 días
                 </th>
-                <th className="px-4 py-3 text-right font-medium" title="WhatsApp-klick senaste 30 dygnen">
-                  WA 30d
+                <th className="px-4 py-3 text-right font-medium" title="Clics en WhatsApp en los últimos 30 días">
+                  WA, 30 días
                 </th>
-                <th className="px-4 py-3 text-right font-medium">Score</th>
+                <th className="px-4 py-3 text-right font-medium">Puntaje</th>
               </tr>
             </thead>
             <tbody>
@@ -132,20 +132,20 @@ export default async function AdminSitesPage({
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge tone={subscriptionTone(row.subscriptionStatus)}>
-                        {row.subscriptionStatus ? (SUB_LABELS[row.subscriptionStatus] ?? row.subscriptionStatus) : "Ingen"}
+                        {row.subscriptionStatus ? (SUB_LABELS[row.subscriptionStatus] ?? row.subscriptionStatus) : "Ninguna"}
                       </Badge>
                       {row.pendingPayments > 0 ? (
-                        <Badge tone="warn" title="Betalningar som väntar på bekräftelse">
-                          {row.pendingPayments} att bekräfta
+                        <Badge tone="warn" title="Pagos pendientes de confirmación">
+                          {row.pendingPayments} por confirmar
                         </Badge>
                       ) : null}
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     {row.whatsappVerifiedAt ? (
-                      <Badge tone="ok">Verifierad</Badge>
+                      <Badge tone="ok">Verificado</Badge>
                     ) : (
-                      <Badge tone="warn">Overifierad</Badge>
+                      <Badge tone="warn">Sin verificar</Badge>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums">{Number(row.views30d)}</td>

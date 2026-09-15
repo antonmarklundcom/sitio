@@ -35,11 +35,11 @@ ok('modellen står utskriven', /claude-[a-z0-9-]+/.test(body));
 
 // Knappen heter "Pulir textos" första gången och "Kör igen" när ett förslag
 // redan ligger i activity_log — båda är samma knapp.
-const button = panel.getByRole('button', { name: /Pulir textos|Kör igen/ }).first();
+const button = panel.getByRole('button', { name: /Pulir textos|Volver a ejecutar/ }).first();
 ok('putsknappen finns', await button.isVisible().catch(() => false));
 
 const disabled = await button.isDisabled().catch(() => null);
-const warns = body.includes('ANTHROPIC_API_KEY saknas i miljön');
+const warns = body.includes('Falta ANTHROPIC_API_KEY en el entorno');
 
 if (HAS_KEY) {
   ok('med nyckel: ingen saknas-varning', !warns);
@@ -47,7 +47,7 @@ if (HAS_KEY) {
 } else {
   ok('utan nyckel: panelen säger vilken variabel som saknas', warns);
   ok('utan nyckel: knappen är avstängd', disabled === true);
-  ok('utan nyckel: sidan renderar ändå resten', has('Status och länkar') && has('Bilder') && has('Moduler'));
+  ok('utan nyckel: sidan renderar ändå resten', has('Estado y enlaces') && has('Imágenes') && has('Módulos'));
 }
 
 // Degraderingen får inte hänga på att sidan är trasig: en 500 hade gett en

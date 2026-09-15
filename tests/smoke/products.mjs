@@ -18,15 +18,15 @@ const { ok, failed } = createChecker();
 await adminLogin(p, ok, b);
 
 // ---------- 1. modulväxeln: hitta business 1:s rad, säkerställ på ----------
-const modulesCardFor = (page) => page.locator('section').filter({ hasText: /moduler/i }).last();
+const modulesCardFor = (page) => page.locator('section').filter({ hasText: /módulos/i }).last();
 const productsRowFor = (page) => modulesCardFor(page).locator('li').filter({ hasText: 'products' }).first();
 
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-ok('products är byggd och märks inte som obyggd', !/ej byggt än/i.test(await productsRowFor(p).innerText()));
+ok('products är byggd och märks inte som obyggd', !/todavía no está/i.test(await productsRowFor(p).innerText()));
 
-if ((await productsRowFor(p).innerText()).includes('Slå på')) {
-  await productsRowFor(p).getByRole('button', { name: 'Slå på' }).click();
+if ((await productsRowFor(p).innerText()).includes('Activar')) {
+  await productsRowFor(p).getByRole('button', { name: 'Activar' }).click();
   await p.waitForTimeout(2500);
 }
 
@@ -43,14 +43,14 @@ await p.waitForTimeout(1500);
 const themeForm = p.locator('form').filter({ has: p.locator('select[name=category]') }).first();
 const originalCategory = await themeForm.locator('select[name=category]').inputValue();
 await themeForm.locator('select[name=category]').selectOption('comercio');
-await themeForm.getByRole('button', { name: /Spara/ }).first().click();
+await themeForm.getByRole('button', { name: /Guardar/ }).first().click();
 await p.waitForTimeout(2500);
 
 // ---------- 2. owner-konto + OTP-inloggning (samma flöde som e2e-filens 11) ----------
 await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);
-if (/utan owner-konto/i.test(await p.locator('body').innerText())) {
-  await p.getByRole('button', { name: 'Skapa konto' }).first().click();
+if (/sin cuenta de dueño/i.test(await p.locator('body').innerText())) {
+  await p.getByRole('button', { name: 'Crear cuenta' }).first().click();
   await p.waitForTimeout(3000);
   await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1200);
@@ -66,7 +66,7 @@ await owner.waitForTimeout(2000);
 
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);
-await p.getByRole('button', { name: 'Generera kod' }).first().click();
+await p.getByRole('button', { name: 'Generar código' }).first().click();
 await p.waitForTimeout(2500);
 const ownerCode = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
 ok('inloggningskod genererad', Boolean(ownerCode));
@@ -129,7 +129,7 @@ await owner.locator('.panel-menu-form input[name=name]').first().fill('Producto 
 
 await p.goto(B + '/admin/sitios/' + (ownerBizId ?? '1'), { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-await productsRowFor(p).getByRole('button', { name: 'Stäng av' }).click();
+await productsRowFor(p).getByRole('button', { name: 'Desactivar' }).click();
 await p.waitForTimeout(2500);
 if (ownerSlug) {
   const html = await (await fetch(B + '/' + ownerSlug)).text();
@@ -147,7 +147,7 @@ ok(
 
 await p.goto(B + '/admin/sitios/' + (ownerBizId ?? '1'), { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
-await productsRowFor(p).getByRole('button', { name: 'Slå på' }).click();
+await productsRowFor(p).getByRole('button', { name: 'Activar' }).click();
 await p.waitForTimeout(2500);
 if (ownerSlug) {
   const html = await (await fetch(B + '/' + ownerSlug)).text();
@@ -160,7 +160,7 @@ if (ownerSlug) {
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 await themeForm.locator('select[name=category]').selectOption(originalCategory);
-await themeForm.getByRole('button', { name: /Spara/ }).first().click();
+await themeForm.getByRole('button', { name: /Guardar/ }).first().click();
 await p.waitForTimeout(2000);
 
 await finish(b, failed());

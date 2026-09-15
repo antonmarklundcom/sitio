@@ -4,11 +4,11 @@ import { requireRole } from "@/lib/auth";
 import { logoutAction } from "../login/actions";
 
 const NAV = [
-  { href: "/admin", label: "Sajter" },
-  { href: "/admin/alta", label: "Intake" },
+  { href: "/admin", label: "Sitios" },
+  { href: "/admin/alta", label: "Altas" },
   { href: "/admin/pagos", label: "Cobros" },
   { href: "/admin/leads", label: "Leads" },
-  { href: "/admin/accesos", label: "Inloggningar" },
+  { href: "/admin/accesos", label: "Accesos" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -40,7 +40,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 type="submit"
                 className="rounded-md px-2.5 py-1.5 text-admin-muted transition-colors hover:text-admin-text"
               >
-                Logga ut
+                Cerrar sesión
               </button>
             </form>
           </div>

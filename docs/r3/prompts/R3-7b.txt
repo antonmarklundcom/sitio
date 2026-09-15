@@ -1,0 +1,42 @@
+Task:
+Repo sitio (Next.js 15, TypeScript). Ticket R3-7, part B of two, from docs/r3/README.md Batch 2. Part A (merged) moved the admin components and the shared label maps to Paraguayan Spanish. Part B finishes the job: every user-visible string in the admin pages, the admin server actions (their error and success messages), the login form, and the admin layout moves to es-PY voseo (vos tenés, guardá, confirmá; never tú, never usted). Only text changes: no layout, markup, class, prop, route, redirect, validation rule or logic change. Code comments and identifiers stay. Then update the smoke suites so their assertions match the new Spanish admin strings; the suites test names (the first argument of ok) may stay Swedish, only the strings they look for in the page must change.
+
+Glossary, same as part A, use exactly: Sajter = Sitios. Intake = Altas. Cobros stays. Leads stays. Inloggningar = Accesos. Moduler = Módulos. Prenumeration = Suscripción. Betalning = Pago. Bekräfta = Confirmar. Bekräftad = Confirmado. Avvisa = Rechazar. Förfaller = Vence. Förfallen = Vencida. Bransch = Rubro. Företagsnamn = Nombre del negocio. Beskrivning = Descripción. Anteckning = Nota. Förhandsvisning = Vista previa. Publicera = Publicar. Pausad = Pausada. Slå på = Activar. Stäng av = Desactivar. Spara = Guardar. Sparad = Guardado. Radera = Eliminar. Ny sajt = Nuevo sitio. Logga ut = Cerrar sesión. Logga in = Iniciar sesión. E-post = Correo. Lösenord = Contraseña. Fel e-post eller lösenord = Correo o contraseña incorrectos. För många försök, vänta 15 minuter = Demasiados intentos. Esperá 15 minutos y probá de nuevo. Status och länkar = Estado y enlaces. Tema och palett följer branschen = El tema y la paleta siguen al rubro. Besök, 30 dgr = Visitas, 30 días. Betalningen är bekräftad = El pago está confirmado. OTP-kod genererad = Código generado. ANTHROPIC_API_KEY saknas i miljön = Falta ANTHROPIC_API_KEY en el entorno. Kör förfallokontroll nu = Ejecutar control de vencimientos ahora. Vencen pronto stays. Owner = Dueño. Superadmin stays. Page titles (metadata title) also in Spanish.
+
+Files to touch:
+src/app/admin/layout.tsx (metadata title only)
+src/app/admin/login/login-form.tsx
+src/app/admin/login/actions.ts (message strings only)
+src/app/admin/(dashboard)/layout.tsx (NAV labels and the logout button text only; the ThemeToggle line stays)
+src/app/admin/(dashboard)/page.tsx
+src/app/admin/(dashboard)/accesos/page.tsx and actions.ts
+src/app/admin/(dashboard)/alta/page.tsx and actions.ts
+src/app/admin/(dashboard)/leads/page.tsx and actions.ts
+src/app/admin/(dashboard)/pagos/page.tsx and actions.ts
+src/app/admin/(dashboard)/sitios/[id]/page.tsx, nuevo/page.tsx, actions.ts, media-actions.ts, module-actions.ts, polish-actions.ts
+scripts/smoke-e2e.mjs and tests/smoke/*.mjs (only the strings that are matched against admin page text or admin action responses)
+tests/unit/*.test.ts (only expected strings that came from the files above, if any)
+
+Do not touch:
+src/components/**, src/lib/** (part A is done there), src/app/mi-sitio/**, src/app/alta/**, src/app/[slug]/**, src/app/api/**, src/app/registro/** (another ticket owns it).
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, .husky/**, .env.example, anything under .github/.
+Any identifier, prop, route, className, redirect target, enum or database value.
+
+Definition of done:
+No Swedish word remains in JSX text, placeholders, titles, aria-labels, button labels, option labels, metadata titles or returned message strings in the listed admin files.
+Strings are es-PY voseo, sentence case, ¿ ¡ where needed, and the glossary is used consistently with part A.
+npm test passes; the smoke suites still find their admin strings (the manager runs npm run smoke against a fresh build; make the assertions match what the pages now render).
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+npm run build   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

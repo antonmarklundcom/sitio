@@ -40,7 +40,7 @@ export async function saveSubscriptionAction(
   const user = await requireRole("superadmin");
 
   const business = await getBusinessById(businessId);
-  if (!business) return { error: "Sajten finns inte." };
+  if (!business) return { error: "El sitio no existe." };
 
   const parsed = subscriptionFormSchema.safeParse({
     plan: formData.get("plan") ?? "basico",
@@ -50,12 +50,12 @@ export async function saveSubscriptionAction(
     status: formData.get("status") ?? "active",
   });
   if (!parsed.success) {
-    return { error: "Formuläret innehåller fel.", fieldErrors: fieldErrors(parsed.error.issues) };
+    return { error: "El formulario contiene errores.", fieldErrors: fieldErrors(parsed.error.issues) };
   }
 
   const values = parsed.data;
   if (values.expiresAt <= values.startsAt) {
-    return { error: "Perioden är fel.", fieldErrors: { expiresAt: "Slutdatum måste ligga efter startdatum." } };
+    return { error: "El período no es válido.", fieldErrors: { expiresAt: "La fecha de fin debe ser posterior a la fecha de inicio." } };
   }
 
   const existingId = Number(formData.get("subscriptionId") ?? 0);
@@ -70,7 +70,7 @@ export async function saveSubscriptionAction(
   if (existingId > 0) {
     const current = await getCurrentSubscription(businessId);
     // Tenant-check: id:t kommer från ett formulär och får aldrig litas på.
-    if (!current || current.id !== existingId) return { error: "Prenumerationen hör inte till den här sajten." };
+    if (!current || current.id !== existingId) return { error: "La suscripción no pertenece a este sitio." };
     await db.update(subscriptions).set(row).where(eq(subscriptions.id, existingId));
   } else {
     await db.insert(subscriptions).values({ businessId, ...row });
@@ -84,7 +84,7 @@ export async function saveSubscriptionAction(
   });
 
   refresh(businessId);
-  return { ok: "Prenumerationen är sparad." };
+  return { ok: "Suscripción guardada." };
 }
 
 /**
@@ -100,10 +100,10 @@ export async function registerPaymentAction(
   const user = await requireRole("superadmin");
 
   const business = await getBusinessById(businessId);
-  if (!business) return { error: "Sajten finns inte." };
+  if (!business) return { error: "El sitio no existe." };
 
   const subscription = await getCurrentSubscription(businessId);
-  if (!subscription) return { error: "Skapa en prenumeration först — en betalning hör alltid till en period." };
+  if (!subscription) return { error: "Creá una suscripción primero — un pago siempre corresponde a un período." };
 
   const parsed = paymentFormSchema.safeParse({
     amountGs: formData.get("amountGs") ?? "",
@@ -114,22 +114,22 @@ export async function registerPaymentAction(
     notes: formData.get("notes") ?? "",
   });
   if (!parsed.success) {
-    return { error: "Formuläret innehåller fel.", fieldErrors: fieldErrors(parsed.error.issues) };
+    return { error: "El formulario contiene errores.", fieldErrors: fieldErrors(parsed.error.issues) };
   }
 
   const values = parsed.data;
   if (values.periodEnd <= values.periodStart) {
-    return { error: "Perioden är fel.", fieldErrors: { periodEnd: "Slutdatum måste ligga efter startdatum." } };
+    return { error: "El período no es válido.", fieldErrors: { periodEnd: "La fecha de fin debe ser posterior a la fecha de inicio." } };
   }
 
   let receiptMediaId: number | null = null;
   const file = formData.get("receipt");
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_UPLOAD_BYTES) {
-      return { error: "Kvittot är större än 10 MB.", fieldErrors: { receipt: "Max 10 MB." } };
+      return { error: "El comprobante supera los 10 MB.", fieldErrors: { receipt: "Máximo 10 MB." } };
     }
     if (!(ALLOWED_MIME as readonly string[]).includes(file.type)) {
-      return { error: "Formatet stöds inte.", fieldErrors: { receipt: "Använd JPEG, PNG, WEBP eller HEIC." } };
+      return { error: "El formato no es compatible.", fieldErrors: { receipt: "Usá JPEG, PNG, WEBP o HEIC." } };
     }
     try {
       const processed = await processImage({
@@ -150,7 +150,7 @@ export async function registerPaymentAction(
       });
       receiptMediaId = Number(inserted.insertId);
     } catch {
-      return { error: "Kvittobilden gick inte att läsa.", fieldErrors: { receipt: "Är filen skadad?" } };
+      return { error: "No se pudo leer la imagen del comprobante.", fieldErrors: { receipt: "¿El archivo está dañado?" } };
     }
   }
 
@@ -175,7 +175,7 @@ export async function registerPaymentAction(
   });
 
   refresh(businessId);
-  return { ok: "Betalningen är registrerad. Bekräfta den när pengarna syns." };
+  return { ok: "El pago está registrado. Confirmalo cuando veas el dinero acreditado." };
 }
 
 async function loadPayment(paymentId: number) {
@@ -194,7 +194,7 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
   const back = String(formData.get("back") ?? "/admin/pagos");
 
   const payment = await loadPayment(paymentId);
-  if (!payment) throw new Error("Betalningen finns inte.");
+  if (!payment) throw new Error("El pago no existe.");
   if (payment.status === "confirmed") redirect(back);
 
   const [subscription] = await db
@@ -202,7 +202,7 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
     .from(subscriptions)
     .where(eq(subscriptions.id, payment.subscriptionId))
     .limit(1);
-  if (!subscription) throw new Error("Prenumerationen finns inte.");
+  if (!subscription) throw new Error("La suscripción no existe.");
 
   const nextExpiry = extendedExpiry(subscription.expiresAt, payment.periodEnd);
 
@@ -243,7 +243,7 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
   });
 
   refresh(payment.businessId);
-  redirect(`${back}?ok=${encodeURIComponent("Betalningen är bekräftad.")}`);
+  redirect(`${back}?ok=${encodeURIComponent("El pago está confirmado.")}`);
 }
 
 export async function rejectPaymentAction(formData: FormData): Promise<void> {
@@ -252,7 +252,7 @@ export async function rejectPaymentAction(formData: FormData): Promise<void> {
   const back = String(formData.get("back") ?? "/admin/pagos");
 
   const payment = await loadPayment(paymentId);
-  if (!payment) throw new Error("Betalningen finns inte.");
+  if (!payment) throw new Error("El pago no existe.");
 
   await db.update(payments).set({ status: "rejected" }).where(eq(payments.id, paymentId));
   await logActivity({
@@ -263,7 +263,7 @@ export async function rejectPaymentAction(formData: FormData): Promise<void> {
   });
 
   refresh(payment.businessId);
-  redirect(`${back}?ok=${encodeURIComponent("Betalningen är avvisad.")}`);
+  redirect(`${back}?ok=${encodeURIComponent("El pago está rechazado.")}`);
 }
 
 /**
@@ -281,6 +281,6 @@ export async function runLifecycleAction(): Promise<void> {
   revalidatePath("/admin/pagos");
   revalidatePath("/admin");
 
-  const summary = `Respit: ${result.toGrace}. Förfallna: ${result.toExpired}. Pausade sajter: ${result.pausedBusinesses.length}.`;
+  const summary = `Período de gracia: ${result.toGrace}. Vencidas: ${result.toExpired}. Sitios en pausa: ${result.pausedBusinesses.length}.`;
   redirect(`/admin/pagos?ok=${encodeURIComponent(summary)}`);
 }
