@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { requireRole } from "@/lib/auth";
 import { logoutAction } from "../login/actions";
 
@@ -33,6 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <span className="text-admin-muted">{user.name}</span>
+            <ThemeToggle />
             <form action={logoutAction}>
               <button
                 type="submit"
