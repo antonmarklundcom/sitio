@@ -52,10 +52,10 @@ export const LEAD_STAGES = ["ninguno", "contactado", "cotizado", "vendido"] as c
 export type LeadStage = (typeof LEAD_STAGES)[number];
 
 export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
-  ninguno: "Inget",
-  contactado: "Kontaktad",
-  cotizado: "Offererad",
-  vendido: "Såld",
+  ninguno: "Ninguno",
+  contactado: "Contactado",
+  cotizado: "Cotizado",
+  vendido: "Vendido",
 };
 
 /**

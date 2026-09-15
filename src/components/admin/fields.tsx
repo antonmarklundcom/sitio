@@ -130,7 +130,7 @@ export function ServicesEditor({ defaultValue }: { defaultValue: ServiceRow[] })
           <input
             name="service.desc"
             defaultValue={row.desc ?? ""}
-            placeholder="Kort beskrivning (visas under rubriken)"
+            placeholder="Descripción breve (se muestra debajo del título)"
             maxLength={200}
             className="w-full rounded-md border border-admin-line bg-admin-surface px-3 py-2 text-sm outline-none focus:border-admin-accent"
           />
@@ -138,9 +138,9 @@ export function ServicesEditor({ defaultValue }: { defaultValue: ServiceRow[] })
             type="button"
             onClick={() => setRows((prev) => prev.filter((_, idx) => idx !== i))}
             className="shrink-0 rounded-md border border-admin-line px-3 py-2 text-sm text-admin-muted hover:border-admin-danger hover:text-admin-danger"
-            aria-label={`Ta bort tjänst ${i + 1}`}
+            aria-label={`Eliminar servicio ${i + 1}`}
           >
-            Ta bort
+            Eliminar
           </button>
         </div>
       ))}
@@ -149,7 +149,7 @@ export function ServicesEditor({ defaultValue }: { defaultValue: ServiceRow[] })
         onClick={() => setRows((prev) => [...prev, { name: "", desc: "" }])}
         className="rounded-lg border border-dashed border-admin-line px-3 py-2 text-sm text-admin-muted hover:border-admin-accent hover:text-admin-text"
       >
-        + Lägg till tjänst
+        + Agregar servicio
       </button>
     </div>
   );
@@ -176,7 +176,7 @@ export function HoursEditor({ defaultValue }: { defaultValue: HoursMap }) {
         );
       })}
       <p className="text-xs text-admin-muted">
-        Två intervall per dag stöds — för almuerzo + cena. Lämna tomt för att bara använda det första.
+        Podés usar dos franjas horarias por día, para almuerzo y cena. Dejá la segunda vacía si solo usás la primera.
       </p>
     </div>
   );
@@ -227,7 +227,7 @@ function HoursRow({
             defaultValue={intervals[i]?.open ?? ""}
             disabled={closed}
             className={timeClass}
-            aria-label={`${label} intervall ${i + 1} öppnar`}
+            aria-label={`${label}, franja horaria ${i + 1}, apertura`}
           />
           <span className="text-admin-muted">–</span>
           <input
@@ -236,7 +236,7 @@ function HoursRow({
             defaultValue={intervals[i]?.close ?? ""}
             disabled={closed}
             className={timeClass}
-            aria-label={`${label} intervall ${i + 1} stänger`}
+            aria-label={`${label}, franja horaria ${i + 1}, cierre`}
           />
         </span>
       ))}

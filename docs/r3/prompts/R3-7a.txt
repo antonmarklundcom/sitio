@@ -1,0 +1,37 @@
+Task:
+Repo sitio (Next.js 15, TypeScript). Ticket R3-7, part A of two, from docs/r3/README.md Batch 2. The superadmin panel (/admin) was written in Swedish because only the owner used it. From now on it is used by a Paraguayan sales person, so every user-visible string in the admin components moves to Paraguayan Spanish (es-PY, voseo: vos tenés, guardá, confirmá; never tú, never usted). Only the text changes: no layout, markup, class, prop, route or logic change. Code comments and identifiers stay as they are. Part B (pages, server actions, smoke assertions) is a separate ticket; do not touch those files.
+
+Glossary, use exactly these terms:
+Sajt/Sajter = Sitio/Sitios. Intake/Altas = Altas. Cobros stays. Leads stays. Inloggningar/owner-konton = Accesos. Moduler = Módulos. Prenumeration = Suscripción. Betalning = Pago. Bekräfta = Confirmar. Bekräftad = Confirmado. Avvisa = Rechazar. Avvisad = Rechazado. Förfaller = Vence. Förfallen = Vencida. Förnyelse = Renovación. Respit = Gracia. Bransch = Rubro. Företagsnamn = Nombre del negocio. Beskrivning = Descripción. Anteckning = Nota. Förhandsvisning = Vista previa. Publicera = Publicar. Publicerad = Publicada. Pausad = Pausada. Avstängd = Desactivada. Utkast = Borrador. Väntar på granskning = Pendiente de revisión. Hot lead stays. Besök = Visitas. WhatsApp-klick = Clics en WhatsApp. Putsa/AI-puts = Pulir textos. Förslag = Propuesta. Spara = Guardar. Sparad = Guardado. Radera = Eliminar. Ladda upp = Subir. Flytta upp = Subir. Flytta ner = Bajar. Huvudbild = Foto principal. Logga = Logo. Foton = Fotos. Galleri = Galería. Meny = Menú. Produkter = Productos. Owner = Dueño. Superadmin stays. Aktivera = Activar. Stäng av = Desactivar. Alla statusar = Todos los estados. Inga X ännu = Todavía no hay X. Ej byggt än = Todavía no está. Fel e-post eller lösenord = Correo o contraseña incorrectos. För många försök, vänta 15 minuter = Demasiados intentos. Esperá 15 minutos y probá de nuevo. Öppettider = Horario. Abierto ahora stays. Statistik = Estadísticas. Senaste 30 dagarna = Últimos 30 días. Bots är bortfiltrerade = Los bots no se cuentan. Tema och palett följer branschen = El tema y la paleta siguen al rubro. Variant = Variante. Accent colour names in presentation.ts: cyan = cian, orange = naranja, blå = azul, grön = verde, rödbrun = marrón rojizo, teal = verde azulado, rosa = rosa.
+
+Files to touch:
+src/components/admin/*.tsx (all twelve files)
+src/lib/modules.ts (only the label strings)
+src/lib/presentation.ts (only the accent names and presentationLabel text; keep the label shape key · variante N (accent))
+tests/unit/presentation.test.ts (only the label regex and accent expectations)
+tests/unit/modules.test.ts (only label expectations, if any)
+
+Do not touch:
+src/app/** (part B), src/components/mi-sitio/**, src/components/site/**, src/components/landing/**, src/components/intake/**, src/themes/**.
+scripts/**, tests/smoke/** (part B).
+src/db/schema.ts, drizzle/**, src/lib/auth*.ts, src/lib/session*.ts, src/middleware.ts, src/lib/env.ts, src/lib/billing.ts, src/app/api/**, .husky/**, .env.example, anything under .github/.
+Any identifier, prop name, route, className, data attribute, enum value or database value. Only human-readable text changes.
+
+Definition of done:
+No Swedish word remains in any JSX text, placeholder, title, aria-label, button label, option label or error string inside src/components/admin/*.tsx. A grep for the letters å ä ö in JSX string positions of those files returns nothing (comments may still contain them).
+Strings are es-PY voseo and use the glossary; sentence case, no shouting, ¿ and ¡ where Spanish needs them.
+The presentationLabel output becomes for example servicios · variante 2 (cian) and tests/unit/presentation.test.ts is adjusted to that shape.
+npm test passes with the same number of test files as before.
+Stay within the listed files. If something outside them must change to satisfy the definition of done, stop and say so instead of changing it.
+
+Commands to run before reporting:
+npm run typecheck   (working directory: repo root)
+npm run lint   (working directory: repo root)
+npm test   (working directory: repo root)
+Run every listed command. Report FAIL with the error text rather than skipping or substituting another check.
+
+Report format:
+Files changed: each path with a one-line summary of the change.
+Commands run: each command with PASS or FAIL and a one-line result.
+Flagged or not done: anything skipped, blocked, ambiguous, or outside scope, or None.
+Keep the report under 30 lines. No diffs, no file dumps. Never print or write secrets, tokens, or API keys.

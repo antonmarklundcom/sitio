@@ -55,7 +55,7 @@ function SubmitButton({ label }: { label: string }) {
       disabled={pending}
       className="rounded-lg bg-admin-accent px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
-      {pending ? "Sparar…" : label}
+      {pending ? "Guardando…" : label}
     </button>
   );
 }
@@ -103,14 +103,14 @@ export function BillingPanel({
 
   return (
     <Card>
-      <SectionTitle hint="Priser i heltals-guaraníes. Bekräftad betalning förlänger perioden; utebliven betalning pausar sajten efter respiten.">
-        Prenumeration och betalningar
+      <SectionTitle hint="Precios en guaraníes enteros. Un pago confirmado extiende el período; la falta de pago pausa el sitio después del período de gracia.">
+        Suscripción y pagos
       </SectionTitle>
 
       {subscription ? (
         <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-admin-line bg-admin-surface-2 px-4 py-3 text-sm">
           <span className="font-medium">{PLAN_LABELS[subscription.plan as keyof typeof PLAN_LABELS] ?? subscription.plan}</span>
-          <span className="font-mono">{formatGs(subscription.priceGs)}/år</span>
+          <span className="font-mono">{formatGs(subscription.priceGs)}/año</span>
           <span
             className={`rounded-full border px-2 py-0.5 text-xs ${
               statusTone(subscription.status) === "ok"
@@ -125,28 +125,28 @@ export function BillingPanel({
             {SUBSCRIPTION_STATUS_LABELS[subscription.status as SubscriptionStatus] ?? subscription.status}
           </span>
           <span className="text-admin-muted">
-            Förfaller {subscription.expiresAt}
-            {left !== null ? (left >= 0 ? ` · om ${left} dgr` : ` · ${Math.abs(left)} dgr sedan`) : ""}
+            Vence {subscription.expiresAt}
+            {left !== null ? (left >= 0 ? ` · en ${left} días` : ` · ${Math.abs(left)} días atrás`) : ""}
           </span>
           <a
             href={renewalHref}
             target="_blank"
             rel="noreferrer"
             className="ml-auto text-admin-accent hover:underline"
-            title={`Förnyelsemeddelande med årets statistik: ${yearStats.views365} besök, ${yearStats.waClicks365} WhatsApp-klick`}
+            title={`Mensaje de renovación con las estadísticas del año: ${yearStats.views365} visitas, ${yearStats.waClicks365} clics en WhatsApp`}
           >
-            Skicka förnyelse på WhatsApp →
+            Enviar renovación por WhatsApp →
           </a>
         </div>
       ) : (
         <Notice tone="warn">
-          {businessName} har ingen prenumeration. Skapa en innan du registrerar en betalning.
+          {businessName} no tiene suscripción. Creá una antes de registrar un pago.
         </Notice>
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <form action={subAction} className="space-y-3">
-          <h3 className="text-sm font-medium">{subscription ? "Uppdatera prenumeration" : "Skapa prenumeration"}</h3>
+          <h3 className="text-sm font-medium">{subscription ? "Actualizar suscripción" : "Crear suscripción"}</h3>
           {subState.error ? <Notice tone="danger">{subState.error}</Notice> : null}
           {subState.ok ? <Notice tone="ok">{subState.ok}</Notice> : null}
           {subscription ? <input type="hidden" name="subscriptionId" value={subscription.id} /> : null}
@@ -158,11 +158,11 @@ export function BillingPanel({
                 defaultValue={subscription?.plan ?? "basico"}
                 options={PLANS.map((p) => ({
                   value: p,
-                  label: `${PLAN_LABELS[p]} — riktpris ${formatGs(PLAN_SUGGESTED_PRICE_GS[p])}`,
+                  label: `${PLAN_LABELS[p]} — precio sugerido ${formatGs(PLAN_SUGGESTED_PRICE_GS[p])}`,
                 }))}
               />
             </Field>
-            <Field label="Pris per år (Gs)" name="priceGs" required error={subState.fieldErrors?.priceGs}>
+            <Field label="Precio por año (Gs)" name="priceGs" required error={subState.fieldErrors?.priceGs}>
               <TextInput
                 name="priceGs"
                 type="number"
@@ -170,10 +170,10 @@ export function BillingPanel({
                 required
               />
             </Field>
-            <Field label="Startar" name="startsAt" required error={subState.fieldErrors?.startsAt}>
+            <Field label="Inicio" name="startsAt" required error={subState.fieldErrors?.startsAt}>
               <TextInput name="startsAt" type="date" defaultValue={subscription?.startsAt ?? today} required />
             </Field>
-            <Field label="Förfaller" name="expiresAt" required error={subState.fieldErrors?.expiresAt}>
+            <Field label="Vence" name="expiresAt" required error={subState.fieldErrors?.expiresAt}>
               <TextInput
                 name="expiresAt"
                 type="date"
@@ -181,7 +181,7 @@ export function BillingPanel({
                 required
               />
             </Field>
-            <Field label="Status" name="status" error={subState.fieldErrors?.status}>
+            <Field label="Estado" name="status" error={subState.fieldErrors?.status}>
               <Select
                 name="status"
                 defaultValue={subscription?.status ?? "active"}
@@ -189,16 +189,16 @@ export function BillingPanel({
               />
             </Field>
           </div>
-          <SubmitButton label="Spara prenumeration" />
+          <SubmitButton label="Guardar suscripción" />
         </form>
 
         <form action={payAction} className="space-y-3">
-          <h3 className="text-sm font-medium">Registrera betalning</h3>
+          <h3 className="text-sm font-medium">Registrar pago</h3>
           {payState.error ? <Notice tone="danger">{payState.error}</Notice> : null}
           {payState.ok ? <Notice tone="ok">{payState.ok}</Notice> : null}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Belopp (Gs)" name="amountGs" required error={payState.fieldErrors?.amountGs}>
+            <Field label="Monto (Gs)" name="amountGs" required error={payState.fieldErrors?.amountGs}>
               <TextInput
                 name="amountGs"
                 type="number"
@@ -206,17 +206,17 @@ export function BillingPanel({
                 required
               />
             </Field>
-            <Field label="Metod" name="method" error={payState.fieldErrors?.method}>
+            <Field label="Método" name="method" error={payState.fieldErrors?.method}>
               <Select
                 name="method"
                 defaultValue="transferencia"
                 options={PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] }))}
               />
             </Field>
-            <Field label="Referens (nro de operación)" name="reference" error={payState.fieldErrors?.reference}>
+            <Field label="Referencia (nro. de operación)" name="reference" error={payState.fieldErrors?.reference}>
               <TextInput name="reference" maxLength={120} />
             </Field>
-            <Field label="Kvitto (comprobante)" name="receipt" error={payState.fieldErrors?.receipt}>
+            <Field label="Comprobante" name="receipt" error={payState.fieldErrors?.receipt}>
               <input
                 id="receipt"
                 name="receipt"
@@ -225,37 +225,37 @@ export function BillingPanel({
                 className="w-full rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-admin-surface file:px-2 file:py-1 file:text-admin-text"
               />
             </Field>
-            <Field label="Period från" name="periodStart" required error={payState.fieldErrors?.periodStart}>
+            <Field label="Período desde" name="periodStart" required error={payState.fieldErrors?.periodStart}>
               <TextInput name="periodStart" type="date" defaultValue={subscription?.startsAt ?? today} required />
             </Field>
-            <Field label="Period till" name="periodEnd" required error={payState.fieldErrors?.periodEnd}>
+            <Field label="Período hasta" name="periodEnd" required error={payState.fieldErrors?.periodEnd}>
               <TextInput name="periodEnd" type="date" defaultValue={subscription?.expiresAt ?? defaultExpiry} required />
             </Field>
           </div>
-          <Field label="Anteckning" name="notes" error={payState.fieldErrors?.notes}>
+          <Field label="Nota" name="notes" error={payState.fieldErrors?.notes}>
             <TextArea name="notes" rows={2} maxLength={300} />
           </Field>
-          <SubmitButton label="Registrera betalning" />
+          <SubmitButton label="Registrar pago" />
         </form>
       </div>
 
       <div className="mt-6">
-        <h3 className="mb-2 text-sm font-medium">Betalningshistorik</h3>
+        <h3 className="mb-2 text-sm font-medium">Historial de pagos</h3>
         {payments.length === 0 ? (
           <p className="rounded-lg border border-dashed border-admin-line px-3 py-5 text-center text-sm text-admin-muted">
-            Inga betalningar registrerade.
+            Todavía no hay pagos registrados.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-admin-line">
             <table className="w-full min-w-[44rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-admin-line bg-admin-surface-2 text-left text-xs tracking-wide text-admin-muted uppercase">
-                  <th className="px-3 py-2 font-medium">Belopp</th>
-                  <th className="px-3 py-2 font-medium">Metod</th>
-                  <th className="px-3 py-2 font-medium">Period</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                  <th className="px-3 py-2 font-medium">Kvitto</th>
-                  <th className="px-3 py-2 text-right font-medium">Åtgärd</th>
+                  <th className="px-3 py-2 font-medium">Monto</th>
+                  <th className="px-3 py-2 font-medium">Método</th>
+                  <th className="px-3 py-2 font-medium">Período</th>
+                  <th className="px-3 py-2 font-medium">Estado</th>
+                  <th className="px-3 py-2 font-medium">Comprobante</th>
+                  <th className="px-3 py-2 text-right font-medium">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,13 +279,13 @@ export function BillingPanel({
                               : "border-admin-danger/40 bg-admin-danger/10 text-admin-danger"
                         }`}
                       >
-                        {p.status === "reported" ? "Rapporterad" : p.status === "confirmed" ? "Bekräftad" : "Avvisad"}
+                        {p.status === "reported" ? "Reportado" : p.status === "confirmed" ? "Confirmado" : "Rechazado"}
                       </span>
                     </td>
                     <td className="px-3 py-2">
                       {p.receiptUrl ? (
                         <a href={p.receiptUrl} target="_blank" rel="noreferrer" className="text-admin-accent hover:underline">
-                          Visa
+                          Ver
                         </a>
                       ) : (
                         <span className="text-admin-muted">—</span>
@@ -298,7 +298,7 @@ export function BillingPanel({
                             <input type="hidden" name="paymentId" value={p.id} />
                             <input type="hidden" name="back" value={back} />
                             <button type="submit" className="rounded-md bg-admin-ok px-2.5 py-1.5 text-xs font-medium text-admin-bg">
-                              Bekräfta
+                              Confirmar
                             </button>
                           </form>
                           <form action={rejectPayment}>
@@ -308,13 +308,13 @@ export function BillingPanel({
                               type="submit"
                               className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs text-admin-muted hover:text-admin-danger"
                             >
-                              Avvisa
+                              Rechazar
                             </button>
                           </form>
                         </span>
                       ) : (
                         <span className="text-xs text-admin-muted">
-                          {p.confirmedAt ? `Bekräftad ${p.confirmedAt}` : "—"}
+                          {p.confirmedAt ? `Confirmado ${p.confirmedAt}` : "—"}
                         </span>
                       )}
                     </td>

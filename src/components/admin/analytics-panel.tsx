@@ -28,19 +28,19 @@ export function AnalyticsPanel({ analytics }: { analytics: BusinessAnalytics }) 
 
   return (
     <Card>
-      <SectionTitle hint="Bots är bortfiltrerade. Förhandsvisningar räknas aldrig.">
-        Statistik
+      <SectionTitle hint="Los bots no se cuentan. Las vistas previas nunca se cuentan.">
+        Estadísticas
       </SectionTitle>
 
       {hasData ? (
         <div className="mb-5">
           {/* items-stretch + h-full: staplarnas procenthöjder resolverar mot 0
               om kolumnen krymper till sitt innehåll, och grafen blir tom. */}
-          <div className="flex h-28 items-stretch gap-[3px]" role="img" aria-label="Besök per dag, senaste 30 dagarna">
+          <div className="flex h-28 items-stretch gap-[3px]" role="img" aria-label="Visitas por día, últimos 30 días">
             {series30.map((point) => (
               <div
                 key={point.day}
-                title={`${point.day}: ${point.views} besök, ${point.uniques} unika, ${point.waClicks} WhatsApp`}
+                title={`${point.day}: ${point.views} visitas, ${point.uniques} visitantes únicos, ${point.waClicks} WhatsApp`}
                 // Baslinjen gör en nolldag läsbar som en tom dag, inte som ett hål.
                 className="flex h-full flex-1 flex-col justify-end gap-[2px] border-b border-admin-line"
               >
@@ -62,7 +62,7 @@ export function AnalyticsPanel({ analytics }: { analytics: BusinessAnalytics }) 
             <span>
               <span className="mr-3">
                 <span className="mr-1 inline-block h-2 w-2 rounded-sm bg-admin-accent/70 align-middle" />
-                Besök
+                Visitas
               </span>
               <span>
                 <span className="mr-1 inline-block h-2 w-2 rounded-sm bg-admin-ok align-middle" />
@@ -74,19 +74,19 @@ export function AnalyticsPanel({ analytics }: { analytics: BusinessAnalytics }) 
         </div>
       ) : (
         <p className="mb-5 rounded-lg border border-dashed border-admin-line px-3 py-6 text-center text-sm text-admin-muted">
-          Ingen trafik registrerad ännu. Beaconen körs bara på publicerade sajter.
+          Todavía no hay tráfico registrado. El seguimiento funciona solo en sitios publicados.
         </p>
       )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Metric label="Besök, 30 dgr" value={last30.views} />
-        <Metric label="Unika/dag, 30 dgr" value={last30.uniques} hint="summa per dygn" />
-        <Metric label="WhatsApp, 30 dgr" value={last30.waClicks} />
-        <Metric label="Telefon, 30 dgr" value={last30.phoneClicks} />
-        <Metric label="Besök, 365 dgr" value={last365.views} />
-        <Metric label="WhatsApp, 365 dgr" value={last365.waClicks} />
-        <Metric label="Karta, 365 dgr" value={last365.mapClicks} />
-        <Metric label="Sociala, 365 dgr" value={last365.socialClicks} />
+        <Metric label="Visitas, 30 días" value={last30.views} />
+        <Metric label="Visitantes únicos por día, 30 días" value={last30.uniques} hint="suma diaria" />
+        <Metric label="Clics en WhatsApp, 30 días" value={last30.waClicks} />
+        <Metric label="Teléfono, 30 días" value={last30.phoneClicks} />
+        <Metric label="Visitas, 365 días" value={last365.views} />
+        <Metric label="Clics en WhatsApp, 365 días" value={last365.waClicks} />
+        <Metric label="Mapa, 365 días" value={last365.mapClicks} />
+        <Metric label="Redes sociales, 365 días" value={last365.socialClicks} />
       </div>
     </Card>
   );
