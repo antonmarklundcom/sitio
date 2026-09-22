@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DAY_LABELS_ES, groupedHours, nowInAsuncion, openState, openingHoursSpecification } from "@/lib/hours";
+import {
+  DAY_LABELS_ES,
+  groupedHours,
+  normalizeIntervals,
+  nowInAsuncion,
+  openState,
+  openingHoursSpecification,
+} from "@/lib/hours";
 import type { HoursMap } from "@/lib/business";
 
 /** Asunción ligger fast på UTC-3 (ingen sommartid sedan 2024). */
@@ -120,5 +127,69 @@ describe("openingHoursSpecification", () => {
 describe("DAY_LABELS_ES", () => {
   it("täcker alla sju dagsnycklar", () => {
     expect(Object.keys(DAY_LABELS_ES)).toHaveLength(7);
+  });
+});
+
+describe("normalizeIntervals (R3-19)", () => {
+  it("behåller två pass med siesta emellan, sorterade", () => {
+    expect(
+      normalizeIntervals([
+        { open: "15:00", close: "19:00" },
+        { open: "08:00", close: "12:00" },
+      ]),
+    ).toEqual([
+      { open: "08:00", close: "12:00" },
+      { open: "15:00", close: "19:00" },
+    ]);
+  });
+
+  it("slår ihop pass som överlappar eller möts", () => {
+    expect(
+      normalizeIntervals([
+        { open: "08:00", close: "17:00" },
+        { open: "14:00", close: "19:00" },
+      ]),
+    ).toEqual([{ open: "08:00", close: "19:00" }]);
+    expect(
+      normalizeIntervals([
+        { open: "08:00", close: "12:00" },
+        { open: "12:00", close: "16:00" },
+      ]),
+    ).toEqual([{ open: "08:00", close: "16:00" }]);
+  });
+
+  it("godtar midnatt som stängning", () => {
+    expect(
+      normalizeIntervals([
+        { open: "11:00", close: "15:00" },
+        { open: "19:00", close: "00:00" },
+      ]),
+    ).toEqual([
+      { open: "11:00", close: "15:00" },
+      { open: "19:00", close: "00:00" },
+    ]);
+  });
+
+  it("kastar tomma, felformade och bakvända pass", () => {
+    expect(normalizeIntervals([{ open: "", close: "" }])).toEqual([]);
+    expect(normalizeIntervals([{ open: "8", close: "17:00" }])).toEqual([]);
+    expect(normalizeIntervals([{ open: "25:00", close: "26:00" }])).toEqual([]);
+    expect(normalizeIntervals([{ open: "17:00", close: "08:00" }])).toEqual([]);
+    expect(
+      normalizeIntervals([
+        { open: "08:00", close: "12:00" },
+        { open: "", close: "19:00" },
+      ]),
+    ).toEqual([{ open: "08:00", close: "12:00" }]);
+  });
+
+  it("ger högst två pass", () => {
+    expect(
+      normalizeIntervals([
+        { open: "06:00", close: "08:00" },
+        { open: "10:00", close: "12:00" },
+        { open: "15:00", close: "19:00" },
+      ]),
+    ).toHaveLength(2);
   });
 });

@@ -60,6 +60,87 @@ export type IntakeDefaults = {
   hours: Record<string, { open: string; close: string }[] | null>;
 };
 
+/**
+ * En dag i intakens schema (R3-19). Ett pass som standard; "Corta al mediodía"
+ * visar ett andra pass. Första passets fältnamn är oförändrade, det andra
+ * heter `hours.<dag>.1.*` — hoursFromIntake() läser båda och städar med
+ * normalizeIntervals(). Ett dolt andra pass skickas inte alls.
+ */
+function IntakeHoursDay({
+  day,
+  intervals,
+  closedByDefault,
+}: {
+  day: (typeof WEEKDAYS)[number];
+  intervals: { open: string; close: string }[] | null | undefined;
+  closedByDefault: boolean;
+}) {
+  const [split, setSplit] = useState((intervals?.length ?? 0) > 1);
+  const firstClose = useRef<HTMLInputElement | null>(null);
+  const first = intervals?.[0];
+  const second = intervals?.[1];
+
+  function toggleSplit() {
+    // Ett förifyllt 08:00–17:00 skulle överlappa eftermiddagen och slås ihop
+    // till ett pass igen. Mañana slutar därför vid tolv när passet delas.
+    if (!split && firstClose.current && firstClose.current.value > "12:00") firstClose.current.value = "12:00";
+    setSplit(!split);
+  }
+
+  return (
+    <div className="panel-hours-row">
+      <label className="day" htmlFor={`hours.${day.key}.open`}>
+        {day.short}
+      </label>
+      <input
+        id={`hours.${day.key}.open`}
+        name={`hours.${day.key}.open`}
+        type="time"
+        defaultValue={first?.open ?? "08:00"}
+        aria-label={split ? `${day.label} mañana desde` : undefined}
+      />
+      <input
+        ref={firstClose}
+        name={`hours.${day.key}.close`}
+        type="time"
+        defaultValue={first?.close ?? "17:00"}
+        aria-label={split ? `${day.label} mañana hasta` : `${day.label} hasta`}
+      />
+      <span className="closed">
+        <input
+          id={`hours.${day.key}.closed`}
+          name={`hours.${day.key}.closed`}
+          type="checkbox"
+          defaultChecked={closedByDefault}
+        />
+        <label htmlFor={`hours.${day.key}.closed`}>Cerrado</label>
+      </span>
+      {split ? (
+        <>
+          <span className="day day--sub" aria-hidden="true">
+            tarde
+          </span>
+          <input
+            name={`hours.${day.key}.1.open`}
+            type="time"
+            defaultValue={second?.open ?? "15:00"}
+            aria-label={`${day.label} tarde desde`}
+          />
+          <input
+            name={`hours.${day.key}.1.close`}
+            type="time"
+            defaultValue={second?.close ?? "19:00"}
+            aria-label={`${day.label} tarde hasta`}
+          />
+        </>
+      ) : null}
+      <button type="button" className="panel-hours-split" onClick={toggleSplit} aria-pressed={split}>
+        {split ? "Un solo turno" : "Corta al mediodía"}
+      </button>
+    </div>
+  );
+}
+
 export function IntakeDataForm({
   action,
   defaults,
@@ -176,34 +257,16 @@ export function IntakeDataForm({
 
       <div className="panel-card">
         <h2>Horario</h2>
-        <p>Un horario por día. Si cerrás al mediodía, lo arreglamos nosotros después.</p>
+        <p>Un horario por día. ¿Cerrás al mediodía? Tocá “Corta al mediodía” y cargá los dos turnos.</p>
         <div className="panel-hours">
-          {WEEKDAYS.map((day) => {
-            const interval = defaults.hours?.[day.key]?.[0];
-            return (
-              <div key={day.key} className="panel-hours-row">
-                <label className="day" htmlFor={`hours.${day.key}.open`}>
-                  {day.short}
-                </label>
-                <input
-                  id={`hours.${day.key}.open`}
-                  name={`hours.${day.key}.open`}
-                  type="time"
-                  defaultValue={interval?.open ?? "08:00"}
-                />
-                <input name={`hours.${day.key}.close`} type="time" defaultValue={interval?.close ?? "17:00"} />
-                <span className="closed">
-                  <input
-                    id={`hours.${day.key}.closed`}
-                    name={`hours.${day.key}.closed`}
-                    type="checkbox"
-                    defaultChecked={defaults.hours ? defaults.hours[day.key] === null : day.key === "sun"}
-                  />
-                  <label htmlFor={`hours.${day.key}.closed`}>Cerrado</label>
-                </span>
-              </div>
-            );
-          })}
+          {WEEKDAYS.map((day) => (
+            <IntakeHoursDay
+              key={day.key}
+              day={day}
+              intervals={defaults.hours?.[day.key]}
+              closedByDefault={defaults.hours ? defaults.hours[day.key] === null : day.key === "sun"}
+            />
+          ))}
         </div>
       </div>
 

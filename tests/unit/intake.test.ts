@@ -141,6 +141,18 @@ describe("hoursFromIntake", () => {
     expect(hoursFromIntake(fd).sun).toBeNull();
   });
 
+  it("läser ett andra pass när dagen delas (siesta, R3-19)", () => {
+    const fd = new FormData();
+    fd.set("hours.mon.open", "08:00");
+    fd.set("hours.mon.close", "12:00");
+    fd.set("hours.mon.1.open", "15:00");
+    fd.set("hours.mon.1.close", "19:00");
+    expect(hoursFromIntake(fd).mon).toEqual([
+      { open: "08:00", close: "12:00" },
+      { open: "15:00", close: "19:00" },
+    ]);
+  });
+
   it("stänger dagen vid halvifyllda eller felformade tider", () => {
     const fd = new FormData();
     fd.set("hours.tue.open", "08:00");

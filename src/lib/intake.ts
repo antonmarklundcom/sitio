@@ -3,6 +3,7 @@ import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 
 import { z } from "zod";
 import { env } from "./env";
 import { normalizePyPhone } from "./format";
+import { normalizeIntervals } from "./hours";
 
 /**
  * Intake (PLAN.md §1.3 A + PR-10): superadmin skapar ett utkast och skickar en
@@ -110,18 +111,25 @@ export function servicesFromIntake(formData: FormData): { name: string; desc?: s
 }
 
 /**
- * Öppettider i intaken är avsiktligt grova: ett intervall per dag, eller
- * stängt. Delade pass (siesta) är vanliga i Paraguay men går att lägga till i
- * admin efteråt — ett stegformulär på mobil tål inte fyra tidsfält per dag.
+ * Öppettider i intaken (R3-19): ett pass per dag, plus ett andra när kunden
+ * kryssat "Corta al mediodía" — delade pass (siesta) är vanliga i Paraguay.
+ * Första passet behåller sina gamla fältnamn (`hours.<dag>.open/close`), det
+ * andra heter `hours.<dag>.1.open/close`. Städningen är normalizeIntervals().
  */
 export function hoursFromIntake(formData: FormData): Record<string, { open: string; close: string }[] | null> {
   const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
   const out: Record<string, { open: string; close: string }[] | null> = {};
+  const field = (name: string) => String(formData.get(name) ?? "");
   for (const day of days) {
-    const closed = formData.get(`hours.${day}.closed`) === "on";
-    const open = String(formData.get(`hours.${day}.open`) ?? "").trim();
-    const close = String(formData.get(`hours.${day}.close`) ?? "").trim();
-    out[day] = closed || !/^\d{2}:\d{2}$/.test(open) || !/^\d{2}:\d{2}$/.test(close) ? null : [{ open, close }];
+    if (formData.get(`hours.${day}.closed`) === "on") {
+      out[day] = null;
+      continue;
+    }
+    const intervals = normalizeIntervals([
+      { open: field(`hours.${day}.open`), close: field(`hours.${day}.close`) },
+      { open: field(`hours.${day}.1.open`), close: field(`hours.${day}.1.close`) },
+    ]);
+    out[day] = intervals.length > 0 ? intervals : null;
   }
   return out;
 }

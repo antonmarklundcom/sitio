@@ -184,9 +184,23 @@ await cust.fill('input[name="service.0.name"]', 'Pan casero');
 await cust.fill('input[name="service.1.name"]', 'Tortas por encargo');
 await cust.fill('input[name=whatsappPhone]', '0985 334 221');
 await cust.fill('input[name=city]', 'Luque');
+// Siesta (R3-19): måndagen delas i två pass. Mañana kortas till 12:00 av
+// knappen, tarde får 15:00–19:00 som förval.
+await cust.getByRole('button', { name: 'Corta al mediodía' }).first().click();
+ok('delat pass: mañana kortas till 12:00', (await cust.locator('input[name="hours.mon.close"]').inputValue()) === '12:00');
 await cust.getByRole('button', { name: /Guardar y seguir/ }).click();
 await cust.waitForTimeout(2500);
 ok('steg 1 sparat', cust.url().includes('paso=fotos'));
+
+await cust.goto(B + '/alta/' + token, { waitUntil: 'domcontentloaded' });
+await cust.waitForTimeout(800);
+ok(
+  'delat pass sparat och visas igen',
+  (await cust.locator('input[name="hours.mon.close"]').inputValue()) === '12:00' &&
+    (await cust.locator('input[name="hours.mon.1.open"]').inputValue().catch(() => '')) === '15:00' &&
+    (await cust.locator('input[name="hours.mon.1.close"]').inputValue().catch(() => '')) === '19:00',
+);
+await cust.goto(B + '/alta/' + token + '?paso=fotos', { waitUntil: 'domcontentloaded' });
 
 await cust.waitForLoadState('networkidle');
 await cust.waitForTimeout(1200);
