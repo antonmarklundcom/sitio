@@ -566,9 +566,9 @@ closed them.
 
 - PR-17 WhatsApp Cloud API (needs Meta verification, D6). **Blocked on Anton.**
 - PR-18 Extra pages module (`pages` table already exists, no migration).
-- ~~PR-19a Self-service signup~~ — done, R3-9 (#46). PR-19b self-reported
+- ~~PR-19a Self-service signup~~ — done, R3-9 (#46). ~~PR-19b self-reported
   payments (owner reports method + reference + receipt ⇒ payment `reported`,
-  admin confirms) is still open.
+  admin confirms)~~ — done, R3-21 (#62).
 - PR-20 Renewal automation (reminders via Cloud API templates — blocked on
   PR-17) and "tu año en cifras" (the yearly report page is separable).
 - PR-21 R2 migration (only if the uploads-persistence test fails — Anton's

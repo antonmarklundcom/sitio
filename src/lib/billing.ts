@@ -182,3 +182,32 @@ export const paymentFormSchema = z.object({
 
 export type SubscriptionFormValues = z.infer<typeof subscriptionFormSchema>;
 export type PaymentFormValues = z.infer<typeof paymentFormSchema>;
+
+// ---------- kundens egen betalningsrapport (R3-21, PR-19b) ----------
+
+/**
+ * Perioden en betalning som kunden själv rapporterar gäller. Kunden väljer
+ * den inte — en förnyelse börjar där nuvarande period slutar, så att den som
+ * betalar i förväg inte tappar dagar. En prov- eller sedan länge utgången
+ * prenumeration börjar i stället idag: ingen ska betala för dagar som redan
+ * gått utan sajt. Alltid ett år. Superadmin ser perioden innan hen bekräftar.
+ */
+export function ownerReportPeriod(
+  subscription: { status: SubscriptionStatus; expiresAt: Date | string },
+  today: Date | string = new Date(),
+): { periodStart: string; periodEnd: string } {
+  const startFromToday = subscription.status === "trial" || daysUntil(subscription.expiresAt, today) < 0;
+  const start = startFromToday ? parseDay(today) : parseDay(subscription.expiresAt);
+  return { periodStart: toDayString(start), periodEnd: toDayString(addYear(start)) };
+}
+
+/** Kundens formulär: metod, referens och belopp. Spanska (voseo) — kundens yta. */
+export const ownerPaymentReportSchema = z.object({
+  amountGs: z.coerce
+    .number({ message: "Poné el monto en guaraníes." })
+    .int("Los guaraníes no tienen decimales.")
+    .min(1, "Poné el monto que pagaste.")
+    .max(1_000_000_000, "El monto parece estar mal."),
+  method: z.enum(PAYMENT_METHODS, { message: "Elegí cómo pagaste." }),
+  reference: z.string().trim().max(120, "El número de operación es muy largo.").optional().or(z.literal("")),
+});

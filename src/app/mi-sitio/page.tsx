@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { media } from "@/db/schema";
+import { media, payments } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { getBusinessAnalytics } from "@/db/analytics-queries";
 import { assertBusinessAccess, requireRole } from "@/lib/auth";
@@ -34,6 +34,10 @@ import {
 } from "./product-actions";
 import { OwnerEditForm, OwnerPhotos } from "@/components/mi-sitio/owner-forms";
 import { OwnerStats } from "@/components/mi-sitio/owner-stats";
+import { OwnerPlan } from "@/components/mi-sitio/owner-plan";
+import { getCurrentSubscription } from "@/db/billing-queries";
+import { PLAN_LABELS, toDayString } from "@/lib/billing";
+import { reportPaymentAction } from "./payment-actions";
 import {
   ownerDeletePhotoAction,
   ownerMoveMediaAction,
@@ -98,6 +102,15 @@ export default async function MiSitioPage({
   // Menyn och produkterna läses först när modulen är på: en avstängd modul
   // ska inte kosta en extra fråga per sidladdning, och datat ligger kvar
   // tills den slås på igen.
+  // Planen och en eventuell väntande betalningsrapport (R3-21).
+  const [subscription, [pendingPayment]] = await Promise.all([
+    getCurrentSubscription(businessId),
+    db
+      .select({ createdAt: payments.createdAt })
+      .from(payments)
+      .where(and(eq(payments.businessId, businessId), eq(payments.status, "reported")))
+      .limit(1),
+  ]);
   const menu = modules.has("menu") ? await getMenu(businessId) : [];
   const products = modules.has("products") ? await getProducts(businessId) : [];
   const socials = business.socialsJson ?? {};
@@ -127,6 +140,18 @@ export default async function MiSitioPage({
       </p>
 
       <OwnerStats analytics={analytics} />
+
+      {subscription ? (
+        <OwnerPlan
+          planLabel={PLAN_LABELS[subscription.plan]}
+          status={subscription.status}
+          expiresAt={toDayString(subscription.expiresAt)}
+          priceGs={subscription.priceGs}
+          pendingSince={pendingPayment ? toDayString(pendingPayment.createdAt) : null}
+          readOnly={session.role !== "owner"}
+          reportPayment={reportPaymentAction}
+        />
+      ) : null}
 
       <OwnerPhotos
         photos={photos}
