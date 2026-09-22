@@ -2,138 +2,189 @@
  * Palettvarianter per tema. Varje variant är en färdig token-uppsättning —
  * ingen färg härleds i runtime.
  *
- * Registret (docs/PALETTE-REGISTRY.md) håller hue-vinklar och kontrastvärden.
- * Regeln "minst 40° mellan accenter" gäller inom ett tema. Varje tema har
- * två varianter; tema och variant härleds från verksamhetens kategori via
- * presentationFor (src/lib/presentation.ts).
+ * Registret (docs/PALETTE-REGISTRY.md) håller hue-vinklar och uppmätta
+ * kontrastvärden. Regeln "minst 40° mellan accenter" gäller inom ett tema.
+ * Varje tema har två varianter; tema och variant härleds från verksamhetens
+ * kategori via presentationFor (src/lib/presentation.ts).
+ *
+ * ── Varför accenten är tre tokens och inte en (ändring mot v1) ───────────
+ * Alla fyra teman är numera ljusdominanta. En enda accent-token tvingade
+ * fram ett omöjligt val: färgen skulle både bära vit/svart text som fyllning
+ * OCH klara 4,5:1 som liten text mot en ljus bas. En signalorange klarar det
+ * första men aldrig det andra, så v1 fick en brun-dämpad "orange" som inte
+ * läste som orange. Nu:
+ *
+ *   accent       fyllningar (knappar, chips, linjer). Bär `onAccent` som text.
+ *   accentInk    accentfärgad TEXT på ljus botten (länkar, eyebrow, siffror).
+ *   accentLight  accent på det mörka avslutsbandet (`deep`).
+ *
+ * `deep` är temats mörka ton — hero utan foto och avslutsbandet. Den är
+ * tonad per tema i stället för svart, så att det mörka bandet hör hemma i
+ * paletten i stället för att läsa som ett hål i sidan.
  */
 export type Palette = {
-  /** HSL-hue för accenten, i registret. */
+  /** HSL-hue för `accent`, i registret. */
   hue: number;
   base: string;
   surface: string;
   surfaceRaised: string;
+  /** Temats mörka ton: monogram-hero och avslutsbandet. */
+  deep: string;
   ink: string;
   inkMuted: string;
+  /** Fyllningsfärg. Bär `onAccent` som text. */
   accent: string;
-  /** Textfärg som ligger PÅ accenten. */
+  /** Accent som TEXT på ljus botten (≥4,5:1 mot base/surface/surfaceRaised). */
+  accentInk: string;
+  /** Accent på `deep` (≥4,5:1 mot deep). */
+  accentLight: string;
+  /** Textfärg som ligger PÅ accent. */
   onAccent: string;
   hairline: string;
 };
 
 export type ThemePalettes = [Palette, Palette];
 
-/** INDUSTRIAL: mörkdominant, hård kant, hög krominans i accenten. */
+/**
+ * TALLER — ljus stålgrå bas, hårda kanter, signalfärg. Verkstäder och
+ * tekniska tjänster: bilden är oftast en maskin eller ett arbete i halvdager,
+ * och en sval neutral låter den vara den enda färgen i rummet.
+ */
 const servicios: ThemePalettes = [
   {
-    hue: 29,
-    base: "#12100D",
-    surface: "#1B1815",
-    surfaceRaised: "#241F1A",
-    ink: "#F4EFE8",
-    inkMuted: "#A79E92",
-    accent: "#FF8A1F",
-    onAccent: "#12100D",
-    hairline: "rgba(244,239,232,0.12)",
+    hue: 35,
+    base: "#F1F2F3",
+    surface: "#E4E6E8",
+    surfaceRaised: "#FFFFFF",
+    deep: "#161A1E",
+    ink: "#15181B",
+    inkMuted: "#4E575F",
+    accent: "#BE7103",
+    accentInk: "#8A5303",
+    accentLight: "#EFB55C",
+    onAccent: "#1B1304",
+    hairline: "rgba(21,24,27,0.14)",
   },
   {
-    hue: 186,
-    base: "#0B1214",
-    surface: "#131E21",
-    surfaceRaised: "#19282C",
-    ink: "#E9F2F4",
-    inkMuted: "#94A6AA",
-    accent: "#2ACADC",
-    onAccent: "#0B1214",
-    hairline: "rgba(233,242,244,0.12)",
+    hue: 221,
+    base: "#F1F2F3",
+    surface: "#E4E6E8",
+    surfaceRaised: "#FFFFFF",
+    deep: "#161A1E",
+    ink: "#15181B",
+    inkMuted: "#4E575F",
+    accent: "#1D4FB8",
+    accentInk: "#1D4FB8",
+    accentLight: "#96B6F2",
+    onAccent: "#F2F6FF",
+    hairline: "rgba(21,24,27,0.14)",
   },
 ];
 
 /**
- * WARM CRAFT: ljus-varm, texturerad, generös luft. Basen är kräm/varmvit och
- * bär grain i låg opacitet; accenten är mättad men mörk nog att bära text.
+ * COCINA — krämvit, varm, texturerad. Maten är röd, brun och gul; basen är
+ * det enda som kan vara lugnt, annars slåss sidan med tallriken.
  */
 const gastronomia: ThemePalettes = [
   {
-    hue: 11,
-    base: "#FBF5EE",
-    surface: "#F3E9DC",
+    hue: 12,
+    base: "#FBF6EC",
+    surface: "#F3E9D8",
     surfaceRaised: "#FFFFFF",
-    ink: "#241A14",
-    inkMuted: "#6B5A4C",
-    accent: "#B23A20",
-    onAccent: "#FFF7F2",
-    hairline: "rgba(36,26,20,0.14)",
+    deep: "#2A1B11",
+    ink: "#231A12",
+    inkMuted: "#6B5844",
+    accent: "#B5391B",
+    accentInk: "#93331A",
+    accentLight: "#EDA083",
+    onAccent: "#FFF4EE",
+    hairline: "rgba(35,26,18,0.15)",
   },
   {
-    hue: 52,
-    base: "#FAF7EC",
-    surface: "#F0EBD7",
-    surfaceRaised: "#FFFDF6",
-    ink: "#1F2016",
-    inkMuted: "#5F6152",
-    accent: "#7A6B10",
-    onAccent: "#FFFDF0",
-    hairline: "rgba(31,32,22,0.14)",
+    hue: 67,
+    base: "#FBF6EC",
+    surface: "#F3E9D8",
+    surfaceRaised: "#FFFFFF",
+    deep: "#22220F",
+    ink: "#231A12",
+    inkMuted: "#6B5844",
+    accent: "#6B7714",
+    accentInk: "#55600F",
+    accentLight: "#C3CE72",
+    onAccent: "#FAFCEE",
+    hairline: "rgba(35,26,18,0.15)",
   },
 ];
 
 /**
- * EDITORIAL: ljusdominant, platta ytor och hårstrecksramar, en accent.
- * Nästan neutral bas — kundens produktbilder ska bära färgen, inte temat.
+ * MERCADO — pappersvitt, nästan neutralt, en stark accent. Kundens
+ * produktbilder ska bära färgen; temat håller sig ur vägen och ger i stället
+ * ordning: raka linjer, tydliga priser, snabb skanning.
  */
 const comercio: ThemePalettes = [
   {
-    hue: 212,
-    base: "#F7F8FA",
-    surface: "#EDF0F5",
+    hue: 344,
+    base: "#F6F7F8",
+    surface: "#EAECEF",
     surfaceRaised: "#FFFFFF",
-    ink: "#14181D",
-    inkMuted: "#56616F",
-    accent: "#0E4E96",
-    onAccent: "#F4F8FF",
-    hairline: "rgba(20,24,29,0.13)",
+    deep: "#14171B",
+    ink: "#15181C",
+    inkMuted: "#525C66",
+    accent: "#C21744",
+    accentInk: "#A8123C",
+    accentLight: "#F291AC",
+    onAccent: "#FFF2F5",
+    hairline: "rgba(21,24,28,0.13)",
   },
   {
-    hue: 163,
-    base: "#F5F9F7",
-    surface: "#E8F1EC",
+    hue: 143,
+    base: "#F6F7F8",
+    surface: "#EAECEF",
     surfaceRaised: "#FFFFFF",
-    ink: "#101A16",
-    inkMuted: "#4C6058",
-    accent: "#0A6E52",
-    onAccent: "#F2FBF7",
-    hairline: "rgba(16,26,22,0.13)",
+    deep: "#14171B",
+    ink: "#15181C",
+    inkMuted: "#525C66",
+    accent: "#1C6B3A",
+    accentInk: "#186032",
+    accentLight: "#79CD9B",
+    onAccent: "#F1FAF4",
+    hairline: "rgba(21,24,28,0.13)",
   },
 ];
 
 /**
- * CALM: ljusdominant, sval-neutral bas med en svag blågrön ton, en djup
- * accent som bara lever på CTA/status/länkar. v1 (teal) är låst till `salud`,
- * v2 (rose) till `belleza` (plan §1.11).
+ * CALMA — blekt blågrön bas, mjuka former, mycket luft. Vård och skönhet
+ * säljer lugn; v1 (petroleum) är låst till `salud`, v2 (orkidé) till
+ * `belleza` (plan §1.11).
  */
 const salud: ThemePalettes = [
   {
-    hue: 174,
-    base: "#F3F8F7",
-    surface: "#E6F0EE",
+    hue: 187,
+    base: "#F2F7F7",
+    surface: "#E3EFEF",
     surfaceRaised: "#FFFFFF",
-    ink: "#0E211D",
-    inkMuted: "#4E6864",
-    accent: "#0B6B62",
-    onAccent: "#F1FBF9",
-    hairline: "rgba(14,33,29,0.13)",
+    deep: "#0A2725",
+    ink: "#10211F",
+    inkMuted: "#4C6462",
+    accent: "#0B6470",
+    accentInk: "#0B6470",
+    accentLight: "#7CCCD7",
+    onAccent: "#F0FBFC",
+    hairline: "rgba(16,33,31,0.13)",
   },
   {
-    hue: 329,
-    base: "#F8F4F6",
-    surface: "#F1E5EA",
+    hue: 311,
+    base: "#F8F4F7",
+    surface: "#F0E6ED",
     surfaceRaised: "#FFFFFF",
-    ink: "#251620",
-    inkMuted: "#6B5560",
-    accent: "#93275F",
-    onAccent: "#FFF1F7",
-    hairline: "rgba(37,22,32,0.13)",
+    deep: "#241220",
+    ink: "#221520",
+    inkMuted: "#665264",
+    accent: "#9A2C86",
+    accentInk: "#872676",
+    accentLight: "#E19BD6",
+    onAccent: "#FFF1FB",
+    hairline: "rgba(34,21,32,0.13)",
   },
 ];
 
@@ -161,9 +212,12 @@ export function paletteToCssVars(p: Palette): Record<string, string> {
     "--base": p.base,
     "--surface": p.surface,
     "--surface-raised": p.surfaceRaised,
+    "--deep": p.deep,
     "--ink": p.ink,
     "--ink-muted": p.inkMuted,
     "--accent": p.accent,
+    "--accent-ink": p.accentInk,
+    "--accent-light": p.accentLight,
     "--on-accent": p.onAccent,
     "--hairline": p.hairline,
   };

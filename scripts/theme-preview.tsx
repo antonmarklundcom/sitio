@@ -4,7 +4,8 @@
  * kan köras utan databas och utan deploy. Bilderna är genererade platshållare
  * — inga riktiga foton, inga fabricerade omdömen.
  *
- * Kör: npm run theme:preview   ⇒ .preview/<tema>-v<variant>.html + index.html
+ * Kör: npm run theme:preview   ⇒ .preview/<tema>-v<variant>.html,
+ * .preview/<tema>-v1-vacio.html (tomt läge) och index.html
  * Skärmdumpar: npm run theme:shots (kräver .preview/, se scripts/theme-shots.ts)
  */
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -316,6 +317,30 @@ const DEMO_PRODUCTS = [
   { id: 3, name: "Estantería modular de tres cuerpos", description: "Se arma en el local, sin herramientas.", priceGs: 980000, isVisible: true, sortOrder: 2 },
 ];
 
+/**
+ * Det tomma läget. Allt som kan saknas saknas: en ny kund har oftast bara
+ * namn, stad och WhatsApp-nummer den första veckan, och det är exakt det
+ * läget som får en sajt att se trasig ut om temat inte är byggt för det.
+ */
+function emptyBusiness(base: Business): Business {
+  return {
+    ...base,
+    name: "Su",
+    seoTitle: null,
+    description: null,
+    servicesJson: [],
+    hoursJson: null,
+    address: null,
+    zone: null,
+    mapsUrl: null,
+    secondaryPhone: null,
+    ruc: null,
+    socialsJson: null,
+    logoMediaId: null,
+    heroMediaId: null,
+  } as unknown as Business;
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const written: string[] = [];
@@ -336,27 +361,51 @@ async function main() {
       sortOrder: i,
     }));
 
-    for (const variant of [1, 2]) {
+    type Page = { suffix: string; variant: number; props: ThemeProps };
+    const pages: Page[] = [1, 2].map((variant) => ({
+      suffix: `v${variant}`,
+      variant,
+      props: {
+        business: { ...demo.business, paletteVariant: variant },
+        photos,
+        logo: null,
+        hero: photos[0],
+        // Demodatat kör med modulerna PÅ: QA-gaten ska se sektionerna som
+        // en betalande kund ser dem, annars granskas ett utseende som ingen
+        // kund har.
+        modules: new Set<string>(["gallery", "menu", "products"]),
+        menu: DEMO_MENU,
+        products: DEMO_PRODUCTS,
+      },
+    }));
+
+    // Tomt läge: det vanligaste läget vecka ett. Inga foton, ingen logga,
+    // inga tjänster, inga moduler, ingen beskrivning, inga öppettider, ingen
+    // adress — och det kortaste namn en kund rimligen har. Granskas per tema
+    // (variant 1 räcker; tomheten är strukturell, inte färgberoende).
+    pages.push({
+      suffix: "v1-vacio",
+      variant: 1,
+      props: {
+        business: emptyBusiness(demo.business),
+        photos: [],
+        logo: null,
+        hero: null,
+        modules: new Set<string>(),
+        menu: [],
+        products: [],
+      },
+    });
+
+    for (const page of pages) {
+      const { suffix, variant } = page;
       const palette = paletteFor(demo.themeKey, variant);
       const vars = Object.entries(paletteToCssVars(palette))
         .map(([k, v]) => `${k}:${v}`)
         .join(";");
 
       const Theme = demo.Theme;
-      const body = renderToStaticMarkup(
-        <Theme
-          business={{ ...demo.business, paletteVariant: variant }}
-          photos={photos}
-          logo={null}
-          hero={photos[0]}
-          // Demodatat kör med modulerna PÅ: QA-gaten ska se sektionerna som
-          // en betalande kund ser dem, annars granskas ett utseende som ingen
-          // kund har.
-          modules={new Set<string>(["gallery", "menu", "products"])}
-          menu={DEMO_MENU}
-          products={DEMO_PRODUCTS}
-        />,
-      );
+      const body = renderToStaticMarkup(<Theme {...page.props} />);
 
       const html = `<!doctype html>
 <html lang="es-PY">
@@ -364,14 +413,14 @@ async function main() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>QA — ${demo.themeKey} v${variant}</title>
+<title>QA — ${demo.themeKey} ${suffix}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0}
-:root{--font-display:'Bricolage Grotesque',system-ui,sans-serif;--font-text:'Inter Tight',system-ui,sans-serif}
+:root{--font-display:'Archivo',system-ui,sans-serif;--font-text:'Instrument Sans',system-ui,sans-serif}
 ${css(demo.cssFile)}
 </style>
 </head>
@@ -381,9 +430,9 @@ ${css(demo.cssFile)}
 </body>
 </html>`;
 
-      const file = path.join(OUT_DIR, `${demo.themeKey}-v${variant}.html`);
+      const file = path.join(OUT_DIR, `${demo.themeKey}-${suffix}.html`);
       await writeFile(file, html, "utf8");
-      written.push(`${demo.themeKey}-v${variant}.html`);
+      written.push(`${demo.themeKey}-${suffix}.html`);
       console.log(`✓ ${file}  (accent ${palette.accent}, hue ${palette.hue}°)`);
     }
   }

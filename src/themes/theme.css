@@ -1,148 +1,181 @@
 /*
- * Design-floor för kundsajterna. Bygger på web-design-system-skillens
- * tokens.css. Färgerna sätts per sajt via inline-variabler på .site-root
- * (se palettes.ts) — den här filen innehåller ingen färg, bara struktur,
- * skala, material och rörelse.
+ * Design-floor för kundsajterna ("Placa", v2). Färgerna sätts per sajt via
+ * inline-variabler på .site-root (se palettes.ts) — den här filen innehåller
+ * ingen hårdkodad palettfärg, bara struktur, skala, material och rörelse.
  *
  * Scopat till .site-root så att adminets tokens och kundsajternas aldrig
  * blandas. Kundsajten ska upplevas som en fristående sajt.
+ *
+ * Alla fyra teman är ljusdominanta och delar EXAKT samma sektionsvokabulär
+ * (hero → tjänster → moduler → foton → var/när → avslut). Ett tema skiljer
+ * sig genom färg, radie, textur, fotobehandling och i vilken ORDNING blocken
+ * ligger — aldrig genom en egen sidstruktur. Därför finns nästan all layout
+ * här, och temafilerna innehåller bara sina egna skruvar.
+ *
+ * `.t-light` från v1 är borttagen: när varje tema är ljust bar klassen ingen
+ * information. Ljusa skuggvärden är default här i stället, och det mörka
+ * avslutsbandet har egna tokens (--deep / --on-deep).
  */
 
 .site-root {
-  /* typskala, ratio 1.30, bas 17px */
-  --t--1: 0.812rem;
+  /* ---- typskala, ratio 1.25, bas 17 px ---- */
+  --t--2: 0.6875rem;
+  --t--1: 0.8125rem;
   --t-0: 1.0625rem;
-  --t-1: 1.383rem;
-  --t-2: 1.797rem;
-  --t-3: 2.336rem;
-  --t-4: 3.037rem;
-  --t-5: 3.948rem;
-  --t-6: 5.133rem;
-  --measure: 65ch;
+  --t-1: 1.3125rem;
+  --t-2: 1.625rem;
+  --t-3: 2.0625rem;
+  --t-4: 2.5625rem;
+  --t-5: 3.1875rem;
+  --t-6: 4rem;
+  --measure: 60ch;
 
+  /* ---- rumsskala, 4 px-steg ---- */
   --s-1: 0.25rem;
   --s-2: 0.5rem;
   --s-3: 0.75rem;
   --s-4: 1rem;
+  --s-5: 1.25rem;
   --s-6: 1.5rem;
   --s-8: 2rem;
+  --s-10: 2.5rem;
   --s-12: 3rem;
   --s-16: 4rem;
   --s-24: 6rem;
   --s-32: 8rem;
 
-  --r-sm: 6px;
-  --r-md: 14px;
-  --r-lg: 28px;
+  /* ---- form. Varje tema skriver över de tre. ---- */
+  --r-sm: 8px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
 
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.28), 0 4px 12px rgb(0 0 0 / 0.34);
-  --shadow-2: 0 2px 4px rgb(0 0 0 / 0.32), 0 16px 40px rgb(0 0 0 / 0.46);
+  /* ---- material. Ljusstämda: mörka skuggvärden läser som smuts på ljus bas. ---- */
+  --shadow-1: 0 1px 2px rgb(20 18 14 / 0.06), 0 3px 10px rgb(20 18 14 / 0.07);
+  --shadow-2: 0 2px 6px rgb(20 18 14 / 0.08), 0 18px 44px rgb(20 18 14 / 0.14);
+  --ring: inset 0 0 0 1px var(--hairline);
 
+  /* ---- rörelse ---- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
-  --dur-fast: 180ms;
+  --dur-fast: 160ms;
   --dur: 280ms;
 
-  --container: 1200px;
-  --gutter: clamp(1rem, 5vw, 3rem);
+  /* ---- layout ---- */
+  --container: 1120px;
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+  --dock-h: 58px;
+
+  /* ---- bildbehandling. Kundens foton är telefonfoton; en gemensam,
+         återhållsam behandling per tema gör en medioker bild konsekvent
+         i stället för slumpmässig. Varje tema sätter sin egen. ---- */
+  --photo-filter: none;
+
+  /* Härledda toner. color-mix i stället för fler palett-tokens: de här
+     behöver aldrig handplockas, de ska bara ligga rätt mot sin botten. */
+  --wash: color-mix(in srgb, var(--accent) 10%, var(--base));
+  --wash-strong: color-mix(in srgb, var(--accent) 18%, var(--base));
+  --on-deep: var(--base);
+  --on-deep-muted: color-mix(in srgb, var(--base) 70%, var(--deep));
+  --deep-hairline: color-mix(in srgb, var(--base) 22%, transparent);
 
   background: var(--base);
   color: var(--ink);
   font-family: var(--font-text, system-ui, -apple-system, "Segoe UI", sans-serif);
   font-size: var(--t-0);
-  line-height: 1.65;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* ---------- typografi ---------- */
 
 .site-root h1,
 .site-root h2,
 .site-root h3 {
   font-family: var(--font-display, var(--font-text));
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  line-height: 1.02;
-  margin: 0 0 var(--s-6);
+  font-weight: 700;
+  letter-spacing: -0.028em;
+  /* 1.08 och inte tightare: spanska rubriker bär tilde och accenter på varje
+     rad (Ñ, á, ó), och vid 1.04 krockade Ñ:ets tilde med raden ovanför. */
+  line-height: 1.08;
+  margin: 0 0 var(--s-4);
   text-wrap: balance;
+  overflow-wrap: break-word;
 }
-.site-root h1 { font-size: clamp(var(--t-4), 6vw, var(--t-6)); }
-.site-root h2 { font-size: clamp(var(--t-3), 4.5vw, var(--t-5)); }
-.site-root h3 { font-size: var(--t-2); line-height: 1.15; margin-bottom: var(--s-3); }
+.site-root h1 { font-size: clamp(var(--t-3), 8.5vw, var(--t-5)); }
+.site-root h2 { font-size: clamp(var(--t-2), 6vw, var(--t-4)); }
+.site-root h3 { font-size: var(--t-1); line-height: 1.2; letter-spacing: -0.015em; margin-bottom: var(--s-2); }
 .site-root p { max-width: var(--measure); color: var(--ink-muted); margin: 0 0 var(--s-4); }
+.site-root p:last-child { margin-bottom: 0; }
+.site-root strong { color: var(--ink); font-weight: 600; }
 
 .site-root .eyebrow {
   font-size: var(--t--1);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 600;
-  margin: 0 0 var(--s-4);
+  margin: 0 0 var(--s-3);
   display: block;
 }
+.site-root .lede {
+  font-size: var(--t-1);
+  line-height: 1.45;
+  color: var(--ink);
+  letter-spacing: -0.008em;
+}
 
+/* Avslutsradens stora rad. 11vw-golvet är medvetet: statementet är alltid
+   sidans längsta ord-rad, och en clamp med rem-golv sprängde 360 px i v1. */
 .site-root .statement {
   font-family: var(--font-display, var(--font-text));
-  /* 9vw gjorde att clamp-golvet (--t-5) vann under 700 px och rubriken sköt
-     ut ur skärmen på 360 — statementet är alltid den längsta raden på sidan. */
-  font-size: clamp(2.75rem, 12vw, var(--t-6));
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  margin: 0;
+  font-weight: 700;
+  font-size: clamp(2.125rem, 11vw, var(--t-6));
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  color: var(--on-deep);
+  max-width: 18ch;
+  margin: 0 0 var(--s-8);
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
+
+/* ---------- layout ---------- */
 
 .site-root .wrap {
   max-width: var(--container);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
-.site-root section { padding-block: clamp(var(--s-16), 9vw, var(--s-32)); position: relative; }
+/* Modulsektionerna (SiteMenu, SiteProducts) är delade primitiv och bär sina
+   egna klassnamn, inte .block — de måste med i rytmen, annars ligger de
+   dikt an mot blocket ovanför. */
+.site-root .block,
+.site-root .site-menu,
+.site-root .site-products { padding-block: clamp(var(--s-12), 8vw, var(--s-24)); position: relative; }
 .site-root img { max-width: 100%; height: auto; display: block; }
+.site-root ul, .site-root ol { list-style: none; margin: 0; padding: 0; }
 
-/* grain — på varje mörk sektion. På `servicios` är hela sajten mörk, så
-   klassen ligger på roten; på ljusa teman bara på de mörka banden. */
+/* Ett grid- eller flexbarn har min-width:auto som default; en horisontell
+   rail i en sådan kolumn tvingar hela sidan bredare i stället för att
+   scrolla i sig själv. Det var en av buggarna QA-gaten fångade i PR-07. */
+.site-root .grid > *,
+.site-root .info-grid > * { min-width: 0; }
+
+/* ---------- textur ---------- */
+
 .site-root .grain::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.055;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/*
- * Ljusa teman (WARM CRAFT, EDITORIAL) bär `.t-light` på roten. Mörka temans
- * skuggvärden läser som smuts på kräm, och grain i 5,5 % blir synligt brus på
- * en ljus yta — därför tonas båda ner här i stället för i varje temafil.
- */
-.site-root.t-light {
-  --shadow-1: 0 1px 2px rgb(28 20 14 / 0.06), 0 4px 12px rgb(28 20 14 / 0.08);
-  --shadow-2: 0 2px 4px rgb(28 20 14 / 0.07), 0 18px 44px rgb(28 20 14 / 0.14);
-}
-.site-root.t-light .grain::after { opacity: 0.03; }
+/* ---------- knappar ---------- */
 
-/* Mörkt band i ett ljust tema: ink blir yta, base blir text. */
-.site-root .band-dark { position: relative; background: var(--ink); color: var(--base); }
-.site-root .band-dark .grain::after,
-.site-root .band-dark.grain::after { opacity: 0.07; }
-.site-root .band-dark strong { color: var(--base); }
-.site-root .band-dark a { color: var(--base); }
-
-/* scrim — all text över bild */
-.site-root .scrim::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgb(0 0 0 / 0.25) 0%, rgb(0 0 0 / 0.6) 60%, rgb(0 0 0 / 0.85) 100%);
-}
-
-/* kortvarianter */
-.site-root .card { padding: var(--s-8); border-radius: var(--r-md); }
-.site-root .card--hair { border: 1px solid var(--hairline); }
-.site-root .card--raised { background: var(--surface-raised); box-shadow: var(--shadow-2); border-radius: var(--r-lg); }
-.site-root .card--ink { background: var(--accent); color: var(--on-accent); }
-.site-root .card--ink p { color: color-mix(in srgb, var(--on-accent) 78%, transparent); }
-.site-root .card--accent { background: var(--surface); border: 1px solid var(--hairline); border-top: 3px solid var(--accent); }
-
-/* knappar */
 .site-root .btn {
   display: inline-flex;
   align-items: center;
@@ -152,42 +185,397 @@
   padding: 0 var(--s-6);
   border-radius: var(--r-sm);
   font-weight: 600;
+  font-size: var(--t-0);
+  letter-spacing: -0.005em;
   text-decoration: none;
   border: 0;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-io), box-shadow var(--dur-fast) var(--ease-io);
+  text-align: center;
+  transition: transform var(--dur-fast) var(--ease-io), box-shadow var(--dur-fast) var(--ease-io),
+    background-color var(--dur-fast) var(--ease-io);
 }
-.site-root .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.site-root .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.site-root .btn--block { width: 100%; }
 .site-root .btn--primary { background: var(--accent); color: var(--on-accent); }
-.site-root .btn--ghost { background: transparent; color: var(--ink); border: 1px solid var(--hairline); }
-/* WhatsApp-grönt lever ENDAST i knappens glyf — aldrig som yta */
-.site-root .btn--wa { background: var(--ink); color: var(--base); }
+.site-root .btn--quiet {
+  background: transparent;
+  color: var(--accent-ink);
+  border: 1px solid var(--hairline);
+  min-height: 48px;
+}
+.site-root .btn--quiet:hover { background: var(--wash); }
+
+/* WhatsApp-grönt lever ENDAST i knappens glyf — aldrig som yta. Ytan är
+   temats mörkaste ton, så CTA:n är sidans tyngsta element överallt där den
+   dyker upp, utan att låna en annan produkts varumärkesfärg. */
+.site-root .btn--wa { background: var(--deep); color: var(--on-deep); min-height: 56px; }
+.site-root .btn--wa:hover { filter: brightness(1.22); }
 .site-root .btn--wa svg { fill: #25d366; flex: none; }
 
-/* sticky WhatsApp-CTA, mobil */
-.site-root .wa-dock {
-  position: fixed;
-  inset-inline: var(--s-4);
-  bottom: var(--s-4);
-  z-index: 40;
-  box-shadow: var(--shadow-2);
-}
-@media (min-width: 1024px) {
-  .site-root .wa-dock { inset-inline: auto; right: var(--s-8); bottom: var(--s-8); }
+/* Länkar i löptext */
+.site-root .link {
+  color: var(--accent-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 
+/* ---------- status, chips, plattan ---------- */
+
+.site-root .status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t--1);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-4);
+  margin: 0;
+  max-width: none;
+}
+.site-root .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-muted); flex: none; }
+/* Grön statusprick, men INTE #25D366 — WhatsApp-grönt får bara leva i
+   knappens glyf (web-design-system, Step 1). */
+.site-root .dot--open { background: #1a8f4a; }
+
+.site-root .chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.site-root .chip {
+  font-size: var(--t--2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-muted);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  padding: 6px var(--s-3);
+  white-space: nowrap;
+}
+
+/* Plattan: temats enda upphöjda yta. Den dyker upp exakt två gånger per
+   sajt — över hero-bilden och över avslutsbandet — och är det som gör
+   familjen igenkännbar över alla fyra teman. */
+.site-root .plate {
+  background: var(--surface-raised);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--s-6);
+  position: relative;
+}
+@media (min-width: 768px) { .site-root .plate { padding: var(--s-8); } }
+
+/* ---------- 01 HERO ---------- */
+
+.site-root .hero { position: relative; }
+
+.site-root .hero-media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  max-height: 44svh;
+  overflow: hidden;
+  background: var(--deep);
+}
+.site-root .hero-media > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: var(--photo-filter);
+}
+/* Utan foto blir mediaytan kortare — annars skrollar besökaren förbi en
+   halv skärm dekoration för att komma till knappen. */
+/* px-raden före clamp() är inte överflödig: utan `svh` (Android Chrome < 108,
+   som fortfarande finns i Paraguay) är hela clamp() ogiltig, och eftersom
+   monogrammet är absolut positionerat skulle ytan kollapsa till 0 px. */
+.site-root .hero--mono .hero-media {
+  aspect-ratio: auto;
+  max-height: none;
+  height: 220px;
+  height: clamp(180px, 30svh, 260px);
+}
+
+/* Monogram: en sajt utan foto ska se avsiktlig ut, inte tom. Initialerna
+   sätts i display-snittet mot temats mörka ton, med temats textur ovanpå. */
+.site-root .hero-mono {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--deep);
+  overflow: hidden;
+}
+.site-root .hero-mono span {
+  font-family: var(--font-display, var(--font-text));
+  font-weight: 700;
+  font-size: clamp(5rem, 26vw, 11rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--accent-light);
+  opacity: 0.9;
+  user-select: none;
+}
+.site-root .hero-texture { position: absolute; inset: 0; pointer-events: none; }
+
+/* Scrim: all text över bild. Toppen bär namnraden, botten möter plattan. */
+.site-root .hero-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0.12) 26%, rgb(0 0 0 / 0) 46%),
+    linear-gradient(0deg, rgb(0 0 0 / 0.45) 0%, rgb(0 0 0 / 0) 34%);
+}
+.site-root .hero--mono .hero-veil { background: linear-gradient(180deg, rgb(0 0 0 / 0.42) 0%, rgb(0 0 0 / 0) 55%); }
+
+.site-root .hero-bar {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding-block: var(--s-4);
+  color: #fff;
+}
+.site-root .hero-mark {
+  font-family: var(--font-display, var(--font-text));
+  font-weight: 700;
+  font-size: var(--t-0);
+  letter-spacing: -0.01em;
+  color: #fff;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-root .site-logo { max-height: 40px; width: auto; border-radius: var(--r-sm); flex: none; }
+.site-root .hero-call {
+  margin-inline-start: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-pill);
+  border: 1px solid rgb(255 255 255 / 0.55);
+  background: rgb(0 0 0 / 0.28);
+  color: #fff;
+  font-size: var(--t--1);
+  font-weight: 600;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+}
+
+.site-root .hero-plate { margin-top: calc(var(--s-8) * -1); }
+.site-root .hero-plate h1 { margin-bottom: var(--s-3); }
+/* Beskrivningen klipps visuellt till tre rader på telefon: hela poängen med
+   plattan är att namn, status och WhatsApp-knappen ska rymmas ovanför vecket.
+   Texten tas inte bort ur DOM:en — den läses av skärmläsare och av Google, och
+   syns i sin helhet från 768 px. */
+.site-root .hero-plate .lede {
+  margin-bottom: var(--s-5);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+@media (min-width: 768px) { .site-root .hero-plate .lede { -webkit-line-clamp: none; line-clamp: none; overflow: visible; } }
+.site-root .hero-plate .status { margin-bottom: var(--s-5); }
+.site-root .hero-sub {
+  font-size: var(--t--1);
+  color: var(--ink-muted);
+  margin: var(--s-3) 0 0;
+  text-align: center;
+}
+.site-root .hero-actions { display: grid; gap: var(--s-3); }
+.site-root .hero-plate .chips { margin-top: var(--s-5); padding-top: var(--s-5); border-top: 1px solid var(--hairline); }
+
+@media (min-width: 768px) {
+  .site-root .hero-media { aspect-ratio: 16 / 9; max-height: 64svh; }
+  .site-root .hero--mono .hero-media { height: 280px; height: clamp(240px, 34svh, 340px); }
+  .site-root .hero-plate { max-width: 34rem; margin-top: calc(var(--s-16) * -1); }
+  .site-root .hero-actions { grid-auto-flow: column; grid-auto-columns: 1fr; }
+  .site-root .hero-sub { text-align: start; }
+}
+@media (min-width: 1024px) {
+  .site-root .hero-media { aspect-ratio: 16 / 6; max-height: 70svh; }
+  .site-root .hero-plate { max-width: 38rem; margin-top: -11rem; }
+  /* Monogrammet är hela hero-ytan när kunden saknar foto. Med desktopens
+     djupa överlapp täckte plattan nästan hela initialen — den behöver mer
+     höjd och mindre överlapp här, annars ser den tomma sajten ut som ett
+     renderingsfel i stället för som ett val. */
+  .site-root .hero--mono .hero-media { height: 380px; height: clamp(320px, 44svh, 460px); }
+  .site-root .hero--mono .hero-plate { margin-top: -5rem; }
+}
+
+/* ---------- 02 TJÄNSTER ---------- */
+
+.site-root .svc-list { display: grid; gap: 0; margin-top: var(--s-6); border-top: 1px solid var(--hairline); }
+@media (min-width: 900px) { .site-root .svc-list { grid-template-columns: 1fr 1fr; column-gap: var(--s-12); } }
+.site-root .svc-item {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  gap: var(--s-4);
+  align-items: start;
+  padding-block: var(--s-5);
+  border-bottom: 1px solid var(--hairline);
+}
+.site-root .svc-n {
+  font-family: var(--font-display, var(--font-text));
+  font-weight: 700;
+  font-size: var(--t--1);
+  letter-spacing: 0.02em;
+  color: var(--accent-ink);
+  padding-top: 0.28em;
+  font-variant-numeric: tabular-nums;
+}
+.site-root .svc-item h3 { margin-bottom: var(--s-1); }
+.site-root .svc-item p { font-size: var(--t--1); margin: 0; }
+.site-root .svc-ask { margin-top: var(--s-8); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4); }
+.site-root .svc-ask p { margin: 0; }
+
+/* ---------- 03 FOTON ---------- */
+
+.site-root .rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 76%;
+  gap: var(--s-3);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding-inline: var(--gutter);
+  padding-block: var(--s-2);
+  margin-top: var(--s-6);
+  scrollbar-width: thin;
+}
+.site-root .tile {
+  scroll-snap-align: start;
+  margin: 0;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--ring);
+}
+.site-root .tile img { aspect-ratio: 4 / 3; width: 100%; object-fit: cover; filter: var(--photo-filter); }
+@media (min-width: 768px) {
+  .site-root .rail {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-columns: auto;
+    overflow: visible;
+    max-width: var(--container);
+    margin-inline: auto;
+    gap: var(--s-4);
+  }
+  /* Första bilden får dubbel bredd: en enkel mosaik gör en serie medelmåttiga
+     telefonfoton mer redigerad än ett perfekt rutnät gör. */
+  .site-root .rail > :first-child { grid-column: span 2; }
+  .site-root .rail > :first-child img { aspect-ratio: 16 / 9; }
+}
+
+/* ---------- 04 VAR OCH NÄR ---------- */
+
+.site-root .info-grid { display: grid; gap: var(--s-8); }
+@media (min-width: 900px) { .site-root .info-grid { grid-template-columns: 1fr 1fr; gap: var(--s-16); align-items: start; } }
+.site-root .addr { font-size: var(--t-1); color: var(--ink); line-height: 1.4; margin-bottom: var(--s-4); }
+.site-root .addr-sub { font-size: var(--t--1); margin-bottom: var(--s-5); }
+.site-root .hours-list { margin: 0; display: grid; gap: 0; }
+.site-root .hours-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-block: var(--s-3);
+  border-bottom: 1px solid var(--hairline);
+}
+.site-root .hours-row:first-child { border-top: 1px solid var(--hairline); }
+.site-root .hours-row dt { color: var(--ink-muted); margin: 0; font-size: var(--t--1); }
+.site-root .hours-row dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 500; font-size: var(--t--1); }
+
+/* ---------- 05 AVSLUT (mörkt band) + footer ---------- */
+
+.site-root .closing {
+  background: var(--deep);
+  color: var(--on-deep);
+  position: relative;
+  padding-block: clamp(var(--s-16), 10vw, var(--s-32)) 0;
+}
+.site-root .closing p { color: var(--on-deep-muted); }
+/* .statement är också ett <p>, och ärver annars den dämpade tonen från raden
+   ovanför. Slutraden ska vara bandets ljusaste element, inte dess svagaste. */
+.site-root .closing .statement { color: var(--on-deep); }
+.site-root .closing .eyebrow { color: var(--accent-light); }
+/* Plattan är ljus även inne i det mörka bandet, så färgärvet från .closing
+   måste brytas här — annars blir rubriken ljus text på vit yta (osynlig). */
+.site-root .closing-plate { display: grid; gap: var(--s-5); max-width: 34rem; color: var(--ink); }
+.site-root .closing-plate h2 { font-size: var(--t-2); margin-bottom: var(--s-2); }
+.site-root .closing-plate p { color: var(--ink-muted); }
+.site-root .closing-note { font-size: var(--t--1); text-align: center; }
+.site-root .closing-note a { color: var(--accent-ink); font-weight: 600; }
+
+.site-root .site-footer {
+  margin-top: clamp(var(--s-12), 8vw, var(--s-24));
+  border-top: 1px solid var(--deep-hairline);
+  padding-block: var(--s-6);
+  /* extra utrymme längst ner så den fasta WhatsApp-knappen inte täcker text */
+  padding-bottom: calc(var(--s-6) + var(--dock-h) + var(--s-6));
+}
+@media (min-width: 1024px) { .site-root .site-footer { padding-bottom: var(--s-6); } }
+.site-root .footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-6);
+  justify-content: space-between;
+  font-size: var(--t--1);
+  color: var(--on-deep-muted);
+}
+.site-root .footer-socials { display: flex; flex-wrap: wrap; gap: var(--s-4); }
+.site-root .site-footer a { color: var(--on-deep-muted); text-decoration: none; }
+.site-root .site-footer a:hover { color: var(--accent-light); text-decoration: underline; }
+
+/* ---------- fast WhatsApp-CTA ---------- */
+
 /*
- * Motion — reveal. Max 15 % av elementen bär .reveal.
- *
+ * Hela produktens konverteringspunkt. Den ligger kvar på varje scrolldjup,
+ * men den är aldrig en popup: ingen overlay, inget som täcker sidan, inget
+ * som måste stängas. Sidfoten reserverar höjden så att den aldrig döljer text.
+ */
+.site-root .wa-dock {
+  position: fixed;
+  inset-inline: var(--s-3);
+  /* Utan stöd för env() är hela max() ogiltig och `bottom` faller till auto —
+     då hamnar den fasta knappen i toppen av sidan i stället för i botten. */
+  bottom: var(--s-3);
+  bottom: max(var(--s-3), env(safe-area-inset-bottom));
+  z-index: 40;
+  min-height: var(--dock-h);
+  border-radius: var(--r-pill);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.3);
+}
+@media (min-width: 1024px) {
+  .site-root .wa-dock { inset-inline: auto; right: var(--s-8); bottom: var(--s-8); padding-inline: var(--s-8); }
+}
+
+/* ---------- rörelse ---------- */
+
+/*
  * Progressiv förbättring: innehållet är synligt som default och göms bara när
  * JS faktiskt kör (.js sätts av ett inline-script före paint). Annars hade en
  * misslyckad scriptladdning — eller en crawler utan JS — gjort halva sajten
  * osynlig.
+ *
+ * .reveal sätts ALDRIG på ett barn i en horisontell rail: ett element som
+ * ligger utanför railens synliga del skär inte viewporten, får aldrig .is-in,
+ * och QA-gaten rapporterar det (korrekt) som ett fel.
  */
 .site-root .reveal { opacity: 1; transform: none; }
 .js .site-root .reveal {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(14px);
   transition: opacity var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
 }
 .js .site-root .reveal.is-in { opacity: 1; transform: none; }
@@ -195,73 +583,67 @@
 @media (prefers-reduced-motion: reduce) {
   .js .site-root .reveal { opacity: 1; transform: none; transition: none; }
   .site-root .btn:hover { transform: none; }
+  .site-root .rail { scroll-behavior: auto; }
 }
 
+/* ---------- moduler: meny (menu) ---------- */
+/* Delad primitiv: alla teman renderar samma markup (src/components/site/
+   menu-section.tsx), temat skruvar utseendet med .t-<tema> .site-menu …
+   Prickraden byggs av en repeating-gradient i stället för punkttecken, så den
+   varken kopieras med texten eller läses upp. */
 
-/* ---------- delade sektionsprimitiv (alla teman) ---------- */
-
-.site-root .site-logo { max-height: 44px; width: auto; border-radius: var(--r-sm); }
-
-.site-root .hero-status { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t--1); color: var(--ink-muted); margin: 0; }
-.site-root .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-muted); flex: none; }
-/* Grön statusprick, men INTE #25D366 — WhatsApp-grönt får bara leva i
-   knappens glyf (web-design-system, Step 1). */
-.site-root .dot--open { background: #1fa855; }
-
-.site-root .editorial { display: grid; gap: var(--s-6); }
-/* Grid-barn har min-width:auto som default — en horisontell karusell i en
-   kolumn tvingar då hela sidan bredare i stället för att scrolla i sig själv. */
-.site-root .editorial > * { min-width: 0; }
-@media (min-width: 1024px) { .site-root .editorial { grid-template-columns: 4fr 7fr; gap: var(--s-16); } }
-.site-root .editorial-body p { max-width: var(--measure); }
-.site-root .hours-list { margin: var(--s-6) 0; display: grid; gap: 0; max-width: 32rem; }
-.site-root .hours-row {
-  display: flex; justify-content: space-between; gap: var(--s-4);
-  padding-block: var(--s-3); border-bottom: 1px solid var(--hairline);
-}
-.site-root .hours-row dt { color: var(--ink-muted); margin: 0; }
-.site-root .hours-row dd { margin: 0; font-variant-numeric: tabular-nums; }
-.site-root .address { font-size: var(--t--1); color: var(--ink-muted); }
-.site-root .address a { color: var(--accent); }
-
-/* --- footer --- */
-.site-root .site-footer {
-  background: var(--surface); border-top: 1px solid var(--hairline);
-  padding-block: calc(var(--s-16) + var(--s-8)) var(--s-16);
-  /* extra utrymme längst ner så den fasta WhatsApp-knappen inte täcker text */
-  padding-bottom: calc(var(--s-16) + 72px);
-}
-@media (min-width: 1024px) { .site-root .site-footer { padding-bottom: var(--s-16); } }
-.site-root .footer-inner {
-  display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: space-between;
-  font-size: var(--t--1); color: var(--ink-muted);
-}
-.site-root .footer-socials { display: flex; gap: var(--s-4); }
-.site-root .footer-socials a { color: var(--ink-muted); }
-.site-root .site-footer a:hover { color: var(--accent); }
-
-/* --- meny (menu-modulen) --- delad primitiv: alla teman renderar samma markup,
-   temat skruvar utseendet med .t-<tema> .site-menu … Prickraden byggs av en
-   repeating-gradient i stället för punkttecken, så den varken kopieras med
-   texten eller läses upp. */
-.site-root .site-menu-intro { max-width: var(--measure); color: var(--ink-muted); }
+.site-root .site-menu-intro,
+.site-root .site-products-intro { max-width: var(--measure); color: var(--ink-muted); }
 .site-root .site-menu-section { margin-top: var(--s-10); }
 .site-root .site-menu-section h3 {
-  font-size: var(--t-1); padding-bottom: var(--s-2);
-  border-bottom: 1px solid var(--hairline);
+  font-size: var(--t-1);
+  padding-bottom: var(--s-2);
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: 0;
 }
-.site-root .site-menu-section ul { list-style: none; margin: 0; padding: 0; }
 .site-root .site-menu-section li { padding-block: var(--s-4); border-bottom: 1px solid var(--hairline); }
 .site-root .site-menu-section li p {
-  margin: var(--s-1) 0 0; font-size: var(--t--1); color: var(--ink-muted); max-width: var(--measure);
+  margin: var(--s-1) 0 0;
+  font-size: var(--t--1);
+  color: var(--ink-muted);
+  max-width: var(--measure);
 }
 .site-root .site-menu-item-head { display: flex; align-items: baseline; gap: var(--s-3); }
-.site-root .site-menu-item-name { font-weight: 600; }
+.site-root .site-menu-item-name { font-weight: 600; color: var(--ink); }
 .site-root .site-menu-dots {
-  flex: 1; min-width: var(--s-6); align-self: center; height: 1px;
+  display: none;
+  flex: 1;
+  min-width: var(--s-6);
+  align-self: center;
+  height: 1px;
   background: repeating-linear-gradient(to right, var(--hairline) 0 3px, transparent 3px 6px);
 }
-.site-root .site-menu-price { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-muted); }
+@media (min-width: 520px) { .site-root .site-menu-dots { display: block; } }
+.site-root .site-menu-price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- moduler: produkter (products) ---------- */
+/* Samma mönster som menyn. Ett rutnät i stället för sektionslista, eftersom
+   produkter saknar sektionsnivå. */
+
+.site-root .site-products-grid { margin: var(--s-8) 0 0; display: grid; gap: var(--s-3); }
+@media (min-width: 640px) { .site-root .site-products-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .site-root .site-products-grid { grid-template-columns: repeat(3, 1fr); } }
+.site-root .site-products-item {
+  padding: var(--s-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  min-width: 0;
+}
+.site-root .site-products-item p { margin: var(--s-2) 0 0; font-size: var(--t--1); color: var(--ink-muted); }
+.site-root .site-products-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+.site-root .site-products-item-name { font-weight: 600; color: var(--ink); }
+.site-root .site-products-price { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--accent-ink); font-weight: 600; }
 
 /* preview-banner — ligger utanför .site-root eftersom den inte är kundens design */
 .preview-banner {
@@ -272,25 +654,3 @@
   font: 500 0.8125rem/1.4 system-ui, sans-serif;
   text-align: center;
 }
-
-/* == S1 == */
-/* Produkterna (products-modulen, PR-14) — delad primitiv, samma mönster som
-   .site-menu ovan: markupen är gemensam för alla teman, temat skruvar
-   utseendet med .t-<tema> .site-products … Ett rutnät i stället för menyns
-   sektionslista, eftersom produkter saknar sektionsnivå. */
-.site-root .site-products-intro { max-width: var(--measure); color: var(--ink-muted); }
-.site-root .site-products-grid {
-  list-style: none; margin: var(--s-8) 0 0; padding: 0;
-  display: grid; gap: var(--s-4);
-}
-@media (min-width: 640px) { .site-root .site-products-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .site-root .site-products-grid { grid-template-columns: repeat(3, 1fr); } }
-.site-root .site-products-item {
-  padding: var(--s-4); border: 1px solid var(--hairline); border-radius: var(--r-md, 10px);
-}
-.site-root .site-products-item p {
-  margin: var(--s-1) 0 0; font-size: var(--t--1); color: var(--ink-muted);
-}
-.site-root .site-products-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
-.site-root .site-products-item-name { font-weight: 600; }
-.site-root .site-products-price { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-muted); }
