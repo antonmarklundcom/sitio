@@ -38,7 +38,9 @@ export function siteMetadata(site: SiteData, opts: { isPreview: boolean }): Meta
       description,
       locale: "es_PY",
       siteName: business.name,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      // Alltid satt: en tom lista hindrar att landningens delningskort
+      // (src/app/opengraph-image.tsx) ärvs av en kundsajt utan hero.
+      images: ogImage ? [{ url: ogImage }] : [],
     },
   };
 }

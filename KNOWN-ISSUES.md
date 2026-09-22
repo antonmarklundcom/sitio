@@ -18,8 +18,6 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
 - **Products has no view event in the analytics enum** (`menu_view` exists,
   no `products_view`). Needs a migration (enum on `analytics_events`). The
   radar's "menu or products" term reads `business_modules`, by design. (S1, S5)
-- **No `og:image` on the landing page.** Sharing cards are text-only
-  (`og:type`, `og:locale`, `twitter:card summary` are set). (O2)
 - **`npm audit` (with dev deps) has 4 moderate `esbuild` findings** via
   `drizzle-kit → @esbuild-kit/*`. Dev-only; `--omit=dev` is clean. Needs a
   `drizzle-kit` bump. (O1)
