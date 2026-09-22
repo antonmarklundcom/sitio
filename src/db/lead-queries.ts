@@ -1,10 +1,13 @@
 import "server-only";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./index";
-import { businesses } from "./schema";
+import { activityLog, businesses } from "./schema";
 import { env } from "@/lib/env";
 import { daysUntil } from "@/lib/billing";
 import { logActivity } from "@/lib/auth";
+import { absoluteUrl } from "@/lib/env";
+import { dayKeyAsuncion } from "@/lib/analytics";
+import { hotLeadPayload, pushLead, venderCrmConfig } from "@/lib/vendercrm";
 import { computeUpsellScore, isHotLead, type LeadStage, type UpsellStats } from "@/lib/radar";
 
 // Samma korrelationsfälla som `src/db/queries.ts`: `${businesses.id}` i en
@@ -13,7 +16,28 @@ import { computeUpsellScore, isHotLead, type LeadStage, type UpsellStats } from 
 // korrelationen då fel. Tabellnamnet skrivs därför ut explicit.
 const bizId = sql`\`businesses\`.\`id\``;
 
-export type RadarResult = { updated: number; hotLeads: number };
+/** `pushed`/`pushFailed` räknar VenderCRM-pushar (R3-22); båda 0 utan nyckel. */
+/**
+ * Misslyckades senaste pushen för sajten? Då görs ett nytt försök nästa natt
+ * trots att sajten redan var hot — annars försvann en lead för att CRM:et
+ * råkade vara nere en natt. Frågas bara för sajter som är hot.
+ */
+async function lastPushFailed(businessId: number): Promise<boolean> {
+  const [last] = await db
+    .select({ action: activityLog.action })
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.businessId, businessId),
+        inArray(activityLog.action, ["vendercrm_hot_lead_pushed", "vendercrm_hot_lead_failed"]),
+      ),
+    )
+    .orderBy(desc(activityLog.id))
+    .limit(1);
+  return last?.action === "vendercrm_hot_lead_failed";
+}
+
+export type RadarResult = { updated: number; hotLeads: number; pushed: number; pushFailed: number };
 
 /**
  * Räknar om `upsellScore`/`hotLead` för varje publicerad sajt i ett svep.
@@ -27,6 +51,11 @@ export async function runRadar(): Promise<RadarResult> {
   const rows = await db
     .select({
       id: businesses.id,
+      name: businesses.name,
+      slug: businesses.slug,
+      category: businesses.category,
+      whatsappPhone: businesses.whatsappPhone,
+      wasHotLead: businesses.hotLead,
       waClicks30d: sql<number>`(
         select coalesce(sum(d.wa_clicks), 0) from analytics_daily d
         where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
@@ -60,7 +89,11 @@ export async function runRadar(): Promise<RadarResult> {
     .limit(1000);
 
   const thresholds = { waClicks30d: env.hotLeadWaClicks30d, views30d: env.hotLeadViews30d };
+  const crm = venderCrmConfig();
+  const dayKey = dayKeyAsuncion();
   let hotLeads = 0;
+  let pushed = 0;
+  let pushFailed = 0;
 
   for (const row of rows) {
     const stats: UpsellStats = {
@@ -79,14 +112,48 @@ export async function runRadar(): Promise<RadarResult> {
     if (hotLead) hotLeads += 1;
 
     await db.update(businesses).set({ upsellScore, hotLead }).where(eq(businesses.id, row.id));
+
+    // VenderCRM (R3-22): bara när sajten BLIR hot, inte varje natt den är det
+    // — annars får säljaren samma lead 30 gånger i månaden — plus ett nytt
+    // försök efter en misslyckad push. Idempotency-nyckeln (sajt + dygn) tar
+    // hand om en cron som körs två gånger.
+    if (crm && hotLead && (!row.wasHotLead || (await lastPushFailed(row.id)))) {
+      const result = await pushLead(
+        crm,
+        hotLeadPayload(
+          {
+            businessId: row.id,
+            name: row.name,
+            slug: row.slug,
+            category: row.category,
+            whatsappPhone: row.whatsappPhone,
+            waClicks30d: stats.waClicks30d,
+            views30d: stats.views30d,
+            upsellScore,
+            subscriptionStatus: row.subscriptionStatus,
+            subscriptionExpiresAt: row.subscriptionExpiresAt ? String(row.subscriptionExpiresAt).slice(0, 10) : null,
+          },
+          absoluteUrl(`/${row.slug}`),
+          dayKey,
+        ),
+      );
+      if (result.ok) pushed += 1;
+      else pushFailed += 1;
+      await logActivity({
+        businessId: row.id,
+        action: result.ok ? "vendercrm_hot_lead_pushed" : "vendercrm_hot_lead_failed",
+        meta: { status: result.status, duplicate: result.duplicate ?? false, error: result.error ?? null },
+      });
+      if (!result.ok) console.error(`[vendercrm] push för business ${row.id} misslyckades:`, result.status, result.error);
+    }
   }
 
   await logActivity({
     action: "radar_run",
-    meta: { businesses: rows.length, hotLeads },
+    meta: { businesses: rows.length, hotLeads, pushed, pushFailed },
   });
 
-  return { updated: rows.length, hotLeads };
+  return { updated: rows.length, hotLeads, pushed, pushFailed };
 }
 
 export type LeadRow = {

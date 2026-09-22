@@ -573,7 +573,8 @@ closed them.
   PR-17) and "tu año en cifras" (the yearly report page is separable).
 - PR-21 R2 migration (only if the uploads-persistence test fails — Anton's
   step after deploy A; not run yet, so not started).
-- PR-22 VenderCRM push for hot leads.
+- ~~PR-22 VenderCRM push for hot leads.~~ — done, R3-22 (#63). Off until
+  Anton sets `VENDERCRM_URL` + `VENDERCRM_API_KEY` on Hostinger.
 - ~~Menu item and product images (`media.kind` menu_item/product through
   `/api/upload` for owner sessions). No migration needed.~~ — done, R3-16 (#57).
 - ~~Superadmin editing of owner menu/products with actor logging.~~ — done,
