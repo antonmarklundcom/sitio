@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
-import { localBusinessJsonLd } from "@/lib/jsonld";
+import { jsonLdHtml, localBusinessJsonLd } from "@/lib/jsonld";
 import { largestVariant } from "@/lib/media-shared";
 import { paletteFor, paletteToCssVars } from "@/themes/palettes";
 import { themeComponent } from "@/themes/registry";
@@ -77,7 +77,7 @@ export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boo
         products={products}
       />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
       <MotionScript />
       {/* Preview-besök är dina egna — de ska aldrig räknas i kundens statistik. */}
       {isPreview ? null : <AnalyticsScript businessId={business.id} />}

@@ -585,7 +585,11 @@ closed them.
   — done, R3-18 (#59), migration 0003.
 - Move rate limits and lazy rollup to the DB if a second Node process ever
   exists. Not yet — one process.
-- Full CSP once inline scripts move to hashed or external files.
+- ~~Full CSP once inline scripts move to hashed or external files.~~ — CSP
+  shipped, R3-24 (#65): everything but `script-src` locked to self.
+  `script-src` keeps `'unsafe-inline'`: Next's inline RSC payload differs per
+  page and revalidation, so only per-request nonces would work, and those
+  force dynamic rendering (no ISR). See KNOWN-ISSUES.md.
 - ~~Trim `ThemePalettes` to the variants actually selected~~ — done, R3-1 (#34).
 - A superadmin presentation override (one flag) — only if a real customer
   case demands it; today the answer is no (§1.11).

@@ -54,3 +54,19 @@ export function localBusinessJsonLd(params: {
 
   return data;
 }
+
+/**
+ * JSON för en `<script type="application/ld+json">` via dangerouslySetInnerHTML.
+ * `<` blir `<` (giltig JSON, samma värde): utan det avslutar
+ * `</script>` i en kundtext — namn, beskrivning, tjänster, som kommer från
+ * owner-panelen, intaken och /registro — skripttaggen och resten körs som HTML.
+ * `>`, `&` och radseparatorerna U+2028/2029 escapas av samma skäl.
+ */
+export function jsonLdHtml(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
