@@ -147,8 +147,15 @@ ok('prenumerationen förlängd till betalningens periodslut', afterConfirm.inclu
 ok('betalningen står som bekräftad', afterConfirm.includes('Confirmado'));
 
 // 9. analytics: beacon på publicerad sajt, avvisad på opublicerad
-const send = (bid, ua) => fetch(B+'/api/ev', {method:'POST', headers:{'content-type':'application/json','user-agent':ua}, body: JSON.stringify({b:bid,t:'whatsapp_click',p:'/smoke'})});
+const send = (bid, ua) => fetch(B+'/api/ev', {method:'POST', headers:{'content-type':'application/json','user-agent':ua}, body: JSON.stringify({b:bid,t:'whatsapp_click',l:'hero',p:'/smoke'})});
 ok('beacon svarar 204', (await send(1,'Mozilla/5.0 (iPhone)')).status === 204);
+// Per-CTA (R3-18): klicket med l:'hero' syns som "WhatsApp · portada" i adminet.
+await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1000);
+{
+  const t = await p.locator('body').innerText();
+  ok('adminet visar klick per knapp', /Clics por botón/i.test(t) && t.includes('WhatsApp · portada'));
+}
 
 // 10. intake: länk → kundformulär utan inloggning → foto via token → OTP → inlämning
 await p.goto(B + '/admin/alta', { waitUntil: 'domcontentloaded' });

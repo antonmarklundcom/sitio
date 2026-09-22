@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyDevice, clientIp, dayKeyAsuncion, isEventType, referrerHost, visitorHash } from "@/lib/analytics";
+import { classifyDevice, clientIp, ctaLocation, dayKeyAsuncion, isEventType, referrerHost, visitorHash } from "@/lib/analytics";
 
 describe("classifyDevice", () => {
   it("klassar självdeklarerande botar som bot", () => {
@@ -106,5 +106,22 @@ describe("referrerHost", () => {
 
   it("behåller externa värdar när egen värd är okänd", () => {
     expect(referrerHost("https://m.facebook.com/", null)).toBe("m.facebook.com");
+  });
+});
+
+describe("ctaLocation (R3-18)", () => {
+  it("släpper igenom våra egna data-ev-loc-värden", () => {
+    expect(ctaLocation("hero")).toBe("hero");
+    expect(ctaLocation(" Dock ")).toBe("dock");
+    expect(ctaLocation("especialidades")).toBe("especialidades");
+  });
+
+  it("gör allt annat till null", () => {
+    expect(ctaLocation("")).toBeNull();
+    expect(ctaLocation("a".repeat(33))).toBeNull();
+    expect(ctaLocation("<script>")).toBeNull();
+    expect(ctaLocation("hero dock")).toBeNull();
+    expect(ctaLocation(7)).toBeNull();
+    expect(ctaLocation(undefined)).toBeNull();
   });
 });

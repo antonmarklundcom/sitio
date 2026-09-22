@@ -330,6 +330,9 @@ export const analyticsEvents = mysqlTable(
       "products_view",
     ]).notNull(),
     path: varchar("path", { length: 120 }),
+    // Vilken CTA som klickades (`data-ev-loc`: hero, dock, contacto …), eller
+    // sektionens id för ett vy-event. R3-18; null för äldre event.
+    ctaLoc: varchar("cta_loc", { length: 32 }),
     referrerHost: varchar("referrer_host", { length: 120 }),
     deviceType: mysqlEnum("device_type", ["mobile", "desktop", "bot", "unknown"])
       .notNull()

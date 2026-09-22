@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import { db } from "./index";
-import { analyticsDaily } from "./schema";
+import { analyticsDaily, analyticsEvents } from "./schema";
 import { dayKeyAsuncion } from "@/lib/analytics";
 import { ensureRollupFresh } from "@/lib/rollup";
 
@@ -109,4 +109,39 @@ export async function getBusinessAnalytics(businessId: number): Promise<Business
 
   const [last30, last365] = await Promise.all([summarize(businessId, 30), summarize(businessId, 365)]);
   return { series30, last30, last365 };
+}
+
+export type CtaCount = {
+  type: "whatsapp_click" | "phone_click" | "map_click" | "social_click";
+  /** `data-ev-loc`, eller null för klick från före R3-18. */
+  loc: string | null;
+  clicks: number;
+};
+
+/**
+ * Klick per CTA de senaste 30 dygnen (R3-18). Läser råeventen, inte rollupen:
+ * `analytics_daily` har en kolumn per typ, inte per knapp, och råeventen
+ * sparas 396 dygn. Bots räknas inte, samma regel som rollupen.
+ */
+export async function getCtaBreakdown(businessId: number): Promise<CtaCount[]> {
+  const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const rows = await db
+    .select({
+      type: analyticsEvents.type,
+      loc: analyticsEvents.ctaLoc,
+      clicks: sql<number>`count(*)`,
+    })
+    .from(analyticsEvents)
+    .where(
+      and(
+        eq(analyticsEvents.businessId, businessId),
+        inArray(analyticsEvents.type, ["whatsapp_click", "phone_click", "map_click", "social_click"]),
+        ne(analyticsEvents.deviceType, "bot"),
+        gte(analyticsEvents.createdAt, from),
+      ),
+    )
+    .groupBy(analyticsEvents.type, analyticsEvents.ctaLoc)
+    .orderBy(desc(sql`count(*)`));
+
+  return rows.map((r) => ({ type: r.type as CtaCount["type"], loc: r.loc, clicks: Number(r.clicks) }));
 }

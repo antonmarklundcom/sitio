@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBusinessById } from "@/db/queries";
-import { getBusinessAnalytics } from "@/db/analytics-queries";
+import { getBusinessAnalytics, getCtaBreakdown } from "@/db/analytics-queries";
 import { getCurrentSubscription, getPaymentsWithReceipts, getYearStats } from "@/db/billing-queries";
 import { requireRole } from "@/lib/auth";
 import { previewToken } from "@/lib/preview";
@@ -71,10 +71,11 @@ export default async function EditBusinessPage({
   const business = await getBusinessById(businessId);
   if (!business) notFound();
 
-  const [mediaRows, analytics, subscription, paymentRows, yearStats, moduleStates, polishProposal] =
+  const [mediaRows, analytics, ctas, subscription, paymentRows, yearStats, moduleStates, polishProposal] =
     await Promise.all([
       listMediaForBusiness(businessId),
       getBusinessAnalytics(businessId),
+      getCtaBreakdown(businessId),
       getCurrentSubscription(businessId),
       getPaymentsWithReceipts(businessId),
       getYearStats(businessId),
@@ -214,7 +215,7 @@ export default async function EditBusinessPage({
         </div>
       </Card>
 
-      <AnalyticsPanel analytics={analytics} />
+      <AnalyticsPanel analytics={analytics} ctas={ctas} />
 
       <BillingPanel
         businessId={business.id}

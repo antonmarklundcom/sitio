@@ -5,6 +5,7 @@ import { analyticsEvents, businesses } from "@/db/schema";
 import {
   classifyDevice,
   clientIp,
+  ctaLocation,
   dayKeyAsuncion,
   isEventType,
   referrerHost,
@@ -82,6 +83,7 @@ export async function POST(req: Request) {
     businessId: verified,
     type,
     path,
+    ctaLoc: ctaLocation(body.l),
     referrerHost: referrerHost(body.r, ownHost),
     deviceType,
     visitorHash: visitorHash(ip, userAgent, dayKeyAsuncion()),

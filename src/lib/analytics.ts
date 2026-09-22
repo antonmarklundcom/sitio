@@ -25,6 +25,17 @@ export function isEventType(v: unknown): v is EventType {
   return typeof v === "string" && (EVENT_TYPES as readonly string[]).includes(v);
 }
 
+/**
+ * Beaconens `l` (vilken CTA, R3-18). Värdena kommer från våra egna
+ * `data-ev-loc`-attribut, men endpointen är publik: allt som inte ser ut som
+ * ett av dem blir null i stället för att hamna i databasen.
+ */
+export function ctaLocation(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const loc = v.trim().toLowerCase();
+  return /^[a-z0-9_-]{1,32}$/.test(loc) ? loc : null;
+}
+
 export type DeviceType = "mobile" | "desktop" | "bot" | "unknown";
 
 /**
