@@ -1,7 +1,8 @@
 import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "./index";
-import { products } from "./schema";
+import { media, products } from "./schema";
+import { itemImage, type ItemImage } from "@/lib/media-shared";
 
 export type ProductRow = {
   id: number;
@@ -10,23 +11,32 @@ export type ProductRow = {
   priceGs: number | null;
   isVisible: boolean;
   sortOrder: number;
+  /** Produktbilden (R3-16), eller null. */
+  image: ItemImage | null;
 };
 
 /** Hela produktlistan för ett business, i visningsordning. */
 export async function getProducts(businessId: number): Promise<ProductRow[]> {
   const rows = await db
-    .select()
+    .select({
+      product: products,
+      image: { variantsJson: media.variantsJson, width: media.width, height: media.height },
+    })
     .from(products)
+    // businessId i join-villkoret också: en media_id som pekar på en annan
+    // kunds bild ska ge ingen bild, inte den andras.
+    .leftJoin(media, and(eq(media.id, products.mediaId), eq(media.businessId, products.businessId)))
     .where(eq(products.businessId, businessId))
     .orderBy(asc(products.sortOrder), asc(products.id));
 
-  return rows.map((row) => ({
+  return rows.map(({ product: row, image }) => ({
     id: row.id,
     name: row.name,
     description: row.description,
     priceGs: row.priceGs,
     isVisible: row.isVisible,
     sortOrder: row.sortOrder,
+    image: itemImage(businessId, image),
   }));
 }
 

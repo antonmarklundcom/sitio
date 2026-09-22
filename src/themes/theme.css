@@ -625,6 +625,20 @@
   color: var(--ink);
   font-weight: 600;
 }
+/* Rätt med bild (R3-16): kvadratisk miniatyr till vänster, texten som förut. */
+.site-root .site-menu-section li.has-img {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: var(--s-3);
+  align-items: start;
+}
+.site-root .site-menu-item-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--surface-raised);
+}
 
 /* ---------- moduler: produkter (products) ---------- */
 /* Samma mönster som menyn. Ett rutnät i stället för sektionslista, eftersom
@@ -639,6 +653,17 @@
   border-radius: var(--r-md);
   background: var(--surface-raised);
   min-width: 0;
+  overflow: hidden;
+}
+/* Produktbild (R3-16): kant till kant överst i kortet, 4:3 oavsett original. */
+.site-root .site-products-item-img {
+  display: block;
+  width: calc(100% + 2 * var(--s-5));
+  max-width: none;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  margin: calc(-1 * var(--s-5)) calc(-1 * var(--s-5)) var(--s-4);
 }
 .site-root .site-products-item p { margin: var(--s-2) 0 0; font-size: var(--t--1); color: var(--ink-muted); }
 .site-root .site-products-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }

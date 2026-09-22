@@ -36,6 +36,21 @@ export function SiteProducts({
         <ul className="site-products-grid">
           {products.map((product) => (
             <li key={product.id} className="site-products-item reveal">
+              {product.image ? (
+                // Namnet står bredvid — bilden är dekor för skärmläsaren.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="site-products-item-img"
+                  src={product.image.src}
+                  srcSet={product.image.srcSet}
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  width={product.image.width ?? undefined}
+                  height={product.image.height ?? undefined}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null}
               <div className="site-products-item-head">
                 <span className="site-products-item-name">{product.name}</span>
                 <span className="site-products-price">{formatGs(product.priceGs)}</span>

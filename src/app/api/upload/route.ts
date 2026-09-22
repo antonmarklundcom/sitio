@@ -11,6 +11,7 @@ import { logActivity } from "@/lib/auth";
 import { processImage } from "@/lib/media";
 import { ALLOWED_MIME, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
 import { photoLimitFor } from "@/db/module-queries";
+import { itemImageTarget, setItemImage } from "@/db/item-media";
 
 export const runtime = "nodejs";
 
@@ -68,8 +69,13 @@ export async function POST(req: Request) {
   }
 
   // Kvitton hör till betalningsflödet i admin och ska aldrig gå att ladda upp
-  // med en intake-token eller av en owner.
-  if (user?.role !== "superadmin" && kindRaw !== "photo" && kindRaw !== "logo") {
+  // med en intake-token eller av en owner. Bilder på rätter och produkter
+  // (R3-16) kräver en session: intaken har ingen meny att sätta dem på.
+  const isItemKind = kindRaw === "menu_item" || kindRaw === "product";
+  if (kindRaw === "receipt" && user?.role !== "superadmin") {
+    return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  }
+  if (isItemKind && !user) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 
@@ -85,6 +91,20 @@ export async function POST(req: Request) {
   // följa avsändaren.
   const isAdmin = user?.role === "superadmin";
   const msg = (sv: string, es: string) => (isAdmin ? sv : es);
+
+  // Rätten eller produkten som bilden ska sitta på: tillhör tenanten och
+  // modulen är på, annars ingen uppladdning. Kontrolleras före bildbehandlingen
+  // så att ett avslag inte lämnar filer efter sig.
+  let target: Awaited<ReturnType<typeof itemImageTarget>> = null;
+  if (isItemKind) {
+    target = await itemImageTarget(businessId, kindRaw, Number(form.get("targetId")));
+    if (!target) {
+      return NextResponse.json(
+        { error: msg("Rätten eller produkten finns inte.", "Ese plato o producto ya no existe.") },
+        { status: 404 },
+      );
+    }
+  }
 
   if (file.size > MAX_UPLOAD_BYTES) {
     return NextResponse.json(
@@ -174,6 +194,10 @@ export async function POST(req: Request) {
   if (kindRaw === "logo") {
     await db.update(businesses).set({ logoMediaId: created.id }).where(eq(businesses.id, businessId));
   }
+  // En bild per rätt/produkt: den nya kopplas in, den gamla raderas med filer.
+  if (isItemKind && target) {
+    await setItemImage(businessId, kindRaw, target, created.id);
+  }
 
   await logActivity({
     // Utan session är det kunden själv som laddat upp via intake-länken.
@@ -186,6 +210,7 @@ export async function POST(req: Request) {
       bytes: processed.bytes,
       viaIntake: !user,
       byOwner: user?.role === "owner",
+      ...(target ? { targetId: target.id } : {}),
     },
   });
 

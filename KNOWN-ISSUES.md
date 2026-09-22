@@ -11,10 +11,6 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
   conflict, but duplicates the same information. Needs an Anton decision:
   hide `menu` in `comercio` once `products` is on, or leave both
   (`docs/decisions-needed.md`, open since 2026-09-14). (S1)
-- **Product and menu item cards have no image.** No migration needed —
-  `media.kind` already has `menu_item`/`product` and both tables have
-  `media_id` — but `/api/upload` refuses those kinds for owners and neither
-  editor nor renderer uses them. (S1)
 - **Products has no view event in the analytics enum** (`menu_view` exists,
   no `products_view`). Needs a migration (enum on `analytics_events`). The
   radar's "menu or products" term reads `business_modules`, by design. (S1, S5)

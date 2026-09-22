@@ -36,16 +36,31 @@ export function SiteMenu({
             <h3>{section.name}</h3>
             <ul>
               {section.items.map((item) => (
-                <li key={item.id}>
-                  <div className="site-menu-item-head">
-                    <span className="site-menu-item-name">{item.name}</span>
-                    {/* Prickraden binder ihop namn och pris på en bred skärm.
-                        Den är dekor och därför aria-hidden — en skärmläsare
-                        ska läsa "Empanada, 8.000 ₲", inte punkterna. */}
-                    <span className="site-menu-dots" aria-hidden="true" />
-                    <span className="site-menu-price">{formatGs(item.priceGs)}</span>
+                <li key={item.id} className={item.image ? "has-img" : undefined}>
+                  {item.image ? (
+                    // Miniatyr bredvid namnet (R3-16); dekor för skärmläsaren.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      className="site-menu-item-img"
+                      src={item.image.src}
+                      srcSet={item.image.srcSet}
+                      sizes="72px"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : null}
+                  <div className="site-menu-item-body">
+                    <div className="site-menu-item-head">
+                      <span className="site-menu-item-name">{item.name}</span>
+                      {/* Prickraden binder ihop namn och pris på en bred skärm.
+                          Den är dekor och därför aria-hidden — en skärmläsare
+                          ska läsa "Empanada, 8.000 ₲", inte punkterna. */}
+                      <span className="site-menu-dots" aria-hidden="true" />
+                      <span className="site-menu-price">{formatGs(item.priceGs)}</span>
+                    </div>
+                    {item.description ? <p>{item.description}</p> : null}
                   </div>
-                  {item.description ? <p>{item.description}</p> : null}
                 </li>
               ))}
             </ul>

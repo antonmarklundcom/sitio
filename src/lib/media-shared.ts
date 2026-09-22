@@ -40,3 +40,20 @@ export function largestVariant(variants: MediaVariants): string | undefined {
 export function smallestVariant(variants: MediaVariants): string | undefined {
   return variants.w400 ?? variants.w800 ?? variants.w1600;
 }
+
+/** Bilden på en rätt eller produkt, färdig att rendera (R3-16). */
+export type ItemImage = { src: string; srcSet: string; width: number | null; height: number | null };
+
+/**
+ * Bygger `ItemImage` ur en media-rad. Mellanvarianten som src: kortet är
+ * aldrig bredare än en tredjedel av sidan, och srcset tar resten.
+ */
+export function itemImage(
+  businessId: number,
+  row: { variantsJson: MediaVariants | null; width: number | null; height: number | null } | null,
+): ItemImage | null {
+  if (!row?.variantsJson) return null;
+  const src = mediaUrl(businessId, row.variantsJson.w800 ?? smallestVariant(row.variantsJson));
+  if (!src) return null;
+  return { src, srcSet: mediaSrcSet(businessId, row.variantsJson), width: row.width, height: row.height };
+}

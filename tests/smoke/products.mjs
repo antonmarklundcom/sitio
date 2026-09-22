@@ -108,6 +108,62 @@ if (ownerSlug) {
   ok('sin evento de vista propio (fuera del enum, S1)', !html.includes('data-ev-view="product'));
 }
 
+// ---------- 3b. fotos de producto (R3-16) ----------
+const sharp = (await import('sharp')).default;
+const jpegOf = (r) =>
+  sharp({ create: { width: 900, height: 700, channels: 3, background: { r, g: 90, b: 60 } } }).jpeg().toBuffer();
+const productLi = (name) => owner.locator('.panel-menu-items li').filter({ hasText: name }).first();
+const imgSrcOf = async (name) => {
+  const img = productLi(name).locator('.panel-item-image img');
+  return (await img.count()) ? img.first().getAttribute('src') : null;
+};
+const status = async (src) => (src ? (await fetch(B + src)).status : 0);
+
+await owner.waitForLoadState('networkidle');
+await productLi(nombre1).locator('.panel-item-image input[type=file]').setInputFiles({
+  name: 'silla.jpg', mimeType: 'image/jpeg', buffer: await jpegOf(120),
+});
+await owner.waitForTimeout(3500);
+const firstSrc = await imgSrcOf(nombre1);
+ok('foto de producto subida desde el panel', Boolean(firstSrc) && (await status(firstSrc)) === 200, firstSrc ?? '');
+if (ownerSlug) {
+  const html = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('la foto sale en el catálogo público', html.includes('site-products-item-img') && html.includes(firstSrc ?? '§'));
+}
+
+await productLi(nombre1).locator('.panel-item-image input[type=file]').setInputFiles({
+  name: 'silla2.jpg', mimeType: 'image/jpeg', buffer: await jpegOf(30),
+});
+await owner.waitForTimeout(3500);
+const secondSrc = await imgSrcOf(nombre1);
+ok('cambiar foto reemplaza la anterior', Boolean(secondSrc) && secondSrc !== firstSrc);
+ok('la foto anterior se borra del disco', (await status(firstSrc)) === 404);
+
+await productLi(nombre1).getByRole('button', { name: 'Quitar foto' }).click();
+await owner.waitForTimeout(3000);
+ok('quitar foto la saca del panel', (await imgSrcOf(nombre1)) === null);
+ok('quitar foto borra el archivo', (await status(secondSrc)) === 404);
+
+// Tenant-check en la ruta: un targetId que no es de esta cuenta no sube nada.
+// fetch() desde la página: la cookie de sesión es Secure en producción y el
+// APIRequestContext de Playwright no la manda por http.
+const foreign = await owner.evaluate(async () => {
+  const body = new FormData();
+  body.set('kind', 'product');
+  body.set('targetId', '99999999');
+  body.set('file', new File([new Uint8Array([0xff, 0xd8, 0xff])], 'x.jpg', { type: 'image/jpeg' }));
+  return (await fetch('/api/upload', { method: 'POST', body })).status;
+});
+ok('producto ajeno o inexistente → 404', foreign === 404, String(foreign));
+
+// La foto de nombre2 se queda para el paso 6: borrar el producto borra el archivo.
+await productLi(nombre2).locator('.panel-item-image input[type=file]').setInputFiles({
+  name: 'mesa.jpg', mimeType: 'image/jpeg', buffer: await jpegOf(80),
+});
+await owner.waitForTimeout(3500);
+const mesaSrc = await imgSrcOf(nombre2);
+ok('segunda foto subida', Boolean(mesaSrc));
+
 // ---------- 4. ocultar: fuera del sitio, presente en el panel ----------
 await owner
   .locator('.panel-menu-items li')
@@ -154,6 +210,18 @@ if (ownerSlug) {
   ok('al reactivar, los datos vuelven (nada se borró)', html.includes(nombre2));
   ok('el post rechazado nunca se escribió', !html.includes('Producto fantasma'));
 }
+
+// ---------- 6. borrar productos: la foto se va con el producto (R3-16) ----------
+// También es la limpieza: sin esto, cada corrida suma dos productos al tope de 60.
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForLoadState('networkidle');
+for (const name of [nombre1, nombre2]) {
+  await productLi(name).getByRole('button', { name: 'Borrar', exact: true }).click();
+  await owner.waitForTimeout(2500);
+}
+const afterDelete = await owner.locator('body').innerText();
+ok('productos de la corrida borrados', !afterDelete.includes(nombre1) && !afterDelete.includes(nombre2));
+ok('borrar el producto borra su foto', (await status(mesaSrc)) === 404);
 
 // Deja el rubro de la semilla como estaba — otros archivos de la suite (y una
 // relectura humana de business 1) no deben ver un cambio permanente.

@@ -6,6 +6,7 @@ import { formatGs } from "@/lib/format";
 import { MENU_MAX_ITEMS_PER_SECTION, MENU_MAX_SECTIONS } from "@/lib/menu-form";
 import type { MenuSectionRow } from "@/db/menu-queries";
 import type { MenuFormState } from "@/app/mi-sitio/menu-actions";
+import { ItemImageField } from "./item-image";
 
 /**
  * Menyredigeraren i owner-panelen. Spanska (voseo) — kundens yta.
@@ -106,6 +107,7 @@ export function OwnerMenu({
   deleteItem,
   toggleAvailability,
   moveItem,
+  removeItemImage,
 }: {
   menu: MenuSectionRow[];
   addSection: (state: MenuFormState, formData: FormData) => Promise<MenuFormState>;
@@ -116,6 +118,7 @@ export function OwnerMenu({
   deleteItem: (formData: FormData) => Promise<void>;
   toggleAvailability: (formData: FormData) => Promise<void>;
   moveItem: (formData: FormData) => Promise<void>;
+  removeItemImage: (formData: FormData) => Promise<void>;
 }) {
   const [addState, addAction] = useActionState<MenuFormState, FormData>(addSection, {});
   const [editing, setEditing] = useState<number | null>(null);
@@ -186,6 +189,14 @@ export function OwnerMenu({
                     <span className="price">{formatGs(item.priceGs)}</span>
                   </div>
                   {item.description ? <p className="hint">{item.description}</p> : null}
+                  <ItemImageField
+                    kind="menu_item"
+                    targetId={item.id}
+                    idField="itemId"
+                    name={item.name}
+                    image={item.image}
+                    removeImage={removeItemImage}
+                  />
                   <div className="panel-menu-item-actions">
                     <form action={toggleAvailability}>
                       <input type="hidden" name="itemId" value={item.id} />

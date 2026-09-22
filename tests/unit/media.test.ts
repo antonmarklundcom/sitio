@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { contentTypeFor, mediaSrcSet, mediaUrl, resolveMediaPath } from "@/lib/media";
+import { contentTypeFor, itemImage, mediaSrcSet, mediaUrl, resolveMediaPath } from "@/lib/media";
 
 const ROOT = path.resolve(process.env.UPLOADS_DIR as string);
 
@@ -59,5 +59,28 @@ describe("mediaUrl och mediaSrcSet", () => {
     expect(mediaSrcSet(7, { w400: "a.webp", w1600: "c.webp" })).toBe(
       "/media/7/a.webp 400w, /media/7/c.webp 1600w",
     );
+  });
+});
+
+describe("itemImage (R3-16)", () => {
+  it("är null utan media-rad eller utan varianter", () => {
+    expect(itemImage(7, null)).toBeNull();
+    expect(itemImage(7, { variantsJson: null, width: 800, height: 600 })).toBeNull();
+    expect(itemImage(7, { variantsJson: {}, width: 800, height: 600 })).toBeNull();
+  });
+
+  it("tar mellanvarianten som src och alla varianter i srcset", () => {
+    expect(
+      itemImage(7, { variantsJson: { w400: "a.webp", w800: "b.webp", w1600: "c.webp" }, width: 1600, height: 1200 }),
+    ).toEqual({
+      src: "/media/7/b.webp",
+      srcSet: "/media/7/a.webp 400w, /media/7/b.webp 800w, /media/7/c.webp 1600w",
+      width: 1600,
+      height: 1200,
+    });
+  });
+
+  it("faller tillbaka på minsta varianten när en liten bild saknar w800", () => {
+    expect(itemImage(7, { variantsJson: { w400: "a.webp" }, width: 300, height: 300 })?.src).toBe("/media/7/a.webp");
   });
 });

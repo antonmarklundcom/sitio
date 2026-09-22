@@ -20,6 +20,7 @@ import {
   deleteSectionAction,
   moveItemAction,
   moveSectionAction,
+  removeItemImageAction,
   renameSectionAction,
   saveItemAction,
   toggleItemAvailabilityAction,
@@ -27,6 +28,7 @@ import {
 import {
   deleteProductAction,
   moveProductAction,
+  removeProductImageAction,
   saveProductAction,
   toggleProductVisibilityAction,
 } from "./product-actions";
@@ -148,6 +150,7 @@ export default async function MiSitioPage({
           deleteItem={deleteItemAction}
           toggleAvailability={toggleItemAvailabilityAction}
           moveItem={moveItemAction}
+          removeItemImage={removeItemImageAction}
         />
       ) : null}
 
@@ -158,6 +161,7 @@ export default async function MiSitioPage({
           deleteProduct={deleteProductAction}
           toggleVisibility={toggleProductVisibilityAction}
           moveProduct={moveProductAction}
+          removeImage={removeProductImageAction}
         />
       ) : null}
 

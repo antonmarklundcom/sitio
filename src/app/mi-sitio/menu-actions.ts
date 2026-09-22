@@ -5,6 +5,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { menuItems, menuSections } from "@/db/schema";
 import { ownedItem, ownedSection } from "@/db/menu-queries";
+import { deleteMedia, itemImageTarget, setItemImage } from "@/db/item-media";
 import { enabledModules } from "@/db/module-queries";
 import { logActivity } from "@/lib/auth";
 import { ownerContext, type OwnerContext } from "@/lib/owner-context";
@@ -98,10 +99,12 @@ export async function deleteSectionAction(formData: FormData): Promise<void> {
   const sectionId = Number(formData.get("sectionId"));
   if (!(await ownedSection(ctx.business.id, sectionId))) return;
 
-  await db
-    .delete(menuItems)
-    .where(and(eq(menuItems.businessId, ctx.business.id), eq(menuItems.sectionId, sectionId)));
+  const sectionItems = and(eq(menuItems.businessId, ctx.business.id), eq(menuItems.sectionId, sectionId));
+  const images = await db.select({ mediaId: menuItems.mediaId }).from(menuItems).where(sectionItems);
+  await db.delete(menuItems).where(sectionItems);
   await db.delete(menuSections).where(eq(menuSections.id, sectionId));
+  // Rätternas bilder går med sektionen (R3-16).
+  await deleteMedia(ctx.business.id, images.map((row) => row.mediaId));
 
   await afterWrite(ctx, "owner_menu_section_deleted", { sectionId });
 }
@@ -198,10 +201,24 @@ export async function deleteItemAction(formData: FormData): Promise<void> {
   if (!ctx) return;
 
   const itemId = Number(formData.get("itemId"));
-  if (!(await ownedItem(ctx.business.id, itemId))) return;
+  const item = await ownedItem(ctx.business.id, itemId);
+  if (!item) return;
 
   await db.delete(menuItems).where(eq(menuItems.id, itemId));
+  await deleteMedia(ctx.business.id, [item.mediaId]);
   await afterWrite(ctx, "owner_menu_item_deleted", { itemId });
+}
+
+/** Tar bort rättens bild (R3-16). Rätten står kvar, utan bild. */
+export async function removeItemImageAction(formData: FormData): Promise<void> {
+  const ctx = await menuContext();
+  if (!ctx) return;
+
+  const target = await itemImageTarget(ctx.business.id, "menu_item", Number(formData.get("itemId")));
+  if (!target?.mediaId) return;
+
+  await setItemImage(ctx.business.id, "menu_item", target, null);
+  await afterWrite(ctx, "owner_menu_item_image_removed", { itemId: target.id });
 }
 
 /**
