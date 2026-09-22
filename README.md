@@ -39,6 +39,7 @@ Alla finns dokumenterade i [`.env.example`](.env.example). De kritiska:
 |---|---|
 | `RESEND_API_KEY` | Valfri. Resend för lösenordsåterställning; utan nyckel loggas mejlet bara i utveckling. Krävs för utskick i produktion. |
 | `RESEND_FROM` | Valfri verifierad avsändaradress; krävs när Resend används. |
+| `VENDERCRM_URL`, `VENDERCRM_API_KEY` | Valfria. När båda finns pushar nattens radar varje sajt som *blir* hot lead till VenderCRM (`POST /api/v1/leads`, R3-22). Utan dem händer ingenting. |
 | `DATABASE_URL` | MySQL. Lokalt: Remote MySQL-värden. På Hostinger: **localhost**-varianten. |
 | `NEXT_PUBLIC_BASE_URL` | **Enda** stället där domänen finns. Domänbyte = env-ändring, aldrig refaktorering. |
 | `SESSION_SECRET` | ≥32 tecken. `openssl rand -base64 48` |

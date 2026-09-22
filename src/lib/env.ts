@@ -81,6 +81,16 @@ export const env = {
   get hotLeadViews30d() {
     return int("HOT_LEAD_VIEWS_30D", 300);
   },
+  /**
+   * VenderCRM-push för hot leads (R3-22). Båda tomma = avstängt, en no-op.
+   * Nyckeln är per site i CRM:et och får aldrig ha NEXT_PUBLIC_-prefix.
+   */
+  get venderCrmUrl() {
+    return process.env.VENDERCRM_URL ?? "";
+  },
+  get venderCrmApiKey() {
+    return process.env.VENDERCRM_API_KEY ?? "";
+  },
 };
 
 /**
