@@ -396,6 +396,12 @@
 @media (min-width: 1024px) {
   .site-root .hero-media { aspect-ratio: 16 / 6; max-height: 70svh; }
   .site-root .hero-plate { max-width: 38rem; margin-top: -11rem; }
+  /* Monogrammet är hela hero-ytan när kunden saknar foto. Med desktopens
+     djupa överlapp täckte plattan nästan hela initialen — den behöver mer
+     höjd och mindre överlapp här, annars ser den tomma sajten ut som ett
+     renderingsfel i stället för som ett val. */
+  .site-root .hero--mono .hero-media { height: clamp(320px, 44svh, 460px); }
+  .site-root .hero--mono .hero-plate { margin-top: -5rem; }
 }
 
 /* ---------- 02 TJÄNSTER ---------- */
