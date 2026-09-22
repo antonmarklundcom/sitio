@@ -50,3 +50,15 @@ Not ticketed from `KNOWN-ISSUES.md` this batch: `comercio` menu+products
 (needs an Anton decision, see `docs/decisions-needed.md`), item images
 (migration, batch 2), `products_view` event (migration), `og:image` (image
 budget), `esbuild` audit (drizzle-kit major).
+
+## Batch 3
+
+Run in one Claude Code cloud session (2026-09-22) instead of Codex on the PC:
+the session is both manager and worker, one branch/PR per ticket, same gate.
+Log with the audit of stale items: `docs/log/R3-3.md`.
+
+Not ticketed, blocked on Anton: `comercio` menu+products (decision open),
+PR-17 WhatsApp Cloud API (Meta verification), PR-20 reminders (need PR-17),
+PR-21 R2 (only if the uploads-persistence test on Hostinger fails), and the
+live-deploy steps from batch 2 (import migrations on Hostinger MariaDB,
+`RESEND_*` env, uploads dir, cron, DB password rotation).

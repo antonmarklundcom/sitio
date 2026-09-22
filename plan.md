@@ -114,7 +114,10 @@ New decisions for this round:
     the same by design — identity comes from logo, photos and AI-polished
     text, not from decoration. This overrides `docs/PLAN.md` §1.5's manual
     variant choice; §1.5 is rewritten to match. Built by S7 (§6.5).
-12. **Four themes, not six.** `servicios` (dark, INDUSTRIAL), `comercio`
+12. **Four themes, not six.** (2026-09-22: themes v2 "Placa", #50, made all
+    four light-dominant and renamed the accents — see `docs/log/placa.md` and
+    `src/lib/presentation.ts`; the category → theme/variant mapping in §1.11
+    is unchanged, its "Accent" column is v1.) `servicios` (dark, INDUSTRIAL), `comercio`
     (light, EDITORIAL), `gastronomia` (WARM CRAFT) and the new `salud` (light,
     CALM). `belleza` and `taller` are categories, not themes: S3 and S4 are
     cancelled. The `themeKey` enum keeps the values `belleza` and `taller`
@@ -548,34 +551,44 @@ empty; pre-push green; PR merged; log + §9 line.
 | S1 | #28 | docs/log/S1.md |
 | S7 | #30 | docs/log/S7.md |
 | S6 | #32 | docs/log/S6.md |
+| R3 batch 1 | #34–#39 | docs/log/R3-1.md |
+| R3 batch 2 | #41–#49 | docs/log/R3-2.md |
+| Themes v2 "Placa" | #50 | docs/log/placa.md |
+| R3 batch 3 | see log | docs/log/R3-3.md |
 
 (Phases append one line each: `| O1 | #nn | docs/log/O1.md |`.)
 
 ## 10. Backlog
 
-- PR-17 WhatsApp Cloud API (needs Meta verification, D6).
-- PR-18 Extra pages module.
-- PR-19 Self-service signup and self-reported payments.
-- PR-20 Renewal automation and "tu año en cifras".
-- PR-21 R2 migration (only if the uploads-persistence test fails).
+Re-audited against the code on 2026-09-22 (round 3 batch 3,
+`docs/log/R3-3.md`). Done items are struck through with the ticket that
+closed them.
+
+- PR-17 WhatsApp Cloud API (needs Meta verification, D6). **Blocked on Anton.**
+- PR-18 Extra pages module (`pages` table already exists, no migration).
+- ~~PR-19a Self-service signup~~ — done, R3-9 (#46). PR-19b self-reported
+  payments (owner reports method + reference + receipt ⇒ payment `reported`,
+  admin confirms) is still open.
+- PR-20 Renewal automation (reminders via Cloud API templates — blocked on
+  PR-17) and "tu año en cifras" (the yearly report page is separable).
+- PR-21 R2 migration (only if the uploads-persistence test fails — Anton's
+  step after deploy A; not run yet, so not started).
 - PR-22 VenderCRM push for hot leads.
 - Menu item and product images (`media.kind` menu_item/product through
-  `/api/upload` for owner sessions).
+  `/api/upload` for owner sessions). No migration needed.
 - Superadmin editing of owner menu/products with actor logging.
 - Split opening hours (siesta) in intake.
-- Per-CTA analytics column (`l` in the beacon is dropped today).
+- Per-CTA analytics column (`l` in the beacon is dropped today). Migration.
 - Move rate limits and lazy rollup to the DB if a second Node process ever
-  exists.
+  exists. Not yet — one process.
 - Full CSP once inline scripts move to hashed or external files.
-- Trim `ThemePalettes` to the variants actually selected once S7 has shipped
-  and the QA tool no longer needs four (round 3, cheap tier).
+- ~~Trim `ThemePalettes` to the variants actually selected~~ — done, R3-1 (#34).
 - A superadmin presentation override (one flag) — only if a real customer
   case demands it; today the answer is no (§1.11).
 - Decide whether `comercio` should hide `menu` when `products` is on (both
   render today, no conflict but duplicated info — S1, KNOWN-ISSUES.md).
-- Shared logged-in `storageState` in `tests/smoke/_lib.mjs` (O1's file) so
-  the smoke suite isn't exactly at the login rate limit's ceiling with five
-  suites (O3, S6, KNOWN-ISSUES.md).
+  **Waiting on Anton** (`docs/decisions-needed.md`).
+- ~~Shared logged-in `storageState` in `tests/smoke/_lib.mjs`~~ — done, R3-5 (#37).
 
 ## 11. Round 3: Fable-led refinement, Astra workers
 
