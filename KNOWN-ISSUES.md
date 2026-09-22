@@ -11,10 +11,6 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
   conflict, but duplicates the same information. Needs an Anton decision:
   hide `menu` in `comercio` once `products` is on, or leave both
   (`docs/decisions-needed.md`, open since 2026-09-14). (S1)
-- **`npm run smoke` is not re-runnable against the same database.** The e2e
-  menu steps assume the seeded state (menu off, no items), and the registro
-  suite's six signups hit the in-process rate limit (5/h per IP) on a second
-  run within the hour. (O1, S1, R3-9, inbox 2026-09-14)
 - **Product and menu item cards have no image.** No migration needed —
   `media.kind` already has `menu_item`/`product` and both tables have
   `media_id` — but `/api/upload` refuses those kinds for owners and neither

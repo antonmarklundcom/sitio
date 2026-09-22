@@ -2,7 +2,11 @@ import { B, launchBrowser, createChecker, adminLogin, finish } from './_lib.mjs'
 
 const { ok, failed } = createChecker();
 const browser = await launchBrowser();
-const context = await browser.newContext();
+// Registro rate-limitar 5/h per IP i processen. En egen x-forwarded-for per
+// körning (samma header som actions.ts läser) gör sviten körbar igen mot samma
+// server utan omstart (R3-12); gränsen testas fortfarande inom körningen.
+const runIp = `10.${Date.now() % 250}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250) + 1}`;
+const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-for': runIp } });
 const page = await context.newPage();
 const suffix = Date.now();
 const name = `Registro smoke ${suffix}`;
