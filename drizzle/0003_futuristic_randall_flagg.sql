@@ -1,0 +1,1 @@
+ALTER TABLE `analytics_events` ADD `cta_loc` varchar(32);

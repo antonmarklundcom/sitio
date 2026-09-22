@@ -1,4 +1,4 @@
-import type { BusinessAnalytics } from "@/db/analytics-queries";
+import type { BusinessAnalytics, CtaCount } from "@/db/analytics-queries";
 import { Card, SectionTitle } from "./ui";
 
 /**
@@ -21,7 +21,54 @@ function Metric({ label, value, hint }: { label: string; value: number; hint?: s
   );
 }
 
-export function AnalyticsPanel({ analytics }: { analytics: BusinessAnalytics }) {
+const CTA_TYPE: Record<CtaCount["type"], string> = {
+  whatsapp_click: "WhatsApp",
+  phone_click: "Teléfono",
+  map_click: "Mapa",
+  social_click: "Redes",
+};
+
+/** `data-ev-loc` → vad knappen heter på sidan. Okända värden visas rakt av. */
+const CTA_LOC: Record<string, string> = {
+  hero: "portada",
+  header: "encabezado",
+  dock: "barra fija",
+  contacto: "contacto",
+  donde: "dónde estamos",
+  footer: "pie de página",
+  servicios: "servicios",
+  productos: "productos",
+  especialidades: "especialidades",
+};
+
+/**
+ * Klick per knapp, 30 dagar (R3-18). Svarar på "vilken knapp säljer?" — om
+ * ingen klickar i portadan men alla i barra fija är det ett samtalsämne.
+ */
+function CtaBreakdown({ ctas }: { ctas: CtaCount[] }) {
+  if (ctas.length === 0) return null;
+  return (
+    <div className="mt-5">
+      <h3 className="mb-2 text-xs font-medium text-admin-muted">Clics por botón, 30 días</h3>
+      <ul className="divide-y divide-admin-line rounded-lg border border-admin-line text-sm">
+        {ctas.map((c) => (
+          <li key={`${c.type}:${c.loc ?? ""}`} className="flex items-center justify-between px-3 py-1.5">
+            <span>
+              {CTA_TYPE[c.type]}
+              <span className="text-admin-muted">
+                {" · "}
+                {c.loc ? (CTA_LOC[c.loc] ?? c.loc) : "sin ubicación (antes de R3-18)"}
+              </span>
+            </span>
+            <span className="tabular-nums">{c.clicks.toLocaleString("sv-SE")}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function AnalyticsPanel({ analytics, ctas = [] }: { analytics: BusinessAnalytics; ctas?: CtaCount[] }) {
   const { series30, last30, last365 } = analytics;
   const peak = Math.max(1, ...series30.map((p) => p.views));
   const hasData = series30.some((p) => p.views > 0 || p.waClicks > 0);
@@ -88,6 +135,8 @@ export function AnalyticsPanel({ analytics }: { analytics: BusinessAnalytics }) 
         <Metric label="Mapa, 365 días" value={last365.mapClicks} />
         <Metric label="Redes sociales, 365 días" value={last365.socialClicks} />
       </div>
+
+      <CtaBreakdown ctas={ctas} />
     </Card>
   );
 }

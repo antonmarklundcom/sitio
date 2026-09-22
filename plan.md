@@ -578,7 +578,8 @@ closed them.
   `/api/upload` for owner sessions). No migration needed.~~ — done, R3-16 (#57).
 - Superadmin editing of owner menu/products with actor logging.
 - Split opening hours (siesta) in intake.
-- Per-CTA analytics column (`l` in the beacon is dropped today). Migration.
+- ~~Per-CTA analytics column (`l` in the beacon is dropped today). Migration.~~
+  — done, R3-18 (#59), migration 0003.
 - Move rate limits and lazy rollup to the DB if a second Node process ever
   exists. Not yet — one process.
 - Full CSP once inline scripts move to hashed or external files.

@@ -121,11 +121,16 @@ if (ownerSlug) {
   });
   await visitor.goto(B + '/' + ownerSlug, { waitUntil: 'load' });
   await visitor.locator('#catalogo').scrollIntoViewIfNeeded();
+  // `l` (R3-18) es el id de la sección para un evento de vista.
   const sent = await visitor
-    .waitForFunction(() => window.__ev.some((t) => t.includes('"products_view"')), null, { timeout: 15000 })
+    .waitForFunction(
+      () => window.__ev.some((t) => t.includes('"products_view"') && t.includes('"l":"catalogo"')),
+      null,
+      { timeout: 15000 },
+    )
     .then(() => true)
     .catch(() => false);
-  ok('el navegador manda products_view al ver el catálogo', sent);
+  ok('el navegador manda products_view (con l=catalogo) al ver el catálogo', sent);
   await visitor.close();
 }
 

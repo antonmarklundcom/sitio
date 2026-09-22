@@ -1,10 +1,9 @@
 /**
  * Tre små inline-script. Inget av dem laddar en extern resurs.
  *
- * Beaconen skickar `l` (vilken CTA som klickades) till dataLayer men INTE till
- * /api/ev: analytics_events har ingen kolumn för det, och datamodellen i
- * PLAN.md §2 är auktoritativ. Vill vi mäta per CTA är det en migrering, inte
- * ett extra fält som tyst kastas i ingesten.
+ * Beaconen skickar `l` (vilken CTA som klickades, `data-ev-loc`) både till
+ * dataLayer och till /api/ev, som sparar det i `analytics_events.cta_loc`
+ * (R3-18, migrering 0003). För ett vy-event är `l` sektionens id.
  *
  * JS_FLAG måste köra före paint: reveal-animationen är progressiv förbättring
  * och innehållet göms bara när JS faktiskt finns.
@@ -18,7 +17,7 @@ var bid=document.currentScript&&document.currentScript.dataset.bid;
 function send(ev,loc){
   window.dataLayer.push({event:ev,ev_loc:loc,page_path:location.pathname,site:location.hostname});
   try{
-    navigator.sendBeacon('/api/ev',new Blob([JSON.stringify({b:bid,t:ev,p:location.pathname,r:document.referrer})],{type:'application/json'}));
+    navigator.sendBeacon('/api/ev',new Blob([JSON.stringify({b:bid,t:ev,l:loc,p:location.pathname,r:document.referrer})],{type:'application/json'}));
   }catch(e){}
 }
 document.addEventListener('click',function(e){
