@@ -286,30 +286,74 @@ function css(themeCssFile: string): string {
   ].join("\n");
 }
 
+/** Två sektioner à två poster, som (sektionsnamn, [namn, beskrivning, pris]). */
+function demoMenu(
+  sections: [string, [string, string | null, number | null][]][],
+): ThemeProps["menu"] {
+  let itemId = 0;
+  return sections.map(([name, items], s) => ({
+    id: s + 1,
+    name,
+    sortOrder: s,
+    items: items.map(([itemName, description, priceGs], i) => ({
+      id: ++itemId,
+      sectionId: s + 1,
+      name: itemName,
+      description,
+      priceGs,
+      isAvailable: true,
+      sortOrder: i,
+    })),
+  }));
+}
+
 /**
- * Demomeny för QA-gaten. Sektioner med och utan beskrivning, en rätt utan pris
- * ("A consultar") och ett långt namn — de tre fall som spräcker layouten.
+ * Demomeny per tema för QA-gaten, så att salud visar konsultationer och inte
+ * rätter. Varje meny har samma tre fall som spräcker layouten: en post utan
+ * beskrivning, en utan pris ("A consultar") och ett långt namn.
  */
-const DEMO_MENU = [
-  {
-    id: 1,
-    name: "Para empezar",
-    sortOrder: 0,
-    items: [
-      { id: 1, sectionId: 1, name: "Empanadas de carne", description: "Docena, masa casera.", priceGs: 48000, isAvailable: true, sortOrder: 0 },
-      { id: 2, sectionId: 1, name: "Chipa guasú", description: null, priceGs: 25000, isAvailable: true, sortOrder: 1 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Platos principales",
-    sortOrder: 1,
-    items: [
-      { id: 3, sectionId: 2, name: "Milanesa napolitana con papas fritas y ensalada", description: "Porción grande, alcanza para dos.", priceGs: 75000, isAvailable: true, sortOrder: 0 },
-      { id: 4, sectionId: 2, name: "Pescado del día", description: "Según lo que llegue de la pescadería.", priceGs: null, isAvailable: true, sortOrder: 1 },
-    ],
-  },
-];
+const DEMO_MENUS: Record<string, ThemeProps["menu"]> = {
+  gastronomia: demoMenu([
+    ["Para empezar", [
+      ["Empanadas de carne", "Docena, masa casera.", 48000],
+      ["Chipa guasú", null, 25000],
+    ]],
+    ["Platos principales", [
+      ["Milanesa napolitana con papas fritas y ensalada", "Porción grande, alcanza para dos.", 75000],
+      ["Pescado del día", "Según lo que llegue de la pescadería.", null],
+    ]],
+  ]),
+  salud: demoMenu([
+    ["Consultas", [
+      ["Consulta general", "Primera visita, 30 minutos.", 150000],
+      ["Control", null, 100000],
+    ]],
+    ["Estudios y tratamientos", [
+      ["Electrocardiograma con informe y control de presión arterial", "Resultado el mismo día.", 180000],
+      ["Tratamiento a medida", "Se define después de la consulta.", null],
+    ]],
+  ]),
+  servicios: demoMenu([
+    ["Visitas", [
+      ["Visita técnica a domicilio", "Diagnóstico en Asunción y Gran Asunción.", 120000],
+      ["Limpieza de equipo split", null, 90000],
+    ]],
+    ["Trabajos", [
+      ["Instalación de aire acondicionado split hasta 24.000 BTU", "Incluye soporte y 3 metros de cañería.", 450000],
+      ["Mantenimiento de empresas", "Según cantidad de equipos.", null],
+    ]],
+  ]),
+  comercio: demoMenu([
+    ["Lo más pedido", [
+      ["Cemento portland 50 kg", "Retiro en el local o envío.", 68000],
+      ["Arena lavada", null, 180000],
+    ]],
+    ["Por encargo", [
+      ["Chapa trapezoidal galvanizada calibre 26 cortada a medida", "Entrega en 48 horas.", 95000],
+      ["Aberturas de aluminio", "Consultanos medidas.", null],
+    ]],
+  ]),
+};
 
 const DEMO_PRODUCTS = [
   { id: 1, name: "Silla de madera maciza", description: "Roble, terminación natural.", priceGs: 450000, isVisible: true, sortOrder: 0 },
@@ -374,7 +418,7 @@ async function main() {
         // en betalande kund ser dem, annars granskas ett utseende som ingen
         // kund har.
         modules: new Set<string>(["gallery", "menu", "products"]),
-        menu: DEMO_MENU,
+        menu: DEMO_MENUS[demo.themeKey] ?? DEMO_MENUS.gastronomia,
         products: DEMO_PRODUCTS,
       },
     }));

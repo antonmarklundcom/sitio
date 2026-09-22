@@ -23,10 +23,6 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
 - **`npm audit` (with dev deps) has 4 moderate `esbuild` findings** via
   `drizzle-kit → @esbuild-kit/*`. Dev-only; `--omit=dev` is clean. Needs a
   `drizzle-kit` bump. (O1)
-- **`public/file.svg`, `globe.svg`, `window.svg`** are unused Next.js
-  template leftovers. (O2)
-- **`scripts/theme-preview.tsx`'s shared `DEMO_MENU` placeholder** (dishes,
-  not consultations/services) reads oddly in the `salud` QA screenshot. (S2)
 - **Landing page still loads `globals.css` (Tailwind)** via the root layout
   even though it uses zero utilities — breaking it into its own route group
   would force a second `<html>` layout for one route. Backlog. (O2)
