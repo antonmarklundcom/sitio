@@ -18,9 +18,6 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
 - **Products has no view event in the analytics enum** (`menu_view` exists,
   no `products_view`). Needs a migration (enum on `analytics_events`). The
   radar's "menu or products" term reads `business_modules`, by design. (S1, S5)
-- **`npm audit` (with dev deps) has 4 moderate `esbuild` findings** via
-  `drizzle-kit → @esbuild-kit/*`. Dev-only; `--omit=dev` is clean. Needs a
-  `drizzle-kit` bump. (O1)
 - **Landing page still loads `globals.css` (Tailwind)** via the root layout
   even though it uses zero utilities — breaking it into its own route group
   would force a second `<html>` layout for one route. Backlog. (O2)
