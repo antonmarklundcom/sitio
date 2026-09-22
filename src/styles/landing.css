@@ -187,18 +187,21 @@
 }
 
 /*
- * Demo-innehållet: `servicios`-temats variant 1 (orange, hue 29) i miniatyr.
- * Färgerna är kopierade ur palettes.ts, inte importerade — landningssidan
- * bär aldrig kundsajternas CSS.
+ * Demo-innehållet: `servicios`-temats variant 1 (ámbar, hue 35) i miniatyr,
+ * efter "placa"-omgången. Färgerna är kopierade ur palettes.ts, inte
+ * importerade — landningssidan bär aldrig kundsajternas CSS. Ändras temat
+ * ska den här blocket ändras med, annars säljer sidan något vi inte bygger.
  */
 .lp-demo {
-  --d-base: #12100d;
-  --d-surface: #1b1815;
-  --d-raised: #241f1a;
-  --d-ink: #f4efe8;
-  --d-muted: #a79e92;
-  --d-accent: #ff8a1f;
-  --d-hair: rgba(244, 239, 232, 0.12);
+  --d-base: #f1f2f3;
+  --d-surface: #e4e6e8;
+  --d-raised: #ffffff;
+  --d-deep: #161a1e;
+  --d-ink: #15181b;
+  --d-muted: #4e575f;
+  --d-accent: #be7103;
+  --d-accent-light: #efb55c;
+  --d-hair: rgba(21, 24, 27, 0.14);
 
   height: 100%;
   overflow: hidden;
@@ -206,10 +209,13 @@
   color: var(--d-ink);
   font-size: 8px;
   line-height: 1.45;
-  padding-bottom: 26px;
 }
+/* Landningssidans egna .lp p/.lp span-regler är ljusa (sidan är mörk) och
+   har högre specificitet än mockens .lp-demo-*-klasser. Mocken är numera en
+   LJUS sajt, så färgen måste nollställas här — annars blir plattans rubrik
+   ljus text på vit yta. Varje färgsättning nedan bär därför `.lp-demo `. */
 .lp-demo span,
-.lp-demo p { display: block; }
+.lp-demo p { display: block; color: inherit; }
 .lp-demo p { margin: 0; }
 .lp-demo-bar {
   background: var(--d-surface);
@@ -217,76 +223,128 @@
   padding: 5px 8px;
   text-align: center;
 }
-.lp-demo-url { color: var(--d-muted); font-size: 7px; letter-spacing: 0.02em; }
-.lp-demo .lp-demo-head { display: flex; align-items: center; gap: 6px; padding: 8px 10px 0; }
-.lp-demo-name { font-weight: 600; font-size: 10px; letter-spacing: -0.02em; }
+.lp-demo .lp-demo-url { color: var(--d-muted); font-size: 7px; letter-spacing: 0.02em; }
+
+/* Bildytan. Ingen bild i mocken — en ton ur temats mörka spår plus temats
+   45°-raster, samma yta en kund utan foton faktiskt får. */
+.lp-demo-photo {
+  height: 92px;
+  background-color: var(--d-deep);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(241, 242, 243, 0.06) 0 4px,
+    transparent 4px 12px
+  );
+  position: relative;
+}
+.lp-demo .lp-demo-head { display: flex; align-items: center; gap: 6px; padding: 7px 10px; }
+.lp-demo .lp-demo-name { font-weight: 700; font-size: 9px; letter-spacing: -0.02em; color: #fff; }
 .lp-demo .lp-demo-call {
   margin-inline-start: auto;
-  border: 1px solid var(--d-hair);
-  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 3px;
   padding: 3px 7px;
   font-size: 7px;
-  color: var(--d-muted);
+  color: #fff;
 }
-.lp-demo-hero { padding: 12px 10px 14px; }
-.lp-demo-eyebrow {
+
+/* Plattan: mocken ska visa exakt det greppet — den ligger över bildens
+   underkant och bär rubrik, status och knapp. */
+.lp-demo-plate {
+  position: relative;
+  margin: -14px 10px 0;
+  background: var(--d-raised);
+  border-top: 3px solid var(--d-accent);
+  border-radius: 0 0 6px 6px;
+  padding: 9px 10px 10px;
+  box-shadow: 0 2px 4px rgb(20 18 14 / 0.08), 0 10px 22px rgb(20 18 14 / 0.14);
+}
+.lp-demo .lp-demo-eyebrow {
   color: var(--d-accent);
-  font-size: 6.5px;
-  letter-spacing: 0.12em;
+  font-size: 6px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 600;
   margin-bottom: 5px;
 }
-.lp-demo-h1 { font-size: 15px; line-height: 1.05; letter-spacing: -0.03em; font-weight: 600; margin-bottom: 6px; }
-.lp-demo-lede { color: var(--d-muted); font-size: 7.5px; margin-bottom: 9px; }
-.lp-demo-cta {
-  background: var(--d-accent);
-  color: var(--d-base);
-  border-radius: 999px;
-  padding: 6px 9px;
-  font-weight: 600;
-  font-size: 7.5px;
-  text-align: center;
-  margin-bottom: 8px;
-}
-.lp-demo .lp-demo-status { color: var(--d-muted); font-size: 7px; display: flex; align-items: center; gap: 4px; }
-.lp-demo .lp-demo-dot { width: 5px; height: 5px; border-radius: 999px; background: #35c184; flex: none; }
-.lp-demo .lp-demo-ribbon {
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
+.lp-demo .lp-demo-h1 { color: var(--d-ink); font-size: 13px; line-height: 1.08; letter-spacing: -0.03em; font-weight: 700; margin-bottom: 5px; }
+.lp-demo .lp-demo-lede { color: var(--d-muted); font-size: 7.5px; margin-bottom: 7px; }
+.lp-demo .lp-demo-status {
+  color: var(--d-ink);
   background: var(--d-surface);
-  border-block: 1px solid var(--d-hair);
-  padding: 6px 10px;
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-size: 6.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 7px;
+}
+.lp-demo .lp-demo-dot { width: 5px; height: 5px; border-radius: 999px; background: #1a8f4a; flex: none; }
+.lp-demo .lp-demo-cta {
+  background: var(--d-deep);
+  color: var(--d-base);
+  border-radius: 3px;
+  padding: 7px 9px;
+  font-weight: 600;
+  font-size: 8px;
+  text-align: center;
+}
+.lp-demo .lp-demo-sub { color: var(--d-muted); font-size: 6.5px; text-align: center; margin-top: 4px; }
+.lp-demo-chips { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--d-hair); }
+.lp-demo .lp-demo-chip {
+  display: inline-block;
+  border: 1px solid var(--d-hair);
+  border-radius: 3px;
+  padding: 3px 6px;
   font-size: 5.5px;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
   color: var(--d-muted);
 }
-.lp-demo-services { padding: 12px 10px 0; display: grid; gap: 5px; }
-.lp-demo-card { background: var(--d-raised); border: 1px solid var(--d-hair); border-radius: 6px; padding: 7px 8px; }
-.lp-demo-card--lead { background: var(--d-accent); border-color: transparent; color: var(--d-base); }
-.lp-demo-card-title { font-weight: 600; font-size: 8.5px; letter-spacing: -0.01em; }
-.lp-demo-card-body { font-size: 7px; opacity: 0.8; margin-top: 3px; }
-.lp-demo-hours { padding: 11px 10px 0; display: grid; gap: 4px; font-size: 7px; color: var(--d-muted); }
-.lp-demo .lp-demo-hours-row { display: flex; justify-content: space-between; border-top: 1px solid var(--d-hair); padding-top: 4px; }
-.lp-demo-zone { padding: 9px 10px 0; font-size: 7px; color: var(--d-muted); }
-.lp-demo-zone strong { color: var(--d-ink); font-weight: 600; }
-.lp-demo .lp-demo-foot {
-  margin-top: 10px;
-  border-top: 1px solid var(--d-hair);
-  padding: 7px 10px 0;
-  font-size: 6.5px;
-  color: var(--d-muted);
+
+.lp-demo-svc { padding: 12px 10px 0; }
+.lp-demo .lp-demo-svc-h2 { color: var(--d-ink); font-size: 11px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 5px; }
+.lp-demo .lp-demo-svc-row {
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  border-top: 1px solid var(--d-hair);
+  padding-block: 5px;
 }
-.lp-demo-dock {
+.lp-demo .lp-demo-svc-n { color: var(--d-accent); font-weight: 700; font-size: 7px; }
+.lp-demo .lp-demo-svc-name { color: var(--d-ink); font-weight: 600; font-size: 8px; }
+
+.lp-demo .lp-demo-hours { padding: 10px 10px 12px; display: grid; gap: 4px; font-size: 7px; color: var(--d-muted); }
+.lp-demo .lp-demo-hours-row { display: flex; justify-content: space-between; border-top: 1px solid var(--d-hair); padding-top: 4px; }
+
+.lp-demo-close {
+  background-color: var(--d-deep);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(241, 242, 243, 0.05) 0 4px,
+    transparent 4px 12px
+  );
+  padding: 14px 10px 40px;
+}
+.lp-demo .lp-demo-statement {
+  color: var(--d-base);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.lp-demo .lp-demo-dock {
   position: absolute;
   inset-inline: 10px;
   bottom: 10px;
-  background: var(--d-ink);
+  background: var(--d-deep);
   color: var(--d-base);
-  border-radius: 999px;
+  border: 1px solid rgba(241, 242, 243, 0.22);
+  border-radius: 4px;
   padding: 7px;
   text-align: center;
   font-weight: 600;

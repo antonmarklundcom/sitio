@@ -44,15 +44,15 @@ ok(
   (await p.locator('body').innerText()).includes('El tema y la paleta siguen al rubro'),
 );
 ok(
-  'servicios visar variant 2 (cyan)',
-  (await p.locator('body').innerText()).includes('servicios · variante 2 (cian)'),
+  'servicios visar variant 2 (azul)',
+  (await p.locator('body').innerText()).includes('servicios · variante 2 (azul)'),
 );
 
 await p.selectOption('select[name=category]', 'taller');
 await p.waitForTimeout(400);
 ok(
-  'taller härleds till servicios · variant 1 (orange) direkt, före spar',
-  (await p.locator('body').innerText()).includes('servicios · variante 1 (naranja)'),
+  'taller härleds till servicios · variant 1 (ámbar) direkt, före spar',
+  (await p.locator('body').innerText()).includes('servicios · variante 1 (ámbar)'),
 );
 
 await p.fill('input[name=name]', `Taller Presentación ${suffix}`);
@@ -67,27 +67,27 @@ ok('utkastet skapades', /\/admin\/sitios\/\d+/.test(p.url()), p.url());
 await p.waitForTimeout(1500);
 ok(
   'admin visar den härledda presentationen för taller',
-  (await p.locator('body').innerText()).includes('servicios · variante 1 (naranja)'),
+  (await p.locator('body').innerText()).includes('servicios · variante 1 (ámbar)'),
 );
 
 const tallerHtml = await previewHtml(p);
-// `servicios` är bastemat: dess rot är `.site-root` utan t-klass (de andra
-// temana lägger till sin egen). Accenten är det som skiljer variant 1 från 2.
-ok('sidroten är servicios (site-root utan annan t-klass)', /class="site-root[^"]*"/.test(tallerHtml));
+// Varje tema bär sin egen t-klass på roten (theme.css v2). Accenten är det
+// som skiljer variant 1 från 2 inom temat.
+ok('sidroten bär t-servicios', /class="site-root t-servicios"/.test(tallerHtml));
 ok(
   'inget annat tema renderas',
   !/t-comercio|t-gastronomia|t-salud/.test(tallerHtml),
 );
-ok('variant 1: orange accent #FF8A1F', tallerHtml.includes('#FF8A1F'));
-ok('inte servicios variant 2 (cyan)', !tallerHtml.includes('#2ACADC'));
+ok('variant 1: ámbar accent #BE7103', tallerHtml.includes('#BE7103'));
+ok('inte servicios variant 2 (azul)', !tallerHtml.includes('#1D4FB8'));
 
 // ---------- 3. byt bransch: presentationen härleds om vid spar ----------
 const form = p.locator('form').filter({ has: p.locator('select[name=category]') }).first();
 await form.locator('select[name=category]').selectOption('comercio');
 await p.waitForTimeout(400);
 ok(
-  'comercio härleds till variant 1 (blå) i formuläret',
-  (await p.locator('body').innerText()).includes('comercio · variante 1 (azul)'),
+  'comercio härleds till variant 1 (carmín) i formuläret',
+  (await p.locator('body').innerText()).includes('comercio · variante 1 (carmín)'),
 );
 
 await form.getByRole('button', { name: /Guardar/ }).first().click();
@@ -96,12 +96,12 @@ await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 ok(
   'admin visar comercio efter spar',
-  (await p.locator('body').innerText()).includes('comercio · variante 1 (azul)'),
+  (await p.locator('body').innerText()).includes('comercio · variante 1 (carmín)'),
 );
 
 const comercioHtml = await previewHtml(p);
 ok('sidroten bär t-comercio', comercioHtml.includes('t-comercio'));
-ok('variant 1: blå accent #0E4E96', comercioHtml.includes('#0E4E96'));
-ok('den gamla orange accenten är borta', !comercioHtml.includes('#FF8A1F'));
+ok('variant 1: carmín accent #C21744', comercioHtml.includes('#C21744'));
+ok('den gamla ámbar-accenten är borta', !comercioHtml.includes('#BE7103'));
 
 await finish(b, failed());

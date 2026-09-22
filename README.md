@@ -123,33 +123,92 @@ offseten måste justeras.
 
 ## Teman
 
-Ett tema = en komponent (`src/themes/<key>/<key>-theme.tsx`), en CSS-fil med
-sektionsmönstren, och fyra palettvarianter i `src/themes/palettes.ts`. Fyra
-teman, alla byggda: `servicios` (INDUSTRIAL), `gastronomia` (WARM CRAFT),
-`comercio` (EDITORIAL), `salud` (CALM). `belleza` och `taller` är inga egna
+Fyra teman, alla byggda: `servicios` (TALLER), `gastronomia` (COCINA),
+`comercio` (MERCADO), `salud` (CALMA). `belleza` och `taller` är inga egna
 teman — de är kategorier som renderar på `salud` respektive `servicios` med en
 låst palettvariant (plan §1.12). Vilket tema och vilken variant en sajt får
 avgörs helt av branschen (`presentationFor()` i `src/lib/presentation.ts`,
-plan §1.11) — ingen väljare i admin längre, bara en läsbar rad som visar
-resultatet.
+plan §1.11) — ingen väljare i admin, bara en läsbar rad som visar resultatet.
 
-Delade sektionsprimitiv (öppettidslista, adressrad, footer, statusprick) ligger
-i `src/themes/theme.css`; temafilen innehåller bara temats egna mönster.
-Ljusa teman bär `.t-light` på roten — den tonar ner skuggor och grain, som
-annars är satta för mörkdominant design.
+### "Placa": ett mönster, fyra behandlingar
 
-QA-gaten före varje temaändring:
+De fyra temana är **en produktlinje, inte fyra sajter**. De delar exakt samma
+sektionsvokabulär och samma komponenter; de skiljer sig genom färg, radie,
+textur, fotobehandling och i vilken ordning blocken ligger.
+
+Hero är sidans hela affär: en bild i fast beskärning (1:1 på telefon, 16:6 på
+desktop) med en upphöjd **platta** över dess underkant. Plattan bär namn, en
+rad om vad de gör, "abierto ahora" och WhatsApp-knappen — allt i tumzonen, och
+allt ovanför vecket på 360 px. **Utan foto** byts bilden mot ett **monogram**:
+initialerna satta stort mot temats mörka ton med temats egen textur. Nästan
+varje ny kund saknar bra foton första veckan, och en tom heroyta är skillnaden
+mellan "ny sajt" och "trasig sajt".
+
+Plattan förekommer exakt två gånger per sajt — i hero och över det mörka
+avslutsbandet. Det är familjens igenkänningstecken.
+
+Var koden ligger:
+
+| Fil | Vad den äger |
+|---|---|
+| `src/themes/theme.css` | Hela den delade layouten: tokens, typskala, hero, block, rail, mörkt band, footer, fast CTA, modulprimitivens utseende |
+| `src/components/site/hero.tsx` | Hero-mönstret (platta + monogram + status), delat av alla fyra |
+| `src/components/site/blocks.tsx` | De delade sektionsblocken: tjänster, foton, var/när, avslut+footer, fasta CTA:n |
+| `src/themes/<key>/<key>-theme.tsx` | **Bara** ordning och text. Ingen egen layout. |
+| `src/themes/<key>/<key>.css` | Temats skruvar: radier, textur, fotofilter, ett par typografiska grepp |
+| `src/themes/palettes.ts` | Två färdiga token-uppsättningar per tema. Ingen färg härleds i runtime. |
+
+Blockordningen per tema, och varför, står i `docs/PALETTE-REGISTRY.md`.
+
+### Palett
+
+Alla fyra teman är **ljusdominanta**, med ett mörkt avslutsband vardera. I v1
+var `servicios` det enda mörka temat av fyra, vilket läste som ett misstag i
+familjen. `.t-light` finns därför inte längre — varje tema bär i stället sin
+egen `t-<nyckel>`-klass, `servicios` inkluderat.
+
+Accenten är tre tokens (`accent` för fyllningar, `accentInk` för accentfärgad
+text på ljus botten, `accentLight` för det mörka bandet) plus `deep` för temats
+mörka ton. Skälet, och varje uppmätt kontrastvärde, står i
+`docs/PALETTE-REGISTRY.md`.
+
+Typsnitt: **Archivo** (display) + **Instrument Sans** (text), via `next/font`.
+
+### Telefonmocken på landningssidan
+
+`src/components/landing/phone-mock.tsx` + `.lp-demo-*` i
+`src/styles/landing.css` är en handbyggd miniatyr av `servicios` variant 1.
+Den importerar inte temat (landningssidan rör aldrig databasen, plan §1.4), så
+**den måste uppdateras för hand när temat ändras** — annars säljer sidan en
+sajt vi inte längre bygger.
+
+### QA-gaten före varje temaändring
 
 ```bash
-npm run theme:preview     # .preview/<tema>-v<1..4>.html med demodata
+npm run theme:preview     # .preview/<tema>-v<1|2>.html + <tema>-v1-vacio.html
 npm run theme:shots       # skärmdumpar i 360/768/1280 + överflödeskontroll
 ```
 
+`theme:preview` renderar varje tema i två varianter med modulerna PÅ, och
+dessutom ett **tomt läge** per tema (`-v1-vacio`): inga foton, ingen logga,
+inga tjänster, inga moduler, ingen beskrivning, inga öppettider, ingen adress
+och det kortaste namn en kund rimligen har. Det är det vanligaste läget vecka
+ett, och det som får en sajt att se trasig ut om temat inte är byggt för det.
+
 `theme:shots` serverar `.preview/` över HTTP (bild-src är rotrelativa), väntar
 in reveal-animationen och felrapporterar horisontell scroll per bredd. Den
-fångade fyra riktiga buggar i PR-07: statement-rubriken sprängde 360 px,
-karusellerna sköt ut hela sidan via `min-width: auto`, hero-texten hamnade
-ovanpå kontaktpanelen på desktop, och galleriet renderade tomt.
+fångade fyra riktiga buggar i PR-07 och fyra till i placa-omgången: osynlig
+rubrik i avslutsplattan (ljus text ärvd ner på vit yta), modulsektioner utan
+vertikal rytm, CTA:n under vecket på 360 px, och Ñ:ets tilde som krockade med
+raden ovanför vid radavstånd 1,04.
+
+Två regler som gaten inte kan fånga åt dig:
+
+- **`.reveal` sätts aldrig på ett barn i en horisontell rail.** Ett kort som
+  ligger bortskrollat i sidled skär inte viewporten, får aldrig `.is-in`, och
+  rapporteras (korrekt) som ett fel. Sätt den på railen.
+- **Ett grid- eller flexbarn behöver `min-width: 0`.** Annars tvingar en
+  horisontell rail hela sidan bredare i stället för att scrolla i sig själv.
 
 ## Prenumerationer och betalningar
 

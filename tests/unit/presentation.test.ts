@@ -24,13 +24,13 @@ const { BUILT_THEMES } = await import("@/themes/registry");
 describe("PRESENTATION_BY_CATEGORY", () => {
   it("är exakt tabellen i plan §1.11", () => {
     expect(PRESENTATION_BY_CATEGORY).toEqual({
-      servicios: { themeKey: "servicios", paletteVariant: 2, accent: "cian" },
-      taller: { themeKey: "servicios", paletteVariant: 1, accent: "naranja" },
-      comercio: { themeKey: "comercio", paletteVariant: 1, accent: "azul" },
+      servicios: { themeKey: "servicios", paletteVariant: 2, accent: "azul" },
+      taller: { themeKey: "servicios", paletteVariant: 1, accent: "ámbar" },
+      comercio: { themeKey: "comercio", paletteVariant: 1, accent: "carmín" },
       otro: { themeKey: "comercio", paletteVariant: 2, accent: "verde" },
-      gastronomia: { themeKey: "gastronomia", paletteVariant: 1, accent: "marrón rojizo" },
-      salud: { themeKey: "salud", paletteVariant: 1, accent: "verde azulado" },
-      belleza: { themeKey: "salud", paletteVariant: 2, accent: "rosa" },
+      gastronomia: { themeKey: "gastronomia", paletteVariant: 1, accent: "terracota" },
+      salud: { themeKey: "salud", paletteVariant: 1, accent: "petróleo" },
+      belleza: { themeKey: "salud", paletteVariant: 2, accent: "orquídea" },
     });
   });
 
@@ -74,9 +74,9 @@ describe("presentationFor", () => {
 });
 
 describe("presentationLabel", () => {
-  it("skriver tema, variant och accent på svenska", () => {
-    expect(presentationLabel("servicios")).toBe("servicios · variante 2 (cian)");
-    expect(presentationLabel("belleza")).toBe("salud · variante 2 (rosa)");
+  it("skriver tema, variant och accent på spanska", () => {
+    expect(presentationLabel("servicios")).toBe("servicios · variante 2 (azul)");
+    expect(presentationLabel("belleza")).toBe("salud · variante 2 (orquídea)");
   });
 
   it("ger en etikett för varje bransch", () => {
