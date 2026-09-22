@@ -102,6 +102,8 @@ export function OwnerProducts({
   toggleVisibility,
   moveProduct,
   removeImage,
+  heading = "Tus productos",
+  businessId,
 }: {
   products: ProductRow[];
   saveProduct: (state: ProductFormState, formData: FormData) => Promise<ProductFormState>;
@@ -109,13 +111,17 @@ export function OwnerProducts({
   toggleVisibility: (formData: FormData) => Promise<void>;
   moveProduct: (formData: FormData) => Promise<void>;
   removeImage: (formData: FormData) => Promise<void>;
+  /** Rubriken; adminet (R3-20) talar inte i kundens "tu". */
+  heading?: string;
+  /** Skickas med bilduppladdningen när superadmin redigerar från /admin. */
+  businessId?: number;
 }) {
   const [editing, setEditing] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
 
   return (
     <div className="panel-card">
-      <h2>Tus productos</h2>
+      <h2>{heading}</h2>
       <p>
         Lo que cargues acá sale en tu página con el precio al lado. Los productos marcados como “no visible”
         desaparecen de la página, pero quedan guardados acá para cuando vuelvan.
@@ -139,6 +145,7 @@ export function OwnerProducts({
                 name={product.name}
                 image={product.image}
                 removeImage={removeImage}
+                businessId={businessId}
               />
               <div className="panel-menu-item-actions">
                 <form action={toggleVisibility}>

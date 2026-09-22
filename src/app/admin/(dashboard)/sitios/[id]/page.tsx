@@ -40,6 +40,29 @@ import { PolishPanel } from "@/components/admin/polish-panel";
 import { applyPolishAction, getPolishProposal, runPolishAction } from "../polish-actions";
 import { diffFields } from "@/lib/ai-polish";
 import { env } from "@/lib/env";
+import { getMenu } from "@/db/menu-queries";
+import { getProducts } from "@/db/product-queries";
+import { OwnerMenu } from "@/components/mi-sitio/owner-menu";
+import { OwnerProducts } from "@/components/mi-sitio/owner-products";
+import {
+  adminAddSectionAction,
+  adminDeleteItemAction,
+  adminDeleteSectionAction,
+  adminMoveItemAction,
+  adminMoveSectionAction,
+  adminRemoveItemImageAction,
+  adminRenameSectionAction,
+  adminSaveItemAction,
+  adminToggleItemAvailabilityAction,
+} from "@/app/mi-sitio/menu-actions";
+import {
+  adminDeleteProductAction,
+  adminMoveProductAction,
+  adminRemoveProductImageAction,
+  adminSaveProductAction,
+  adminToggleProductVisibilityAction,
+} from "@/app/mi-sitio/product-actions";
+import "@/styles/panel.css";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +105,14 @@ export default async function EditBusinessPage({
       listModuleStates(businessId),
       getPolishProposal(businessId),
     ]);
+
+  // Meny och produkter laddas bara när modulen är på — samma regel som
+  // owner-panelen; en avstängd modul har ingen editor (R3-20).
+  const enabled = new Set(moduleStates.filter((m) => m.enabled).map((m) => m.key));
+  const [menu, products] = await Promise.all([
+    enabled.has("menu") ? getMenu(businessId) : null,
+    enabled.has("products") ? getProducts(businessId) : null,
+  ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
   const toItem = (m: (typeof mediaRows)[number]): MediaItem => ({
@@ -269,6 +300,46 @@ export default async function EditBusinessPage({
         photoCount={photos.length}
         toggleModule={toggleModuleAction}
       />
+
+      {menu || products ? (
+        <Card>
+          <SectionTitle hint="Mismo editor que ve el cliente en /mi-sitio. Lo que cambies acá queda en el registro de actividad a tu nombre (admin_…), no al del cliente.">
+            Carta y productos
+          </SectionTitle>
+          {/* Panelens komponenter och stilar (R3-20): samma editor som ownern,
+              inte en andra implementation som kan glida isär. */}
+          <div className="panel panel--embedded">
+            {menu ? (
+              <OwnerMenu
+                heading="Carta del cliente"
+                businessId={business.id}
+                menu={menu}
+                addSection={adminAddSectionAction.bind(null, business.id)}
+                renameSection={adminRenameSectionAction.bind(null, business.id)}
+                deleteSection={adminDeleteSectionAction.bind(null, business.id)}
+                moveSection={adminMoveSectionAction.bind(null, business.id)}
+                saveItem={adminSaveItemAction.bind(null, business.id)}
+                deleteItem={adminDeleteItemAction.bind(null, business.id)}
+                toggleAvailability={adminToggleItemAvailabilityAction.bind(null, business.id)}
+                moveItem={adminMoveItemAction.bind(null, business.id)}
+                removeItemImage={adminRemoveItemImageAction.bind(null, business.id)}
+              />
+            ) : null}
+            {products ? (
+              <OwnerProducts
+                heading="Productos del cliente"
+                businessId={business.id}
+                products={products}
+                saveProduct={adminSaveProductAction.bind(null, business.id)}
+                deleteProduct={adminDeleteProductAction.bind(null, business.id)}
+                toggleVisibility={adminToggleProductVisibilityAction.bind(null, business.id)}
+                moveProduct={adminMoveProductAction.bind(null, business.id)}
+                removeImage={adminRemoveProductImageAction.bind(null, business.id)}
+              />
+            ) : null}
+          </div>
+        </Card>
+      ) : null}
 
       <Card>
         <SectionTitle hint="Las imágenes se procesan al subirlas: se eliminan los datos EXIF, se aplica la orientación y se guardan versiones de 400/800/1600 px en webp. El original nunca se guarda.">

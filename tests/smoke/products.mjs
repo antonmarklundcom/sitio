@@ -237,6 +237,31 @@ if (ownerSlug) {
   ok('el post rechazado nunca se escribió', !html.includes('Producto fantasma'));
 }
 
+// ---------- 5b. superadmin edita los productos del cliente desde /admin (R3-20) ----------
+const adminCard = () => p.locator('.panel--embedded');
+await p.goto(B + '/admin/sitios/' + (ownerBizId ?? '1'), { waitUntil: 'domcontentloaded' });
+await p.waitForLoadState('networkidle');
+ok('adminet visar kundens produkter', (await adminCard().innerText().catch(() => '')).includes('Productos del cliente'));
+const nombreAdmin = 'Producto admin ' + Date.now().toString().slice(-4);
+await adminCard().getByRole('button', { name: 'Agregar producto' }).first().click();
+await p.waitForTimeout(600);
+await adminCard().locator('.panel-menu-form input[name=name]').last().fill(nombreAdmin);
+await adminCard().locator('.panel-menu-form input[name=priceGs]').last().fill('99000');
+await adminCard().getByRole('button', { name: 'Agregar producto' }).last().click();
+await p.waitForTimeout(3000);
+ok('superadmin lägger till en produkt åt kunden', (await adminCard().innerText()).includes(nombreAdmin));
+if (ownerSlug) {
+  const html = await (await fetch(B + '/' + ownerSlug)).text();
+  ok('adminens produkt syns på sajten', html.includes(nombreAdmin));
+}
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1000);
+ok('och i kundens panel', (await owner.locator('body').innerText()).includes(nombreAdmin));
+await adminCard().locator('.panel-menu-items li').filter({ hasText: nombreAdmin }).first()
+  .getByRole('button', { name: 'Borrar', exact: true }).click();
+await p.waitForTimeout(2500);
+ok('superadmin raderar produkten', !(await adminCard().innerText()).includes(nombreAdmin));
+
 // ---------- 6. borrar productos: la foto se va con el producto (R3-16) ----------
 // También es la limpieza: sin esto, cada corrida suma dos productos al tope de 60.
 await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });

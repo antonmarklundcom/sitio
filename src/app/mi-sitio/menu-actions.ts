@@ -8,7 +8,7 @@ import { ownedItem, ownedSection } from "@/db/menu-queries";
 import { deleteItemMedia, itemImageTarget, setItemImage } from "@/db/item-media";
 import { enabledModules } from "@/db/module-queries";
 import { logActivity } from "@/lib/auth";
-import { ownerContext, type OwnerContext } from "@/lib/owner-context";
+import { adminEditorContext, ownerEditorContext, type EditorContext } from "@/lib/owner-context";
 import {
   MENU_MAX_ITEMS_PER_SECTION,
   MENU_MAX_SECTIONS,
@@ -19,25 +19,31 @@ import {
 export type MenuFormState = { error?: string; ok?: string };
 
 /**
- * Meny-CRUD för owner (PR-13). Varje åtgärd börjar i samma tre kontroller:
- * ownerContext() (roll + tenant ur sessionen), att modulen faktiskt är påslagen
- * för tenanten, och att raden som ska ändras tillhör tenanten.
+ * Meny-CRUD för owner (PR-13) och för superadmin från /admin (R3-20). Varje
+ * åtgärd börjar i samma tre kontroller: en EditorContext (owner: roll + tenant
+ * ur sessionen; superadmin: rollen + det bundna businessId:t), att modulen
+ * faktiskt är påslagen för tenanten, och att raden som ska ändras tillhör den.
  *
  * Modulkontrollen är inte pynt: en kund vars meny-modul stängts av ska inte
  * kunna fortsätta fylla på menyn genom att posta formuläret hon hade öppet.
  * Datat ligger kvar orört — avstängning döljer menyn, den raderar den inte.
  */
-async function menuContext(): Promise<OwnerContext | null> {
-  const ctx = await ownerContext();
-  if (!ctx) return null;
-  const modules = await enabledModules(ctx.business.id);
-  return modules.has("menu") ? ctx : null;
+async function menuContext(editor: EditorContext | null): Promise<EditorContext | null> {
+  if (!editor) return null;
+  const modules = await enabledModules(editor.business.id);
+  return modules.has("menu") ? editor : null;
 }
 
-async function afterWrite(ctx: OwnerContext, action: string, meta: Record<string, unknown>) {
-  await logActivity({ actorUserId: ctx.userId, businessId: ctx.business.id, action, meta });
+/**
+ * Loggar mot rätt aktör (R3-20): en ändring superadmin gjort åt kunden heter
+ * "admin_…" i stället för "owner_…", och actorUserId är superadmins id.
+ */
+async function afterWrite(ctx: EditorContext, action: string, meta: Record<string, unknown>) {
+  const logged = ctx.actor === "superadmin" ? action.replace(/^owner_/, "admin_") : action;
+  await logActivity({ actorUserId: ctx.userId, businessId: ctx.business.id, action: logged, meta });
   revalidateTag(`biz:${ctx.business.slug}`);
   revalidatePath("/mi-sitio");
+  revalidatePath(`/admin/sitios/${ctx.business.id}`);
 }
 
 /** Nästa sortOrder i en lista — ny rad hamnar sist, aldrig först. */
@@ -49,8 +55,8 @@ async function nextSort(table: typeof menuSections | typeof menuItems, where: Re
   return Number(row?.next ?? 0);
 }
 
-export async function addSectionAction(_prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
-  const ctx = await menuContext();
+async function addSection(editor: EditorContext | null, _prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
+  const ctx = await menuContext(editor);
   if (!ctx) return { error: "No pudimos guardar. Entrá de nuevo." };
 
   const parsed = menuSectionSchema.safeParse({ name: formData.get("name") ?? "" });
@@ -74,8 +80,8 @@ export async function addSectionAction(_prev: MenuFormState, formData: FormData)
   return { ok: "Sección agregada." };
 }
 
-export async function renameSectionAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function renameSection(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const sectionId = Number(formData.get("sectionId"));
@@ -92,8 +98,8 @@ export async function renameSectionAction(formData: FormData): Promise<void> {
  * annars kan en avbruten körning lämna rätter utan sektion — rader som inte
  * syns någonstans men fortfarande räknas mot taket.
  */
-export async function deleteSectionAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function deleteSection(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const sectionId = Number(formData.get("sectionId"));
@@ -109,8 +115,8 @@ export async function deleteSectionAction(formData: FormData): Promise<void> {
   await afterWrite(ctx, "owner_menu_section_deleted", { sectionId });
 }
 
-export async function moveSectionAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function moveSection(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const sectionId = Number(formData.get("sectionId"));
@@ -140,8 +146,8 @@ export async function moveSectionAction(formData: FormData): Promise<void> {
 }
 
 /** Lägger till eller uppdaterar en rätt. Samma formulär, samma validering. */
-export async function saveItemAction(_prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
-  const ctx = await menuContext();
+async function saveItem(editor: EditorContext | null, _prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
+  const ctx = await menuContext(editor);
   if (!ctx) return { error: "No pudimos guardar. Entrá de nuevo." };
 
   const sectionId = Number(formData.get("sectionId"));
@@ -196,8 +202,8 @@ export async function saveItemAction(_prev: MenuFormState, formData: FormData): 
   return { ok: "Plato agregado." };
 }
 
-export async function deleteItemAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function deleteItem(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const itemId = Number(formData.get("itemId"));
@@ -210,8 +216,8 @@ export async function deleteItemAction(formData: FormData): Promise<void> {
 }
 
 /** Tar bort rättens bild (R3-16). Rätten står kvar, utan bild. */
-export async function removeItemImageAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function removeItemImage(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const target = await itemImageTarget(ctx.business.id, "menu_item", Number(formData.get("itemId")));
@@ -226,8 +232,8 @@ export async function removeItemImageAction(formData: FormData): Promise<void> {
  * saveItemAction: att markera dagens slutsålda rätt ska vara ett klick, inte
  * ett formulär att fylla i på nytt.
  */
-export async function toggleItemAvailabilityAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function toggleItemAvailability(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const itemId = Number(formData.get("itemId"));
@@ -238,8 +244,8 @@ export async function toggleItemAvailabilityAction(formData: FormData): Promise<
   await afterWrite(ctx, "owner_menu_item_availability", { itemId, isAvailable: !item.isAvailable });
 }
 
-export async function moveItemAction(formData: FormData): Promise<void> {
-  const ctx = await menuContext();
+async function moveItem(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await menuContext(editor);
   if (!ctx) return;
 
   const itemId = Number(formData.get("itemId"));
@@ -265,4 +271,80 @@ export async function moveItemAction(formData: FormData): Promise<void> {
   }
 
   await afterWrite(ctx, "owner_menu_item_moved", { itemId, direction: step });
+}
+
+// ---------- exporterade åtgärder (R3-20) ----------
+// Owner-varianten tar tenanten ur sessionen; admin-varianten binds med
+// businessId på /admin/sitios/[id] och kräver superadmin (adminEditorContext).
+
+export async function addSectionAction(_prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
+  return addSection(await ownerEditorContext(), _prev, formData);
+}
+
+export async function adminAddSectionAction(businessId: number, _prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
+  return addSection(await adminEditorContext(businessId), _prev, formData);
+}
+
+export async function renameSectionAction(formData: FormData): Promise<void> {
+  return renameSection(await ownerEditorContext(), formData);
+}
+
+export async function adminRenameSectionAction(businessId: number, formData: FormData): Promise<void> {
+  return renameSection(await adminEditorContext(businessId), formData);
+}
+
+export async function deleteSectionAction(formData: FormData): Promise<void> {
+  return deleteSection(await ownerEditorContext(), formData);
+}
+
+export async function adminDeleteSectionAction(businessId: number, formData: FormData): Promise<void> {
+  return deleteSection(await adminEditorContext(businessId), formData);
+}
+
+export async function moveSectionAction(formData: FormData): Promise<void> {
+  return moveSection(await ownerEditorContext(), formData);
+}
+
+export async function adminMoveSectionAction(businessId: number, formData: FormData): Promise<void> {
+  return moveSection(await adminEditorContext(businessId), formData);
+}
+
+export async function saveItemAction(_prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
+  return saveItem(await ownerEditorContext(), _prev, formData);
+}
+
+export async function adminSaveItemAction(businessId: number, _prev: MenuFormState, formData: FormData): Promise<MenuFormState> {
+  return saveItem(await adminEditorContext(businessId), _prev, formData);
+}
+
+export async function deleteItemAction(formData: FormData): Promise<void> {
+  return deleteItem(await ownerEditorContext(), formData);
+}
+
+export async function adminDeleteItemAction(businessId: number, formData: FormData): Promise<void> {
+  return deleteItem(await adminEditorContext(businessId), formData);
+}
+
+export async function removeItemImageAction(formData: FormData): Promise<void> {
+  return removeItemImage(await ownerEditorContext(), formData);
+}
+
+export async function adminRemoveItemImageAction(businessId: number, formData: FormData): Promise<void> {
+  return removeItemImage(await adminEditorContext(businessId), formData);
+}
+
+export async function toggleItemAvailabilityAction(formData: FormData): Promise<void> {
+  return toggleItemAvailability(await ownerEditorContext(), formData);
+}
+
+export async function adminToggleItemAvailabilityAction(businessId: number, formData: FormData): Promise<void> {
+  return toggleItemAvailability(await adminEditorContext(businessId), formData);
+}
+
+export async function moveItemAction(formData: FormData): Promise<void> {
+  return moveItem(await ownerEditorContext(), formData);
+}
+
+export async function adminMoveItemAction(businessId: number, formData: FormData): Promise<void> {
+  return moveItem(await adminEditorContext(businessId), formData);
 }
