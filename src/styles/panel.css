@@ -194,3 +194,13 @@
 .panel-menu-form { border-top: 1px dashed var(--line); margin-top: 0.5rem; padding-top: 0.5rem; }
 .panel-menu-add { border-top: 1px solid var(--line); padding-top: 0.75rem; }
 .panel-check { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; }
+
+/* Bild på en rätt eller produkt (R3-16): liten miniatyr + knappar på en rad. */
+.panel-item-image { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.4rem; }
+.panel-item-image img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.panel-item-image-btn, .panel-item-image button {
+  background: none; border: 0; color: var(--accent); font: inherit; font-size: 0.8rem;
+  cursor: pointer; padding: 0.35rem 0.25rem; min-height: 36px; display: inline-flex; align-items: center;
+}
+.panel-item-image button.danger { color: var(--danger); }
+.panel-item-image .panel-note { flex-basis: 100%; margin: 0; }

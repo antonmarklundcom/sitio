@@ -5,6 +5,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import { ownedProduct } from "@/db/product-queries";
+import { deleteItemMedia, itemImageTarget, setItemImage } from "@/db/item-media";
 import { enabledModules } from "@/db/module-queries";
 import { logActivity } from "@/lib/auth";
 import { ownerContext, type OwnerContext } from "@/lib/owner-context";
@@ -99,10 +100,26 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   if (!ctx) return;
 
   const productId = Number(formData.get("productId"));
-  if (!(await ownedProduct(ctx.business.id, productId))) return;
+  const product = await ownedProduct(ctx.business.id, productId);
+  if (!product) return;
 
   await db.delete(products).where(eq(products.id, productId));
+  // Bilden går med produkten — annars ligger filen kvar på disken utan att
+  // något pekar på den.
+  await deleteItemMedia(ctx.business.id, [product.mediaId]);
   await afterWrite(ctx, "owner_product_deleted", { productId });
+}
+
+/** Tar bort produktens bild (R3-16). Produkten står kvar, utan bild. */
+export async function removeProductImageAction(formData: FormData): Promise<void> {
+  const ctx = await productContext();
+  if (!ctx) return;
+
+  const target = await itemImageTarget(ctx.business.id, "product", Number(formData.get("productId")));
+  if (!target?.mediaId) return;
+
+  await setItemImage(ctx.business.id, "product", target, null);
+  await afterWrite(ctx, "owner_product_image_removed", { productId: target.id });
 }
 
 /**

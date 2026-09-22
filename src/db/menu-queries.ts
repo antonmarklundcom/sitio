@@ -1,7 +1,8 @@
 import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "./index";
-import { menuItems, menuSections } from "./schema";
+import { media, menuItems, menuSections } from "./schema";
+import { itemImage, type ItemImage } from "@/lib/media-shared";
 
 export type MenuItemRow = {
   id: number;
@@ -11,6 +12,8 @@ export type MenuItemRow = {
   priceGs: number | null;
   isAvailable: boolean;
   sortOrder: number;
+  /** Rättens bild (R3-16), eller null. */
+  image: ItemImage | null;
 };
 
 export type MenuSectionRow = {
@@ -35,8 +38,13 @@ export async function getMenu(businessId: number): Promise<MenuSectionRow[]> {
       .where(eq(menuSections.businessId, businessId))
       .orderBy(asc(menuSections.sortOrder), asc(menuSections.id)),
     db
-      .select()
+      .select({
+        item: menuItems,
+        image: { variantsJson: media.variantsJson, width: media.width, height: media.height },
+      })
       .from(menuItems)
+      // businessId i join-villkoret: en media_id från en annan kund ger ingen bild.
+      .leftJoin(media, and(eq(media.id, menuItems.mediaId), eq(media.businessId, menuItems.businessId)))
       .where(eq(menuItems.businessId, businessId))
       .orderBy(asc(menuItems.sortOrder), asc(menuItems.id)),
   ]);
@@ -46,8 +54,8 @@ export async function getMenu(businessId: number): Promise<MenuSectionRow[]> {
     name: section.name,
     sortOrder: section.sortOrder,
     items: items
-      .filter((item) => item.sectionId === section.id)
-      .map((item) => ({
+      .filter(({ item }) => item.sectionId === section.id)
+      .map(({ item, image }) => ({
         id: item.id,
         sectionId: item.sectionId,
         name: item.name,
@@ -55,6 +63,7 @@ export async function getMenu(businessId: number): Promise<MenuSectionRow[]> {
         priceGs: item.priceGs,
         isAvailable: item.isAvailable,
         sortOrder: item.sortOrder,
+        image: itemImage(businessId, image),
       })),
   }));
 }

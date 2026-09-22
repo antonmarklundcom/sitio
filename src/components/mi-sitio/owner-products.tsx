@@ -6,6 +6,7 @@ import { formatGs } from "@/lib/format";
 import { PRODUCTS_MAX } from "@/lib/product-form";
 import type { ProductRow } from "@/db/product-queries";
 import type { ProductFormState } from "@/app/mi-sitio/product-actions";
+import { ItemImageField } from "./item-image";
 
 /**
  * Produktredigeraren i owner-panelen (PR-14). Spanska (voseo) — kundens yta.
@@ -100,12 +101,14 @@ export function OwnerProducts({
   deleteProduct,
   toggleVisibility,
   moveProduct,
+  removeImage,
 }: {
   products: ProductRow[];
   saveProduct: (state: ProductFormState, formData: FormData) => Promise<ProductFormState>;
   deleteProduct: (formData: FormData) => Promise<void>;
   toggleVisibility: (formData: FormData) => Promise<void>;
   moveProduct: (formData: FormData) => Promise<void>;
+  removeImage: (formData: FormData) => Promise<void>;
 }) {
   const [editing, setEditing] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
@@ -129,6 +132,14 @@ export function OwnerProducts({
                 <span className="price">{formatGs(product.priceGs)}</span>
               </div>
               {product.description ? <p className="hint">{product.description}</p> : null}
+              <ItemImageField
+                kind="product"
+                targetId={product.id}
+                idField="productId"
+                name={product.name}
+                image={product.image}
+                removeImage={removeImage}
+              />
               <div className="panel-menu-item-actions">
                 <form action={toggleVisibility}>
                   <input type="hidden" name="productId" value={product.id} />

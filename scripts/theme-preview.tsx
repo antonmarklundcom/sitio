@@ -19,6 +19,7 @@ import { GastronomiaTheme } from "../src/themes/gastronomia/gastronomia-theme";
 import { SaludTheme } from "../src/themes/salud/salud-theme";
 import { ServiciosTheme } from "../src/themes/servicios/servicios-theme";
 import { paletteFor, paletteToCssVars } from "../src/themes/palettes";
+import { itemImage } from "../src/lib/media-shared";
 import type { ThemeProps } from "../src/themes/types";
 import type { Business } from "../src/db/schema";
 
@@ -303,6 +304,7 @@ function demoMenu(
       priceGs,
       isAvailable: true,
       sortOrder: i,
+      image: null,
     })),
   }));
 }
@@ -356,9 +358,9 @@ const DEMO_MENUS: Record<string, ThemeProps["menu"]> = {
 };
 
 const DEMO_PRODUCTS = [
-  { id: 1, name: "Silla de madera maciza", description: "Roble, terminación natural.", priceGs: 450000, isVisible: true, sortOrder: 0 },
-  { id: 2, name: "Mesa a medida", description: "Consultanos tamaño y madera.", priceGs: null, isVisible: true, sortOrder: 1 },
-  { id: 3, name: "Estantería modular de tres cuerpos", description: "Se arma en el local, sin herramientas.", priceGs: 980000, isVisible: true, sortOrder: 2 },
+  { id: 1, name: "Silla de madera maciza", description: "Roble, terminación natural.", priceGs: 450000, isVisible: true, sortOrder: 0, image: null },
+  { id: 2, name: "Mesa a medida", description: "Consultanos tamaño y madera.", priceGs: null, isVisible: true, sortOrder: 1, image: null },
+  { id: 3, name: "Estantería modular de tres cuerpos", description: "Se arma en el local, sin herramientas.", priceGs: 980000, isVisible: true, sortOrder: 2, image: null },
 ];
 
 /**
@@ -405,6 +407,19 @@ async function main() {
       sortOrder: i,
     }));
 
+    // Första rätten och första produkten får en bild (R3-16), resten inte —
+    // gaten ska se båda lägena bredvid varandra.
+    const demoImage = itemImage(demo.business.id, {
+      variantsJson: placeholders[1 % placeholders.length].variants,
+      width: 1600,
+      height: 1200,
+    });
+    const menu = (DEMO_MENUS[demo.themeKey] ?? DEMO_MENUS.gastronomia).map((section, si) => ({
+      ...section,
+      items: section.items.map((item, ii) => (si === 0 && ii === 0 ? { ...item, image: demoImage } : item)),
+    }));
+    const products = DEMO_PRODUCTS.map((product, i) => (i === 0 ? { ...product, image: demoImage } : product));
+
     type Page = { suffix: string; variant: number; props: ThemeProps };
     const pages: Page[] = [1, 2].map((variant) => ({
       suffix: `v${variant}`,
@@ -418,8 +433,8 @@ async function main() {
         // en betalande kund ser dem, annars granskas ett utseende som ingen
         // kund har.
         modules: new Set<string>(["gallery", "menu", "products"]),
-        menu: DEMO_MENUS[demo.themeKey] ?? DEMO_MENUS.gastronomia,
-        products: DEMO_PRODUCTS,
+        menu,
+        products,
       },
     }));
 

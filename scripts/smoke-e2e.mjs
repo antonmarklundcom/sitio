@@ -490,6 +490,21 @@ if (ownerSlug14) {
   ok('menyn skickar menu_view', html.includes('data-ev-view="menu_view"'));
 }
 
+// Bild på en rätt (R3-16): upp från panelen, ut på sajten; raderas med
+// sektionen i städningen nedan.
+await owner.waitForLoadState('networkidle');
+await seccionBox().locator('.panel-menu-items li').filter({ hasText: pescado })
+  .locator('.panel-item-image input[type=file]')
+  .setInputFiles({ name: 'pescado.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+await owner.waitForTimeout(3500);
+const dishImg = await seccionBox().locator('.panel-menu-items li').filter({ hasText: pescado })
+  .locator('.panel-item-image img').getAttribute('src').catch(() => null);
+ok('bild på rätten uppladdad', Boolean(dishImg) && (await fetch(B + dishImg)).status === 200, dishImg ?? '');
+if (ownerSlug14) {
+  const html = await (await fetch(B + '/' + ownerSlug14)).text();
+  ok('rättens bild syns på sajten', html.includes('site-menu-item-img') && html.includes(dishImg ?? '§'));
+}
+
 // "No hay hoy": rätten ska bort från sajten men ligga kvar i panelen — annars
 // måste kunden skriva in den på nytt i morgon.
 await seccionBox().locator('.panel-menu-items li').filter({ hasText: empanada })
@@ -544,6 +559,7 @@ await owner.waitForTimeout(1500);
 await seccionBox().getByRole('button', { name: 'Borrar sección' }).click();
 await owner.waitForTimeout(2500);
 ok('testsektionen städas bort', !(await owner.locator('body').innerText()).includes(seccion));
+ok('rättens bild raderas med sektionen', !dishImg || (await fetch(B + dishImg)).status === 404);
 await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 await menuRow().getByRole('button', { name: 'Desactivar' }).click();

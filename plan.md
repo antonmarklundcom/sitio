@@ -574,8 +574,8 @@ closed them.
 - PR-21 R2 migration (only if the uploads-persistence test fails — Anton's
   step after deploy A; not run yet, so not started).
 - PR-22 VenderCRM push for hot leads.
-- Menu item and product images (`media.kind` menu_item/product through
-  `/api/upload` for owner sessions). No migration needed.
+- ~~Menu item and product images (`media.kind` menu_item/product through
+  `/api/upload` for owner sessions). No migration needed.~~ — done, R3-16 (#57).
 - Superadmin editing of owner menu/products with actor logging.
 - Split opening hours (siesta) in intake.
 - Per-CTA analytics column (`l` in the beacon is dropped today). Migration.

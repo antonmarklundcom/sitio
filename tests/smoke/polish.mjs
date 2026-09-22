@@ -51,7 +51,11 @@ if (HAS_KEY) {
 }
 
 // Degraderingen får inte hänga på att sidan är trasig: en 500 hade gett en
-// tom body långt innan kontrollerna ovan.
-ok('sidan är inte en felsida', !has('Application error') && !body.includes('500'));
+// tom body långt innan kontrollerna ovan. Inte `includes('500')`: e2e:s
+// slumpade betalreferenser (OP-500257) fällde kontrollen på en frisk sida.
+ok(
+  'sidan är inte en felsida',
+  !has('Application error') && !has('Internal Server Error') && body.trim().length > 200,
+);
 
 await finish(b, failed());
