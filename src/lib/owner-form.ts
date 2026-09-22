@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeIntervals } from "./hours";
 
 /**
  * Whitelistan för /mi-sitio. Fälten som INTE står här kan inte ändras av en
@@ -48,7 +49,6 @@ export function ownerHoursFromForm(
   formData: FormData,
 ): Record<string, { open: string; close: string }[] | null> {
   const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-  const time = /^\d{2}:\d{2}$/;
   const out: Record<string, { open: string; close: string }[] | null> = {};
 
   for (const day of days) {
@@ -56,12 +56,14 @@ export function ownerHoursFromForm(
       out[day] = null;
       continue;
     }
-    const intervals: { open: string; close: string }[] = [];
-    for (const slot of [0, 1]) {
-      const open = String(formData.get(`hours.${day}.${slot}.open`) ?? "").trim();
-      const close = String(formData.get(`hours.${day}.${slot}.close`) ?? "").trim();
-      if (time.test(open) && time.test(close) && close > open) intervals.push({ open, close });
-    }
+    // Samma städning som intaken (R3-19). Tidigare föll 19:00–00:00 bort här
+    // eftersom "00:00" < "19:00" som sträng — midnatt är ett giltigt slut.
+    const intervals = normalizeIntervals(
+      [0, 1].map((slot) => ({
+        open: String(formData.get(`hours.${day}.${slot}.open`) ?? ""),
+        close: String(formData.get(`hours.${day}.${slot}.close`) ?? ""),
+      })),
+    );
     out[day] = intervals.length > 0 ? intervals : null;
   }
   return out;

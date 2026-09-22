@@ -577,7 +577,7 @@ closed them.
 - ~~Menu item and product images (`media.kind` menu_item/product through
   `/api/upload` for owner sessions). No migration needed.~~ — done, R3-16 (#57).
 - Superadmin editing of owner menu/products with actor logging.
-- Split opening hours (siesta) in intake.
+- ~~Split opening hours (siesta) in intake.~~ — done, R3-19 (#60).
 - ~~Per-CTA analytics column (`l` in the beacon is dropped today). Migration.~~
   — done, R3-18 (#59), migration 0003.
 - Move rate limits and lazy rollup to the DB if a second Node process ever

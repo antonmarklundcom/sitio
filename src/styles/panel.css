@@ -94,6 +94,14 @@
   .panel-hours-row { grid-template-columns: 3rem 1fr 1fr; row-gap: 0.25rem; }
   .panel-hours-row .closed { grid-column: 1 / -1; justify-self: start; padding-bottom: 0.35rem; }
 }
+/* Delat pass i intaken (R3-19): "tarde" på egen rad under mañana, knappen
+   under fälten. Samma kolumner, så båda passen linjerar på 360 px också. */
+.panel-hours-row .day--sub { font-size: 0.8rem; color: var(--muted); }
+.panel-hours-split {
+  grid-column: 2 / -1; justify-self: start;
+  background: none; border: 0; color: var(--accent); font: inherit; font-size: 0.8rem;
+  cursor: pointer; padding: 0.35rem 0; min-height: 36px;
+}
 
 .panel-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
 .panel-photos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }

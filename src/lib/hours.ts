@@ -54,6 +54,37 @@ function toMinutes(time: string): number {
   return h * 60 + m;
 }
 
+/** Högst två pass per dag: mañana och tarde (siesta emellan). */
+export const MAX_INTERVALS_PER_DAY = 2;
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/**
+ * Städar en dags pass från ett formulär (R3-19): felformade och halvifyllda
+ * pass faller bort, stängning "00:00" betyder midnatt (samma regel som
+ * openState), passen sorteras, och pass som överlappar eller möts slås ihop
+ * — 08:00–17:00 plus 14:00–19:00 är 08:00–19:00, inte två rader som säger
+ * emot varandra. Tom lista = stängt.
+ */
+export function normalizeIntervals(raw: { open: string; close: string }[]): HoursInterval[] {
+  const end = (close: string) => (close === "00:00" ? 24 * 60 : toMinutes(close));
+  const valid = raw
+    .map((i) => ({ open: i.open.trim(), close: i.close.trim() }))
+    .filter((i) => TIME.test(i.open) && TIME.test(i.close) && end(i.close) > toMinutes(i.open))
+    .sort((a, b) => toMinutes(a.open) - toMinutes(b.open));
+
+  const out: HoursInterval[] = [];
+  for (const interval of valid) {
+    const last = out[out.length - 1];
+    if (last && toMinutes(interval.open) <= end(last.close)) {
+      if (end(interval.close) > end(last.close)) last.close = interval.close;
+    } else {
+      out.push({ ...interval });
+    }
+  }
+  return out.slice(0, MAX_INTERVALS_PER_DAY);
+}
+
 export type OpenState =
   | { open: true; closesAt: string }
   | { open: false; opensAt: string; opensDay: string | null };
