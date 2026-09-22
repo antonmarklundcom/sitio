@@ -50,31 +50,24 @@ export async function setItemImage(
     .update(table)
     .set({ mediaId })
     .where(and(eq(table.id, target.id), eq(table.businessId, businessId)));
-  if (target.mediaId && target.mediaId !== mediaId) await deleteMedia(businessId, [target.mediaId]);
+  if (target.mediaId && target.mediaId !== mediaId) await deleteItemMedia(businessId, [target.mediaId]);
 }
 
 /**
- * Raderar media-rader och deras filer. Tenant-check i WHERE-satsen: ett id
- * från en annan kund raderas aldrig, även om det skulle smita in i listan.
+ * Raderar bilder på rätter/produkter med filer. Tenant-check och kind i
+ * WHERE-satsen: ett id från en annan kund, eller en media_id som av någon
+ * anledning pekar på ett galleri-foto eller en logga, raderas aldrig här.
  */
-export async function deleteMedia(businessId: number, ids: (number | null | undefined)[]): Promise<void> {
+export async function deleteItemMedia(businessId: number, ids: (number | null | undefined)[]): Promise<void> {
   const wanted = ids.filter((id): id is number => typeof id === "number" && id > 0);
   if (wanted.length === 0) return;
 
-  const rows = await db
-    .select({ id: media.id, variantsJson: media.variantsJson })
-    .from(media)
-    .where(and(eq(media.businessId, businessId), inArray(media.id, wanted)));
+  const scope = and(
+    eq(media.businessId, businessId),
+    inArray(media.kind, ["menu_item", "product"]),
+    inArray(media.id, wanted),
+  );
+  const rows = await db.select({ variantsJson: media.variantsJson }).from(media).where(scope);
   for (const row of rows) await deleteMediaFiles(businessId, row.variantsJson ?? {});
-  if (rows.length > 0) {
-    await db.delete(media).where(
-      and(
-        eq(media.businessId, businessId),
-        inArray(
-          media.id,
-          rows.map((r) => r.id),
-        ),
-      ),
-    );
-  }
+  if (rows.length > 0) await db.delete(media).where(scope);
 }

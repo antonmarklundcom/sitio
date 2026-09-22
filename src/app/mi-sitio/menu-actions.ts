@@ -5,7 +5,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { menuItems, menuSections } from "@/db/schema";
 import { ownedItem, ownedSection } from "@/db/menu-queries";
-import { deleteMedia, itemImageTarget, setItemImage } from "@/db/item-media";
+import { deleteItemMedia, itemImageTarget, setItemImage } from "@/db/item-media";
 import { enabledModules } from "@/db/module-queries";
 import { logActivity } from "@/lib/auth";
 import { ownerContext, type OwnerContext } from "@/lib/owner-context";
@@ -104,7 +104,7 @@ export async function deleteSectionAction(formData: FormData): Promise<void> {
   await db.delete(menuItems).where(sectionItems);
   await db.delete(menuSections).where(eq(menuSections.id, sectionId));
   // Rätternas bilder går med sektionen (R3-16).
-  await deleteMedia(ctx.business.id, images.map((row) => row.mediaId));
+  await deleteItemMedia(ctx.business.id, images.map((row) => row.mediaId));
 
   await afterWrite(ctx, "owner_menu_section_deleted", { sectionId });
 }
@@ -205,7 +205,7 @@ export async function deleteItemAction(formData: FormData): Promise<void> {
   if (!item) return;
 
   await db.delete(menuItems).where(eq(menuItems.id, itemId));
-  await deleteMedia(ctx.business.id, [item.mediaId]);
+  await deleteItemMedia(ctx.business.id, [item.mediaId]);
   await afterWrite(ctx, "owner_menu_item_deleted", { itemId });
 }
 

@@ -5,7 +5,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import { ownedProduct } from "@/db/product-queries";
-import { deleteMedia, itemImageTarget, setItemImage } from "@/db/item-media";
+import { deleteItemMedia, itemImageTarget, setItemImage } from "@/db/item-media";
 import { enabledModules } from "@/db/module-queries";
 import { logActivity } from "@/lib/auth";
 import { ownerContext, type OwnerContext } from "@/lib/owner-context";
@@ -106,7 +106,7 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   await db.delete(products).where(eq(products.id, productId));
   // Bilden går med produkten — annars ligger filen kvar på disken utan att
   // något pekar på den.
-  await deleteMedia(ctx.business.id, [product.mediaId]);
+  await deleteItemMedia(ctx.business.id, [product.mediaId]);
   await afterWrite(ctx, "owner_product_deleted", { productId });
 }
 
