@@ -25,7 +25,7 @@ document.addEventListener('click',function(e){
   var t=e.target.closest('[data-ev]');
   if(t)send(t.dataset.ev,t.dataset.evLoc||'');
 },true);
-/* Vy-event (menu_view, gallery_view): en meny läses, den klickas inte, så ett
+/* Vy-event (menu_view, gallery_view, products_view): en meny läses, den klickas inte, så ett
    klickevent hade mätt noll. Skickas EN gång per sidvisning och först när
    sektionen faktiskt syns — en sektion längst ner som ingen scrollar till ska
    inte räknas som läst. Utan IntersectionObserver skickas inget alls; en

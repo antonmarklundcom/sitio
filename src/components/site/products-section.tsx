@@ -6,9 +6,8 @@ import type { ProductRow } from "@/db/product-queries";
  * densamma i alla teman och stilarna ligger i `theme.css`, samma mönster som
  * `SiteMenu`. Varje tema får skruva utseendet med `.t-<tema> .site-products …`.
  *
- * Produkter har inget vy-event i analytics-enumet (plan §1.1: inga
- * migreringar i den här rundan), så sektionen renderar utan `data-ev-view` —
- * till skillnad från menyns `menu_view`.
+ * `data-ev-view="products_view"` (R3-17, migrering 0002) läses av beaconen
+ * precis som menyns `menu_view`: en gång, när katalogen faktiskt syns.
  */
 export function SiteProducts({
   products,
@@ -27,7 +26,7 @@ export function SiteProducts({
     // "catalogo" y no "productos": comercio ya usa id="productos" para su
     // sección de servicios destacados (business.servicesJson), y las dos
     // secciones pueden coexistir en la misma página.
-    <section id="catalogo" className="site-products">
+    <section id="catalogo" className="site-products" data-ev-view="products_view">
       <div className="wrap">
         <span className="eyebrow">{eyebrow}</span>
         <h2 className="reveal">{title}</h2>

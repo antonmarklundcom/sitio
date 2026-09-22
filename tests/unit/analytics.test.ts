@@ -31,6 +31,7 @@ describe("isEventType", () => {
   it("känner igen de definierade händelserna", () => {
     expect(isEventType("whatsapp_click")).toBe(true);
     expect(isEventType("page_view")).toBe(true);
+    expect(isEventType("products_view")).toBe(true);
   });
 
   it("avvisar okända och icke-strängar", () => {

@@ -1,0 +1,1 @@
+ALTER TABLE `analytics_events` MODIFY COLUMN `type` enum('page_view','whatsapp_click','phone_click','map_click','social_click','menu_view','gallery_view','products_view') NOT NULL;
