@@ -212,3 +212,7 @@
 }
 .panel-item-image button.danger { color: var(--danger); }
 .panel-item-image .panel-note { flex-basis: 100%; margin: 0; }
+
+/* Owner-editorn inbäddad i adminets sajtsida (R3-20): panelens tokens och
+   komponenter, men inte dess helsidesbakgrund och minsta höjd. */
+.panel.panel--embedded { min-height: 0; background: transparent; font-size: 15px; }

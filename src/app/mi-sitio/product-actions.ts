@@ -8,31 +8,37 @@ import { ownedProduct } from "@/db/product-queries";
 import { deleteItemMedia, itemImageTarget, setItemImage } from "@/db/item-media";
 import { enabledModules } from "@/db/module-queries";
 import { logActivity } from "@/lib/auth";
-import { ownerContext, type OwnerContext } from "@/lib/owner-context";
+import { adminEditorContext, ownerEditorContext, type EditorContext } from "@/lib/owner-context";
 import { PRODUCTS_MAX, productFromForm } from "@/lib/product-form";
 
 export type ProductFormState = { error?: string; ok?: string };
 
 /**
- * Produkt-CRUD för owner (PR-14). Samma tre kontroller som menyn: ownerContext()
- * (roll + tenant ur sessionen), att modulen faktiskt är påslagen för tenanten,
- * och att raden som ska ändras tillhör tenanten.
+ * Produkt-CRUD för owner (PR-14) och för superadmin från /admin (R3-20). Samma
+ * tre kontroller som menyn: en EditorContext (owner: roll + tenant ur
+ * sessionen; superadmin: rollen + det bundna businessId:t), att modulen
+ * faktiskt är påslagen för tenanten, och att raden som ska ändras tillhör den.
  *
  * Modulkontrollen ligger här och inte bara i UI:t: en kund vars produkt-modul
  * stängts av ska inte kunna fortsätta posta formuläret hon hade öppet. Datat
  * ligger kvar orört — avstängning döljer listan, den raderar den inte.
  */
-async function productContext(): Promise<OwnerContext | null> {
-  const ctx = await ownerContext();
-  if (!ctx) return null;
-  const modules = await enabledModules(ctx.business.id);
-  return modules.has("products") ? ctx : null;
+async function productContext(editor: EditorContext | null): Promise<EditorContext | null> {
+  if (!editor) return null;
+  const modules = await enabledModules(editor.business.id);
+  return modules.has("products") ? editor : null;
 }
 
-async function afterWrite(ctx: OwnerContext, action: string, meta: Record<string, unknown>) {
-  await logActivity({ actorUserId: ctx.userId, businessId: ctx.business.id, action, meta });
+/**
+ * Loggar mot rätt aktör (R3-20): en ändring superadmin gjort åt kunden heter
+ * "admin_…" i stället för "owner_…", och actorUserId är superadmins id.
+ */
+async function afterWrite(ctx: EditorContext, action: string, meta: Record<string, unknown>) {
+  const logged = ctx.actor === "superadmin" ? action.replace(/^owner_/, "admin_") : action;
+  await logActivity({ actorUserId: ctx.userId, businessId: ctx.business.id, action: logged, meta });
   revalidateTag(`biz:${ctx.business.slug}`);
   revalidatePath("/mi-sitio");
+  revalidatePath(`/admin/sitios/${ctx.business.id}`);
 }
 
 /** Nästa sortOrder i listan — en ny produkt hamnar sist, aldrig först. */
@@ -45,11 +51,11 @@ async function nextSort(businessId: number) {
 }
 
 /** Lägger till eller uppdaterar en produkt. Samma formulär, samma validering. */
-export async function saveProductAction(
+async function saveProduct(editor: EditorContext | null, 
   _prev: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
-  const ctx = await productContext();
+  const ctx = await productContext(editor);
   if (!ctx) return { error: "No pudimos guardar. Entrá de nuevo." };
 
   const parsed = productFromForm(formData);
@@ -95,8 +101,8 @@ export async function saveProductAction(
   return { ok: "Producto agregado." };
 }
 
-export async function deleteProductAction(formData: FormData): Promise<void> {
-  const ctx = await productContext();
+async function deleteProduct(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await productContext(editor);
   if (!ctx) return;
 
   const productId = Number(formData.get("productId"));
@@ -111,8 +117,8 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
 }
 
 /** Tar bort produktens bild (R3-16). Produkten står kvar, utan bild. */
-export async function removeProductImageAction(formData: FormData): Promise<void> {
-  const ctx = await productContext();
+async function removeProductImage(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await productContext(editor);
   if (!ctx) return;
 
   const target = await itemImageTarget(ctx.business.id, "product", Number(formData.get("productId")));
@@ -128,8 +134,8 @@ export async function removeProductImageAction(formData: FormData): Promise<void
  * inte ett formulär att fylla i på nytt. Döljer på den publika sajten, ligger
  * kvar i panelen.
  */
-export async function toggleProductVisibilityAction(formData: FormData): Promise<void> {
-  const ctx = await productContext();
+async function toggleProductVisibility(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await productContext(editor);
   if (!ctx) return;
 
   const productId = Number(formData.get("productId"));
@@ -140,8 +146,8 @@ export async function toggleProductVisibilityAction(formData: FormData): Promise
   await afterWrite(ctx, "owner_product_visibility", { productId, isVisible: !product.isVisible });
 }
 
-export async function moveProductAction(formData: FormData): Promise<void> {
-  const ctx = await productContext();
+async function moveProduct(editor: EditorContext | null, formData: FormData): Promise<void> {
+  const ctx = await productContext(editor);
   if (!ctx) return;
 
   const productId = Number(formData.get("productId"));
@@ -169,4 +175,54 @@ export async function moveProductAction(formData: FormData): Promise<void> {
   }
 
   await afterWrite(ctx, "owner_product_moved", { productId, direction: step });
+}
+
+// ---------- exporterade åtgärder (R3-20) ----------
+// Owner-varianten tar tenanten ur sessionen; admin-varianten binds med
+// businessId på /admin/sitios/[id] och kräver superadmin (adminEditorContext).
+
+export async function saveProductAction(
+  _prev: ProductFormState,
+  formData: FormData,
+): Promise<ProductFormState> {
+  return saveProduct(await ownerEditorContext(), _prev, formData);
+}
+
+export async function adminSaveProductAction(businessId: number, 
+  _prev: ProductFormState,
+  formData: FormData,
+): Promise<ProductFormState> {
+  return saveProduct(await adminEditorContext(businessId), _prev, formData);
+}
+
+export async function deleteProductAction(formData: FormData): Promise<void> {
+  return deleteProduct(await ownerEditorContext(), formData);
+}
+
+export async function adminDeleteProductAction(businessId: number, formData: FormData): Promise<void> {
+  return deleteProduct(await adminEditorContext(businessId), formData);
+}
+
+export async function removeProductImageAction(formData: FormData): Promise<void> {
+  return removeProductImage(await ownerEditorContext(), formData);
+}
+
+export async function adminRemoveProductImageAction(businessId: number, formData: FormData): Promise<void> {
+  return removeProductImage(await adminEditorContext(businessId), formData);
+}
+
+export async function toggleProductVisibilityAction(formData: FormData): Promise<void> {
+  return toggleProductVisibility(await ownerEditorContext(), formData);
+}
+
+export async function adminToggleProductVisibilityAction(businessId: number, formData: FormData): Promise<void> {
+  return toggleProductVisibility(await adminEditorContext(businessId), formData);
+}
+
+export async function moveProductAction(formData: FormData): Promise<void> {
+  return moveProduct(await ownerEditorContext(), formData);
+}
+
+export async function adminMoveProductAction(businessId: number, formData: FormData): Promise<void> {
+  return moveProduct(await adminEditorContext(businessId), formData);
 }

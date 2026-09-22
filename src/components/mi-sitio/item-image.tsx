@@ -9,8 +9,8 @@ import { ACCEPT_ATTR, MAX_UPLOAD_BYTES, type ItemImage } from "@/lib/media-share
  * "Subir foto" laddar upp, "Cambiar foto" ersätter (rutten raderar den gamla),
  * "Quitar foto" tar bort den. Spanska (voseo) — kundens yta.
  *
- * Inget businessId skickas: för en owner-session tar /api/upload det ur
- * sessionen, och targetId kontrolleras mot tenanten där.
+ * En owner skickar inget businessId: /api/upload tar det ur sessionen, och
+ * targetId kontrolleras mot tenanten där. Superadmin i /admin skickar det.
  */
 export function ItemImageField({
   kind,
@@ -19,6 +19,7 @@ export function ItemImageField({
   name,
   image,
   removeImage,
+  businessId,
 }: {
   kind: "menu_item" | "product";
   targetId: number;
@@ -27,6 +28,8 @@ export function ItemImageField({
   name: string;
   image: ItemImage | null;
   removeImage: (formData: FormData) => Promise<void>;
+  /** Bara från /admin (R3-20): superadmin har ingen tenant i sessionen. */
+  businessId?: number;
 }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement | null>(null);
@@ -46,6 +49,7 @@ export function ItemImageField({
     try {
       const body = new FormData();
       body.set("kind", kind);
+      if (businessId) body.set("businessId", String(businessId));
       body.set("targetId", String(targetId));
       body.set("altText", name);
       body.set("file", file);

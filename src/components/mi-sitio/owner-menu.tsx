@@ -108,6 +108,8 @@ export function OwnerMenu({
   toggleAvailability,
   moveItem,
   removeItemImage,
+  heading = "Tu carta",
+  businessId,
 }: {
   menu: MenuSectionRow[];
   addSection: (state: MenuFormState, formData: FormData) => Promise<MenuFormState>;
@@ -119,6 +121,10 @@ export function OwnerMenu({
   toggleAvailability: (formData: FormData) => Promise<void>;
   moveItem: (formData: FormData) => Promise<void>;
   removeItemImage: (formData: FormData) => Promise<void>;
+  /** Rubriken; adminet (R3-20) talar inte i kundens "tu". */
+  heading?: string;
+  /** Skickas med bilduppladdningen när superadmin redigerar från /admin. */
+  businessId?: number;
 }) {
   const [addState, addAction] = useActionState<MenuFormState, FormData>(addSection, {});
   const [editing, setEditing] = useState<number | null>(null);
@@ -127,7 +133,7 @@ export function OwnerMenu({
 
   return (
     <div className="panel-card">
-      <h2>Tu carta</h2>
+      <h2>{heading}</h2>
       <p>
         Lo que cargues acá sale en tu página con el precio al lado. Los platos marcados como “no hay hoy”
         desaparecen de la página, pero quedan guardados acá para cuando vuelvan.
@@ -196,6 +202,7 @@ export function OwnerMenu({
                     name={item.name}
                     image={item.image}
                     removeImage={removeItemImage}
+                    businessId={businessId}
                   />
                   <div className="panel-menu-item-actions">
                     <form action={toggleAvailability}>
