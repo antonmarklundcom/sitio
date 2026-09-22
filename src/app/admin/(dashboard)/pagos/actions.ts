@@ -4,12 +4,11 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, media, payments, subscriptions } from "@/db/schema";
+import { businesses, payments, subscriptions } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { getCurrentSubscription } from "@/db/billing-queries";
 import { logActivity, requireRole } from "@/lib/auth";
-import { processImage } from "@/lib/media";
-import { ALLOWED_MIME, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
+import { storeReceipt } from "@/lib/receipt";
 import { paymentFormSchema, subscriptionFormSchema, toDayString } from "@/lib/billing";
 import { extendedExpiry, runBillingLifecycle } from "@/lib/billing-lifecycle";
 
@@ -122,37 +121,21 @@ export async function registerPaymentAction(
     return { error: "El período no es válido.", fieldErrors: { periodEnd: "La fecha de fin debe ser posterior a la fecha de inicio." } };
   }
 
-  let receiptMediaId: number | null = null;
-  const file = formData.get("receipt");
-  if (file instanceof File && file.size > 0) {
-    if (file.size > MAX_UPLOAD_BYTES) {
+  const receipt = await storeReceipt(
+    businessId,
+    formData.get("receipt"),
+    `Comprobante ${values.reference || toDayString(new Date())}`,
+  );
+  if ("error" in receipt) {
+    if (receipt.error === "size") {
       return { error: "El comprobante supera los 10 MB.", fieldErrors: { receipt: "Máximo 10 MB." } };
     }
-    if (!(ALLOWED_MIME as readonly string[]).includes(file.type)) {
+    if (receipt.error === "mime") {
       return { error: "El formato no es compatible.", fieldErrors: { receipt: "Usá JPEG, PNG, WEBP o HEIC." } };
     }
-    try {
-      const processed = await processImage({
-        businessId,
-        buffer: Buffer.from(await file.arrayBuffer()),
-        kind: "receipt",
-      });
-      const [inserted] = await db.insert(media).values({
-        businessId,
-        kind: "receipt",
-        fileKey: processed.fileKey,
-        mime: processed.mime,
-        width: processed.width,
-        height: processed.height,
-        bytes: processed.bytes,
-        variantsJson: processed.variants,
-        altText: `Comprobante ${values.reference || toDayString(new Date())}`,
-      });
-      receiptMediaId = Number(inserted.insertId);
-    } catch {
-      return { error: "No se pudo leer la imagen del comprobante.", fieldErrors: { receipt: "¿El archivo está dañado?" } };
-    }
+    return { error: "No se pudo leer la imagen del comprobante.", fieldErrors: { receipt: "¿El archivo está dañado?" } };
   }
+  const receiptMediaId = receipt.mediaId;
 
   await db.insert(payments).values({
     businessId,

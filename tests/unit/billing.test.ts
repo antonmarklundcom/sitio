@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   GRACE_DAYS,
+  ownerPaymentReportSchema,
+  ownerReportPeriod,
   PLANS,
   PLAN_LABELS,
   PLAN_SUGGESTED_PRICE_GS,
@@ -164,5 +166,43 @@ describe("planregister", () => {
   it("täcker alla statusvärden i livscykeln", () => {
     expect(SUBSCRIPTION_STATUSES).toContain("grace");
     expect(SUBSCRIPTION_STATUSES).toHaveLength(5);
+  });
+});
+
+describe("ownerReportPeriod (R3-21)", () => {
+  it("förnyelse i förväg börjar där nuvarande period slutar", () => {
+    expect(ownerReportPeriod({ status: "active", expiresAt: "2026-11-01" }, "2026-09-22")).toEqual({
+      periodStart: "2026-11-01",
+      periodEnd: "2027-11-01",
+    });
+  });
+
+  it("i graceperioden räknas fortfarande från förfallodagen", () => {
+    expect(ownerReportPeriod({ status: "grace", expiresAt: "2026-09-22" }, "2026-09-22").periodStart).toBe(
+      "2026-09-22",
+    );
+  });
+
+  it("prov och utgången period börjar idag", () => {
+    expect(ownerReportPeriod({ status: "trial", expiresAt: "2026-10-15" }, "2026-09-22")).toEqual({
+      periodStart: "2026-09-22",
+      periodEnd: "2027-09-22",
+    });
+    expect(ownerReportPeriod({ status: "expired", expiresAt: "2026-01-01" }, "2026-09-22").periodStart).toBe(
+      "2026-09-22",
+    );
+  });
+});
+
+describe("ownerPaymentReportSchema (R3-21)", () => {
+  it("tar metod, referens och belopp", () => {
+    const r = ownerPaymentReportSchema.safeParse({ amountGs: "300000", method: "transferencia", reference: " 123 " });
+    expect(r.success && r.data).toEqual({ amountGs: 300000, method: "transferencia", reference: "123" });
+  });
+
+  it("avvisar noll, okänd metod och decimaler", () => {
+    expect(ownerPaymentReportSchema.safeParse({ amountGs: "0", method: "efectivo" }).success).toBe(false);
+    expect(ownerPaymentReportSchema.safeParse({ amountGs: "1000", method: "bitcoin" }).success).toBe(false);
+    expect(ownerPaymentReportSchema.safeParse({ amountGs: "1000.5", method: "efectivo" }).success).toBe(false);
   });
 });

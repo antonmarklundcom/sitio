@@ -310,6 +310,33 @@ const ownerText = await owner.locator('body').innerText();
 ok('statistik visas för owner', ownerText.includes('Tu página en números'));
 ok('inga adminfält läcker till owner', !/Palett|Tema|SEO/i.test(ownerText));
 
+// Kundens egen betalningsrapport (R3-21, PR-19b): metod + referens + kvitto ⇒
+// `reported`, bekräftas i adminets befintliga kö och förlänger planen.
+const planCard = owner.locator('#plan');
+const planText = await planCard.innerText().catch(() => '');
+ok('owner ser sin plan', /Tu plan/i.test(planText));
+const venceAntes = (planText.match(/vence el (\d{2}\/\d{2}\/\d{4})/) || [])[1] ?? null;
+const ownerRef = 'OWN-' + Date.now().toString().slice(-6);
+await planCard.locator('select[name=method]').selectOption('tigo_money');
+await planCard.locator('input[name=reference]').fill(ownerRef);
+await planCard.locator('input[name=receipt]').setInputFiles({ name: 'tigo.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+await planCard.getByRole('button', { name: 'Informar pago' }).click();
+await owner.waitForTimeout(3500);
+ok('owner-rapporten kvitteras', /Recibimos tu pago|Lo estamos revisando/.test(await planCard.innerText()));
+await owner.reload({ waitUntil: 'domcontentloaded' });
+ok('en rapport i taget: formuläret är borta', (await planCard.locator('form').count()) === 0);
+
+await p.goto(B + '/admin/pagos', { waitUntil: 'domcontentloaded' });
+const ownerRow = p.locator('tr').filter({ hasText: ownerRef }).first();
+ok('rapporten ligger i Cobros-kön', (await ownerRow.count()) > 0);
+await ownerRow.getByRole('button', { name: 'Confirmar' }).click();
+await p.waitForTimeout(3000);
+await owner.reload({ waitUntil: 'domcontentloaded' });
+const venceDespues = ((await planCard.innerText()).match(/vence el (\d{2}\/\d{2}\/\d{4})/) || [])[1] ?? null;
+ok('bekräftad rapport förlänger planen ett år', Boolean(venceAntes && venceDespues) && venceDespues !== venceAntes,
+  `${venceAntes} → ${venceDespues}`);
+ok('formuläret är tillbaka efter bekräftelsen', (await planCard.locator('form').count()) === 1);
+
 await owner.goto(B + '/admin', { waitUntil: 'domcontentloaded' });
 ok('owner blockeras från /admin', owner.url().includes('/admin/login'));
 
