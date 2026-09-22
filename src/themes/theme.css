@@ -209,7 +209,7 @@
    temats mörkaste ton, så CTA:n är sidans tyngsta element överallt där den
    dyker upp, utan att låna en annan produkts varumärkesfärg. */
 .site-root .btn--wa { background: var(--deep); color: var(--on-deep); min-height: 56px; }
-.site-root .btn--wa:hover { background: color-mix(in srgb, var(--deep) 88%, var(--accent)); }
+.site-root .btn--wa:hover { filter: brightness(1.22); }
 .site-root .btn--wa svg { fill: #25d366; flex: none; }
 
 /* Länkar i löptext */
@@ -288,7 +288,15 @@
 }
 /* Utan foto blir mediaytan kortare — annars skrollar besökaren förbi en
    halv skärm dekoration för att komma till knappen. */
-.site-root .hero--mono .hero-media { aspect-ratio: auto; height: clamp(180px, 30svh, 260px); max-height: none; }
+/* px-raden före clamp() är inte överflödig: utan `svh` (Android Chrome < 108,
+   som fortfarande finns i Paraguay) är hela clamp() ogiltig, och eftersom
+   monogrammet är absolut positionerat skulle ytan kollapsa till 0 px. */
+.site-root .hero--mono .hero-media {
+  aspect-ratio: auto;
+  max-height: none;
+  height: 220px;
+  height: clamp(180px, 30svh, 260px);
+}
 
 /* Monogram: en sajt utan foto ska se avsiktlig ut, inte tom. Initialerna
    sätts i display-snittet mot temats mörka ton, med temats textur ovanpå. */
@@ -388,7 +396,7 @@
 
 @media (min-width: 768px) {
   .site-root .hero-media { aspect-ratio: 16 / 9; max-height: 64svh; }
-  .site-root .hero--mono .hero-media { height: clamp(240px, 34svh, 340px); }
+  .site-root .hero--mono .hero-media { height: 280px; height: clamp(240px, 34svh, 340px); }
   .site-root .hero-plate { max-width: 34rem; margin-top: calc(var(--s-16) * -1); }
   .site-root .hero-actions { grid-auto-flow: column; grid-auto-columns: 1fr; }
   .site-root .hero-sub { text-align: start; }
@@ -400,7 +408,7 @@
      djupa överlapp täckte plattan nästan hela initialen — den behöver mer
      höjd och mindre överlapp här, annars ser den tomma sajten ut som ett
      renderingsfel i stället för som ett val. */
-  .site-root .hero--mono .hero-media { height: clamp(320px, 44svh, 460px); }
+  .site-root .hero--mono .hero-media { height: 380px; height: clamp(320px, 44svh, 460px); }
   .site-root .hero--mono .hero-plate { margin-top: -5rem; }
 }
 
@@ -539,6 +547,9 @@
 .site-root .wa-dock {
   position: fixed;
   inset-inline: var(--s-3);
+  /* Utan stöd för env() är hela max() ogiltig och `bottom` faller till auto —
+     då hamnar den fasta knappen i toppen av sidan i stället för i botten. */
+  bottom: var(--s-3);
   bottom: max(var(--s-3), env(safe-area-inset-bottom));
   z-index: 40;
   min-height: var(--dock-h);
