@@ -12,9 +12,9 @@ betalningar). Kör det aldrig mot produktion.
 
 ## MySQL 8 i en tom container
 
-MariaDB duger inte: drizzles `serial AUTO_INCREMENT` är MySQL-syntax och
-migreringarna faller. Apt-vägen fungerar i sandlådan även när Docker Hub är
-blockerat.
+Schemat är MariaDB-säkert sedan R3-6 (`bigint unsigned AUTO_INCREMENT`, inte
+`serial`), så båda fungerar; MySQL 8 via apt är den verifierade vägen i
+sandlådan även när Docker Hub är blockerat.
 
 ```bash
 apt-get update -qq && apt-get install -y -qq mysql-server
