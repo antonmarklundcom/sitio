@@ -135,8 +135,10 @@ export function renewalMessage(params: {
   views365: number;
   waClicks365: number;
   siteUrl: string;
+  /** "Tu año en cifras" (R3-23) — länken med token, om den ska med. */
+  reportUrl?: string;
 }): string {
-  const { businessName, priceGs, views365, waClicks365, siteUrl } = params;
+  const { businessName, priceGs, views365, waClicks365, siteUrl, reportUrl } = params;
   const nf = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 0 });
 
   const stats =
@@ -144,9 +146,12 @@ export function renewalMessage(params: {
       ? `Tu página tuvo ${nf.format(views365)} visitas y ${nf.format(waClicks365)} contactos por WhatsApp este año 📈. `
       : "";
 
+  const report = reportUrl ? `Mirá tu año en cifras acá: ${reportUrl} . ` : "";
+
   return (
     `Hola ${businessName}! Te escribo de sitio.com.py. ` +
     stats +
+    report +
     `Tu página (${siteUrl}) vence pronto. ¿La renovamos por ${formatGs(priceGs)} el año?`
   );
 }

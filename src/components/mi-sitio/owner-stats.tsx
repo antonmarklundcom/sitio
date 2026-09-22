@@ -7,7 +7,7 @@ import type { BusinessAnalytics } from "@/db/analytics-queries";
  * Det här är också säljargumentet vid förnyelsen (PLAN.md §1.7) — därför visas
  * året, inte bara månaden.
  */
-export function OwnerStats({ analytics }: { analytics: BusinessAnalytics }) {
+export function OwnerStats({ analytics, reportHref }: { analytics: BusinessAnalytics; reportHref?: string }) {
   const { series30, last30, last365 } = analytics;
   const peak = Math.max(1, ...series30.map((p) => p.views));
   const hasData = series30.some((p) => p.views > 0 || p.waClicks > 0);
@@ -62,6 +62,12 @@ export function OwnerStats({ analytics }: { analytics: BusinessAnalytics }) {
           <span>WhatsApp (1 año)</span>
         </div>
       </div>
+
+      {reportHref ? (
+        <p>
+          <a href={reportHref}>Ver tu año en cifras →</a>
+        </p>
+      ) : null}
     </div>
   );
 }

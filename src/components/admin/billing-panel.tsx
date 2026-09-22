@@ -73,6 +73,7 @@ export function BillingPanel({
   subscription,
   payments,
   renewalHref,
+  reportHref,
   yearStats,
   saveSubscription,
   registerPayment,
@@ -86,6 +87,8 @@ export function BillingPanel({
   subscription: SubscriptionView;
   payments: PaymentView[];
   renewalHref: string;
+  /** "Tu año en cifras" (R3-23), med token. */
+  reportHref?: string;
   yearStats: { views365: number; waClicks365: number };
   saveSubscription: (state: BillingFormState, formData: FormData) => Promise<BillingFormState>;
   registerPayment: (state: BillingFormState, formData: FormData) => Promise<BillingFormState>;
@@ -137,6 +140,11 @@ export function BillingPanel({
           >
             Enviar renovación por WhatsApp →
           </a>
+          {reportHref ? (
+            <a href={reportHref} target="_blank" rel="noreferrer" className="text-admin-accent hover:underline">
+              Año en cifras →
+            </a>
+          ) : null}
         </div>
       ) : (
         <Notice tone="warn">

@@ -63,6 +63,7 @@ import {
   adminToggleProductVisibilityAction,
 } from "@/app/mi-sitio/product-actions";
 import "@/styles/panel.css";
+import { reportPath } from "@/lib/year-report";
 
 export const dynamic = "force-dynamic";
 
@@ -254,6 +255,7 @@ export default async function EditBusinessPage({
         today={toDayString(new Date())}
         defaultExpiry={toDayString(addYear(new Date()))}
         yearStats={yearStats}
+        reportHref={reportPath(business.id, business.slug)}
         renewalHref={waLink(
           business.whatsappPhone,
           renewalMessage({
@@ -262,6 +264,7 @@ export default async function EditBusinessPage({
             views365: yearStats.views365,
             waClicks365: yearStats.waClicks365,
             siteUrl: liveUrl,
+            reportUrl: absoluteUrl(reportPath(business.id, business.slug)),
           }),
         )}
         subscription={

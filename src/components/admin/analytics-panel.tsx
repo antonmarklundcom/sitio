@@ -1,5 +1,6 @@
 import type { BusinessAnalytics, CtaCount } from "@/db/analytics-queries";
 import { Card, SectionTitle } from "./ui";
+import { ctaLabel } from "@/lib/cta-labels";
 
 /**
  * Statistikpanel per sajt: 30-dagarsgraf + summor för 30 och 365 dagar.
@@ -28,18 +29,6 @@ const CTA_TYPE: Record<CtaCount["type"], string> = {
   social_click: "Redes",
 };
 
-/** `data-ev-loc` → vad knappen heter på sidan. Okända värden visas rakt av. */
-const CTA_LOC: Record<string, string> = {
-  hero: "portada",
-  header: "encabezado",
-  dock: "barra fija",
-  contacto: "contacto",
-  donde: "dónde estamos",
-  footer: "pie de página",
-  servicios: "servicios",
-  productos: "productos",
-  especialidades: "especialidades",
-};
 
 /**
  * Klick per knapp, 30 dagar (R3-18). Svarar på "vilken knapp säljer?" — om
@@ -57,7 +46,7 @@ function CtaBreakdown({ ctas }: { ctas: CtaCount[] }) {
               {CTA_TYPE[c.type]}
               <span className="text-admin-muted">
                 {" · "}
-                {c.loc ? (CTA_LOC[c.loc] ?? c.loc) : "sin ubicación (antes de R3-18)"}
+                {c.loc ? ctaLabel(c.loc) : "sin ubicación (antes de R3-18)"}
               </span>
             </span>
             <span className="tabular-nums">{c.clicks.toLocaleString("sv-SE")}</span>

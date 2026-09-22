@@ -570,7 +570,8 @@ closed them.
   payments (owner reports method + reference + receipt ⇒ payment `reported`,
   admin confirms)~~ — done, R3-21 (#62).
 - PR-20 Renewal automation (reminders via Cloud API templates — blocked on
-  PR-17) and "tu año en cifras" (the yearly report page is separable).
+  PR-17). ~~"tu año en cifras" (the yearly report page is separable)~~ —
+  done, R3-23 (#64).
 - PR-21 R2 migration (only if the uploads-persistence test fails — Anton's
   step after deploy A; not run yet, so not started).
 - ~~PR-22 VenderCRM push for hot leads.~~ — done, R3-22 (#63). Off until

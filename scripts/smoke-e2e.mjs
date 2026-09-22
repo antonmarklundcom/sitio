@@ -337,6 +337,16 @@ ok('bekräftad rapport förlänger planen ett år', Boolean(venceAntes && venceD
   `${venceAntes} → ${venceDespues}`);
 ok('formuläret är tillbaka efter bekräftelsen', (await planCard.locator('form').count()) === 1);
 
+// Tu año en cifras (R3-23): länken i owner-panelen bär token; utan den 404.
+const reportHref = await owner.getByRole('link', { name: /Ver tu año en cifras/ }).getAttribute('href').catch(() => null);
+ok('owner har en länk till årsrapporten', Boolean(reportHref) && /^\/reporte\/[^/?]+\?t=[0-9a-f]{24}$/.test(reportHref ?? ''));
+if (reportHref) {
+  const report = await (await fetch(B + reportHref)).text();
+  ok('årsrapporten öppnas utan inloggning', report.includes('Tu año en cifras') && report.includes('Contactos por WhatsApp'));
+  ok('årsrapporten är noindex', /<meta name="robots" content="noindex, nofollow"/.test(report));
+  ok('fel token ger 404', (await fetch(B + reportHref.replace(/t=.*/, 't=' + '0'.repeat(24)))).status === 404);
+}
+
 await owner.goto(B + '/admin', { waitUntil: 'domcontentloaded' });
 ok('owner blockeras från /admin', owner.url().includes('/admin/login'));
 
