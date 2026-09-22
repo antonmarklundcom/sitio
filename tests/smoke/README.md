@@ -53,6 +53,15 @@ inaktuell session (omdirigering till login) ersätts av en riktig inloggning.
 Varje svit behåller sin `login`-rad och skriver ut om sessionen återanvändes
 eller hur många login-POST:ar som gjordes.
 
+**Två körningar i rad mot samma databas och server går (R3-12).** e2e:s
+menyblock stänger av modulen före första kontrollen och städar bort sin sektion
+efteråt; registro och promo skickar en egen `x-forwarded-for` per körning så
+att registrets 5/h per IP inte ärvs. Två gränser ligger kvar i processen: en
+tredje körning inom 15 minuter når owner-kodens 4 per nummer, och en körning
+som kraschat mitt i owner-inloggningen lämnar en oanvänd kod som får "admin ser
+att kunden väntar på kod" att falla tills den gått ut (10 min). Starta om
+servern, eller vänta.
+
 ## Skriva en ny fasfil
 
 ```js

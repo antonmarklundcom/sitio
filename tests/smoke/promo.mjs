@@ -9,7 +9,8 @@ const { ok, failed } = createChecker();
 const browser = await launchBrowser();
 const admin = await browser.newPage();
 // Separate the promo suite from registro.mjs's deliberate rate-limit exhaustion.
-const customer = await browser.newPage({ extraHTTPHeaders: { 'x-forwarded-for': '192.0.2.210' } });
+// Egen IP per körning (R3-12): registro räknar 5/h per IP i processen.
+const customer = await browser.newPage({ extraHTTPHeaders: { 'x-forwarded-for': `192.0.2.${(Date.now() % 200) + 20}` } });
 const banner = 'Probá Plus gratis 14 días — promoción smoke';
 const suffix = Date.now();
 let db;
