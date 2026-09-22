@@ -38,6 +38,7 @@ import { OwnerPlan } from "@/components/mi-sitio/owner-plan";
 import { getCurrentSubscription } from "@/db/billing-queries";
 import { PLAN_LABELS, toDayString } from "@/lib/billing";
 import { reportPaymentAction } from "./payment-actions";
+import { reportPath } from "@/lib/year-report";
 import {
   ownerDeletePhotoAction,
   ownerMoveMediaAction,
@@ -139,7 +140,7 @@ export default async function MiSitioPage({
         contenido. Tu WhatsApp es {displayPhone(business.whatsappPhone)}.
       </p>
 
-      <OwnerStats analytics={analytics} />
+      <OwnerStats analytics={analytics} reportHref={reportPath(businessId, business.slug)} />
 
       {subscription ? (
         <OwnerPlan

@@ -97,6 +97,12 @@ describe("renewalMessage", () => {
     expect(msg).toContain(base.siteUrl);
   });
 
+  it("tar med länken till årsrapporten när den finns (R3-23)", () => {
+    const url = "https://sitio.com.py/reporte/taller-lopez?t=abc";
+    expect(renewalMessage({ ...base, views365: 10, waClicks365: 2, reportUrl: url })).toContain(url);
+    expect(renewalMessage({ ...base, views365: 10, waClicks365: 2 })).not.toContain("/reporte/");
+  });
+
   it("utelämnar statistikmeningen helt vid nollor", () => {
     const msg = renewalMessage({ ...base, views365: 0, waClicks365: 0 });
     expect(msg).not.toContain("visitas");

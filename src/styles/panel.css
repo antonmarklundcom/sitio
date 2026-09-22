@@ -216,3 +216,9 @@
 /* Owner-editorn inbäddad i adminets sajtsida (R3-20): panelens tokens och
    komponenter, men inte dess helsidesbakgrund och minsta höjd. */
 .panel.panel--embedded { min-height: 0; background: transparent; font-size: 15px; }
+
+/* Årsrapporten (R3-23): tolv månadsstaplar med en axel under. */
+.panel-chart--months { height: 8rem; }
+.panel-chart-axis { display: flex; gap: 3px; font-size: 0.7rem; color: var(--muted); }
+.panel-chart-axis span { flex: 1; text-align: center; }
+.panel-report-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.5rem; }

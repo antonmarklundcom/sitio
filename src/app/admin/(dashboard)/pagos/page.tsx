@@ -16,6 +16,7 @@ import {
 } from "@/lib/billing";
 import { Badge, Card, EmptyState, Notice, SectionTitle } from "@/components/admin/ui";
 import { confirmPaymentAction, rejectPaymentAction, runLifecycleAction } from "./actions";
+import { reportPath } from "@/lib/year-report";
 
 export const dynamic = "force-dynamic";
 
@@ -158,6 +159,7 @@ export default async function PaymentsPage({
                       views365: row.views365,
                       waClicks365: row.waClicks365,
                       siteUrl,
+                      reportUrl: absoluteUrl(reportPath(row.businessId, row.slug)),
                     }),
                   );
 
