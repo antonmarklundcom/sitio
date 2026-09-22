@@ -20,3 +20,9 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
   silent. Re-run the polish after a service edit. By design. (O3)
 - **`listLeads()` has the same 300-row cap as `listBusinesses`**, no
   pagination. Not a problem at current customer volume. (S5)
+- **CSP `script-src` still has `'unsafe-inline'`.** Every App Router page
+  carries ~20 inline `self.__next_f.push(…)` scripts with its RSC payload;
+  without `'unsafe-inline'` each response needs a nonce, and nonces force
+  dynamic rendering — the customer sites are ISR by design. All other
+  directives are locked to self (R3-24). Revisit if Next gets hash-based CSP
+  for static output, or if the sites ever leave ISR. (R3-24)

@@ -1,6 +1,7 @@
 import { getPromoSettings } from "@/lib/settings";
 import type { Metadata } from "next";
 import { absoluteUrl, env } from "@/lib/env";
+import { jsonLdHtml } from "@/lib/jsonld";
 import { displayFont, textFont } from "@/themes/fonts";
 import { faqJsonLd, organizationJsonLd } from "@/components/landing/content";
 import { salesContact } from "@/components/landing/sales-contact";
@@ -58,18 +59,17 @@ export default async function LandingPage() {
   const faq = faqJsonLd();
 
   // All text här är vår egen, men `</script>` i en framtida FAQ-formulering
-  // skulle stänga taggen. Escapa `<` en gång, på vägen ut.
-  const ld = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+  // skulle stänga taggen — jsonLdHtml() escapar på vägen ut.
 
   return (
     <div className={`lp ${displayFont.variable} ${textFont.variable}`}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: ld(organization) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(organization) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: ld(faq) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(faq) }}
       />
 
       <LandingHeader contact={contact} />
