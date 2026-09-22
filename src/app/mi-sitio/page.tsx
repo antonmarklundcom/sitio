@@ -39,6 +39,9 @@ import { getCurrentSubscription } from "@/db/billing-queries";
 import { PLAN_LABELS, toDayString } from "@/lib/billing";
 import { reportPaymentAction } from "./payment-actions";
 import { reportPath } from "@/lib/year-report";
+import { getPages } from "@/db/page-queries";
+import { OwnerPages } from "@/components/mi-sitio/owner-pages";
+import { savePageContentAction } from "./page-actions";
 import {
   ownerDeletePhotoAction,
   ownerMoveMediaAction,
@@ -112,6 +115,7 @@ export default async function MiSitioPage({
       .where(and(eq(payments.businessId, businessId), eq(payments.status, "reported")))
       .limit(1),
   ]);
+  const sitePages = modules.has("extra_pages") ? await getPages(businessId) : [];
   const menu = modules.has("menu") ? await getMenu(businessId) : [];
   const products = modules.has("products") ? await getProducts(businessId) : [];
   const socials = business.socialsJson ?? {};
@@ -190,6 +194,8 @@ export default async function MiSitioPage({
           removeImage={removeProductImageAction}
         />
       ) : null}
+
+      <OwnerPages pages={sitePages} siteHref={`/${business.slug}`} save={savePageContentAction} />
 
       <OwnerEditForm
         action={updateOwnerBusinessAction}

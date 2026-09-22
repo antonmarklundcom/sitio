@@ -19,7 +19,7 @@ import type { ThemeProps } from "../types";
  *
  *   hero → tratamientos → dónde y cuándo → el lugar → [precios] → [productos] → cierre
  */
-export function SaludTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
+export function SaludTheme({ business, photos, logo, hero, modules, menu, products, pages }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const status = openState(business.hoursJson);
 
@@ -39,6 +39,7 @@ export function SaludTheme({ business, photos, logo, hero, modules, menu, produc
     <div className="site-root t-salud">
       <SiteHero
         business={business}
+        pages={pages}
         hero={hero}
         logo={logo}
         status={status}

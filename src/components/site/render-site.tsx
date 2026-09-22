@@ -6,6 +6,7 @@ import { paletteFor, paletteToCssVars } from "@/themes/palettes";
 import { themeComponent } from "@/themes/registry";
 import { AnalyticsScript, MotionScript } from "./site-scripts";
 import type { SiteData } from "@/db/site-queries";
+import type { SitePageLink } from "@/themes/types";
 
 /**
  * Delad rendering för den publika routen (/[slug], ISR) och preview-routen
@@ -45,7 +46,24 @@ export function siteMetadata(site: SiteData, opts: { isPreview: boolean }): Meta
   };
 }
 
-export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boolean }) {
+/**
+ * Länkarna till de extra sidorna (R3-25). I förhandsvisningen bär varje länk
+ * token, annars hamnar granskaren på en 404 så fort hen klickar vidare.
+ */
+export function pageLinks(site: SiteData, previewToken?: string): SitePageLink[] {
+  const suffix = previewToken ? `?preview=${previewToken}` : "";
+  return site.pages.map((page) => ({ href: `/${site.business.slug}/${page.pageSlug}${suffix}`, title: page.title }));
+}
+
+export function RenderSite({
+  site,
+  isPreview,
+  previewToken,
+}: {
+  site: SiteData;
+  isPreview: boolean;
+  previewToken?: string;
+}) {
   const { business, photos, logo, hero, modules, menu, products } = site;
   const palette = paletteFor(business.themeKey, business.paletteVariant);
   const Theme = themeComponent(business.themeKey);
@@ -75,6 +93,7 @@ export function RenderSite({ site, isPreview }: { site: SiteData; isPreview: boo
         modules={new Set(modules)}
         menu={menu}
         products={products}
+        pages={pageLinks(site, isPreview ? previewToken : undefined)}
       />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />

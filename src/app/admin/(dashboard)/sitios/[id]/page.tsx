@@ -64,6 +64,9 @@ import {
 } from "@/app/mi-sitio/product-actions";
 import "@/styles/panel.css";
 import { reportPath } from "@/lib/year-report";
+import { getPages } from "@/db/page-queries";
+import { PagesPanel } from "@/components/admin/pages-panel";
+import { createPageAction, deletePageAction, movePageAction, updatePageAction } from "../page-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -110,9 +113,10 @@ export default async function EditBusinessPage({
   // Meny och produkter laddas bara när modulen är på — samma regel som
   // owner-panelen; en avstängd modul har ingen editor (R3-20).
   const enabled = new Set(moduleStates.filter((m) => m.enabled).map((m) => m.key));
-  const [menu, products] = await Promise.all([
+  const [menu, products, sitePages] = await Promise.all([
     enabled.has("menu") ? getMenu(businessId) : null,
     enabled.has("products") ? getProducts(businessId) : null,
+    enabled.has("extra_pages") ? getPages(businessId) : null,
   ]);
   const logo = mediaRows.filter((m) => m.kind === "logo");
   const photos = mediaRows.filter((m) => m.kind === "photo");
@@ -303,6 +307,18 @@ export default async function EditBusinessPage({
         photoCount={photos.length}
         toggleModule={toggleModuleAction}
       />
+
+      {sitePages ? (
+        <PagesPanel
+          pages={sitePages}
+          slug={business.slug}
+          previewToken={previewToken(business.id)}
+          createPage={createPageAction.bind(null, business.id)}
+          updatePage={updatePageAction.bind(null, business.id)}
+          deletePage={deletePageAction.bind(null, business.id)}
+          movePage={movePageAction.bind(null, business.id)}
+        />
+      ) : null}
 
       {menu || products ? (
         <Card>

@@ -37,5 +37,5 @@ export default async function PreviewPage({ params, searchParams }: Params) {
   const site = await previewSite(slug, preview);
   if (!site) notFound();
 
-  return <RenderSite site={site} isPreview />;
+  return <RenderSite site={site} isPreview previewToken={preview} />;
 }

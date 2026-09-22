@@ -13,6 +13,7 @@ export const CTA_LOC_LABELS: Record<string, string> = {
   servicios: "servicios",
   productos: "productos",
   especialidades: "especialidades",
+  pagina: "página adicional",
 };
 
 export function ctaLabel(loc: string): string {

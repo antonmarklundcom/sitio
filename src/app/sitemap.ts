@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getPublishedSlugs } from "@/db/queries";
+import { getPublishedPageLinks, getPublishedSlugs } from "@/db/queries";
 import { absoluteUrl } from "@/lib/env";
 
 /**
@@ -14,7 +14,7 @@ import { absoluteUrl } from "@/lib/env";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const slugs = await getPublishedSlugs();
+  const [slugs, pageLinks] = await Promise.all([getPublishedSlugs(), getPublishedPageLinks()]);
 
   return [
     {
@@ -29,6 +29,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: s.updatedAt ?? new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.8,
+    })),
+    // Extra sidor (R3-25), bara när sidan och modulen är på.
+    ...pageLinks.map((p) => ({
+      url: absoluteUrl(`/${p.slug}/${p.pageSlug}`),
+      lastModified: p.updatedAt ?? new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     })),
   ];
 }

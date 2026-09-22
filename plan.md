@@ -565,7 +565,8 @@ Re-audited against the code on 2026-09-22 (round 3 batch 3,
 closed them.
 
 - PR-17 WhatsApp Cloud API (needs Meta verification, D6). **Blocked on Anton.**
-- PR-18 Extra pages module (`pages` table already exists, no migration).
+- ~~PR-18 Extra pages module (`pages` table already exists, no migration).~~
+  — done, R3-25 (#66).
 - ~~PR-19a Self-service signup~~ — done, R3-9 (#46). ~~PR-19b self-reported
   payments (owner reports method + reference + receipt ⇒ payment `reported`,
   admin confirms)~~ — done, R3-21 (#62).

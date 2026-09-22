@@ -17,7 +17,7 @@ import type { ThemeProps } from "../types";
  *
  *   hero → carta → especialidades → el local → dónde → [para llevar] → cierre
  */
-export function GastronomiaTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
+export function GastronomiaTheme({ business, photos, logo, hero, modules, menu, products, pages }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const status = openState(business.hoursJson);
 
@@ -37,6 +37,7 @@ export function GastronomiaTheme({ business, photos, logo, hero, modules, menu, 
     <div className="site-root t-gastronomia">
       <SiteHero
         business={business}
+        pages={pages}
         hero={hero}
         logo={logo}
         status={status}

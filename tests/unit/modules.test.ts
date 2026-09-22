@@ -27,6 +27,7 @@ describe("modulregistret", () => {
   it("isModuleBuilt följer plannedIn", () => {
     expect(isModuleBuilt("gallery")).toBe(true);
     expect(isModuleBuilt("menu")).toBe(true);
+    expect(isModuleBuilt("extra_pages")).toBe(true);
     expect(isModuleBuilt("booking")).toBe(false);
   });
 

@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, gte, inArray, like, or, sql } from "drizzle-orm";
 import { db } from "./index";
-import { businesses, payments, subscriptions } from "./schema";
+import { businessModules, businesses, pages, payments, subscriptions } from "./schema";
 import type { BusinessStatus } from "@/lib/business";
 
 export type BusinessListRow = {
@@ -110,6 +110,27 @@ export async function getPublishedSlugs() {
     .select({ slug: businesses.slug, updatedAt: businesses.updatedAt })
     .from(businesses)
     .where(eq(businesses.status, "published"));
+}
+
+/**
+ * Extra sidor på publicerade sajter med extra_pages påslagen (R3-25) — samma
+ * villkor som /[slug]/[page] använder för att svara 200, så sitemapen aldrig
+ * listar en 404.
+ */
+export async function getPublishedPageLinks() {
+  return db
+    .select({ slug: businesses.slug, pageSlug: pages.pageSlug, updatedAt: pages.updatedAt })
+    .from(pages)
+    .innerJoin(businesses, eq(businesses.id, pages.businessId))
+    .innerJoin(
+      businessModules,
+      and(
+        eq(businessModules.businessId, pages.businessId),
+        eq(businessModules.moduleKey, "extra_pages"),
+        eq(businessModules.isEnabled, true),
+      ),
+    )
+    .where(and(eq(businesses.status, "published"), eq(pages.isEnabled, true)));
 }
 
 export async function countByStatus(): Promise<Record<string, number>> {
