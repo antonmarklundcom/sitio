@@ -15,6 +15,13 @@
       "when": 1789436708540,
       "tag": "0001_common_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1790115212529,
+      "tag": "0002_aspiring_rhodey",
+      "breakpoints": true
     }
   ]
 }

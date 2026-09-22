@@ -105,7 +105,28 @@ const ownerSlug = ((await owner.locator('.panel-top a').first().getAttribute('hr
 if (ownerSlug) {
   const html = await (await fetch(B + '/' + ownerSlug)).text();
   ok('el catálogo se ve en la página pública (ISR)', html.includes(nombre1) && html.includes(nombre2));
-  ok('sin evento de vista propio (fuera del enum, S1)', !html.includes('data-ev-view="product'));
+  ok('el catálogo manda products_view (R3-17)', html.includes('data-ev-view="products_view"'));
+
+  // El beacon de verdad: la vista sale una vez, cuando el catálogo se ve.
+  // Playwright no expone el cuerpo de un sendBeacon, así que la página anota
+  // cada envío en window.__ev antes de mandarlo.
+  const visitor = await b.newPage();
+  await visitor.addInitScript(() => {
+    window.__ev = [];
+    const original = navigator.sendBeacon.bind(navigator);
+    navigator.sendBeacon = (url, data) => {
+      if (data instanceof Blob) data.text().then((t) => window.__ev.push(t));
+      return original(url, data);
+    };
+  });
+  await visitor.goto(B + '/' + ownerSlug, { waitUntil: 'load' });
+  await visitor.locator('#catalogo').scrollIntoViewIfNeeded();
+  const sent = await visitor
+    .waitForFunction(() => window.__ev.some((t) => t.includes('"products_view"')), null, { timeout: 15000 })
+    .then(() => true)
+    .catch(() => false);
+  ok('el navegador manda products_view al ver el catálogo', sent);
+  await visitor.close();
 }
 
 // ---------- 3b. fotos de producto (R3-16) ----------

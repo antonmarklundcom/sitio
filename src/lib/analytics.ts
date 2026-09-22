@@ -16,6 +16,7 @@ export const EVENT_TYPES = [
   "social_click",
   "menu_view",
   "gallery_view",
+  "products_view",
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];

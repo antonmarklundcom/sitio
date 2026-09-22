@@ -327,6 +327,7 @@ export const analyticsEvents = mysqlTable(
       "social_click",
       "menu_view",
       "gallery_view",
+      "products_view",
     ]).notNull(),
     path: varchar("path", { length: 120 }),
     referrerHost: varchar("referrer_host", { length: 120 }),

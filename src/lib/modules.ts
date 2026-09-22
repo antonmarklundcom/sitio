@@ -45,7 +45,8 @@ export const MODULES: ModuleMeta[] = [
     key: "products",
     label: "Productos",
     summary: "Lista de productos con precio o “consultar”.",
-    effect: "Sigue el mismo patrón que el menú y se muestra en el tema comercio.",
+    effect:
+      "Sigue el mismo patrón que el menú: editor en /mi-sitio y catálogo en el sitio. Las lecturas se registran como products_view.",
   },
   {
     key: "extra_pages",
