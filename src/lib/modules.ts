@@ -51,9 +51,9 @@ export const MODULES: ModuleMeta[] = [
   {
     key: "extra_pages",
     label: "Páginas adicionales",
-    summary: "3–6 páginas internas: /servicios, /nosotros …",
-    effect: "Tabla pages, navegación en el tema y mapa del sitio ampliado.",
-    plannedIn: "PR-18",
+    summary: "Hasta 6 páginas internas: /servicios, /nosotros …",
+    effect:
+      "Las páginas se crean acá en /admin (el cliente solo edita el texto en /mi-sitio). Aparecen como enlaces bajo la portada y en el mapa del sitio.",
   },
   {
     key: "booking",

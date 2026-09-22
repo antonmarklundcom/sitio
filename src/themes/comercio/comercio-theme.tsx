@@ -19,7 +19,7 @@ import type { ThemeProps } from "../types";
  *
  *   hero → catálogo → rubros → el local → [lista de precios] → dónde → cierre
  */
-export function ComercioTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
+export function ComercioTheme({ business, photos, logo, hero, modules, menu, products, pages }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const status = openState(business.hoursJson);
 
@@ -39,6 +39,7 @@ export function ComercioTheme({ business, photos, logo, hero, modules, menu, pro
     <div className="site-root t-comercio">
       <SiteHero
         business={business}
+        pages={pages}
         hero={hero}
         logo={logo}
         status={status}

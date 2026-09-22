@@ -6,6 +6,7 @@ import { businesses, businessModules, media, slugRedirects } from "./schema";
 import type { Business, Media } from "./schema";
 import { getMenu, publicMenu, type MenuSectionRow } from "./menu-queries";
 import { getProducts, publicProducts, type ProductRow } from "./product-queries";
+import { getPages, type PageRow } from "./page-queries";
 
 export type SiteData = {
   business: Business;
@@ -17,6 +18,8 @@ export type SiteData = {
   menu: MenuSectionRow[];
   /** Produkterna, redan filtrerade: tom när modulen är av eller inget är upplagt. */
   products: ProductRow[];
+  /** Extra sidor (R3-25): bara påslagna, och tom när extra_pages är av. */
+  pages: PageRow[];
 };
 
 async function loadSite(slug: string): Promise<SiteData | null> {
@@ -43,6 +46,9 @@ async function loadSite(slug: string): Promise<SiteData | null> {
   const moduleKeys = moduleRows.map((m) => m.moduleKey);
   const menu = moduleKeys.includes("menu") ? publicMenu(await getMenu(business.id)) : [];
   const products = moduleKeys.includes("products") ? publicProducts(await getProducts(business.id)) : [];
+  const pages = moduleKeys.includes("extra_pages")
+    ? (await getPages(business.id)).filter((page) => page.isEnabled)
+    : [];
 
   return {
     business,
@@ -52,6 +58,7 @@ async function loadSite(slug: string): Promise<SiteData | null> {
     modules: moduleKeys,
     menu,
     products,
+    pages,
   };
 }
 

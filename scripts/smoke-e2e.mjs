@@ -623,6 +623,89 @@ await p.waitForTimeout(1500);
 await menuRow().getByRole('button', { name: 'Desactivar' }).click();
 await p.waitForTimeout(2500);
 
+// 15. extra_pages (R3-25): admin skapar en sida, owner skriver texten, sajten
+// länkar till och serverar den, sitemapen listar den; dold sida och avstängd
+// modul ⇒ 404. Städas bort i slutet så att nästa körning börjar från seeden.
+const run15 = Date.now().toString().slice(-5);
+const pagesRow = () => modulesCardFor(p).locator('li').filter({ hasText: 'extra_pages' }).first();
+const pagesCard = () => p.locator('section').filter({ hasText: /Páginas adicionales/ }).last();
+const nosotrosLi = () => pagesCard().locator('li[data-page-slug="nosotros"]');
+const adminBiz = async () => {
+  await p.goto(B + '/admin/sitios/' + ownerBizId, { waitUntil: 'domcontentloaded' });
+  await p.waitForLoadState('networkidle');
+};
+
+await adminBiz();
+ok('extra_pages är byggd och märks inte som obyggd', !/todavía no está/i.test(await pagesRow().innerText()));
+if ((await pagesRow().innerText()).includes('Activar')) {
+  await pagesRow().getByRole('button', { name: 'Activar' }).click();
+  await p.waitForTimeout(2500);
+  await adminBiz();
+}
+// En kraschad tidigare körning kan ha lämnat sidan kvar.
+if ((await nosotrosLi().count()) > 0) {
+  await nosotrosLi().getByRole('button', { name: 'Borrar página' }).click();
+  await p.waitForTimeout(2500);
+}
+await pagesCard().locator('select[name=type]').selectOption('nosotros');
+await pagesCard().getByRole('button', { name: 'Crear página' }).click();
+await p.waitForTimeout(3000);
+ok('admin skapar /nosotros', (await nosotrosLi().count()) === 1);
+
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+await owner.waitForLoadState('networkidle');
+const ownerPageForm = owner.locator('form[data-page-slug="nosotros"]');
+ok('owner ser sidan och kan skriva texten', (await ownerPageForm.count()) === 1);
+ok('owner kan inte skapa sidor', !(await owner.locator('body').innerText()).includes('Crear página'));
+await ownerPageForm.locator('textarea[name=body]').fill(
+  'Somos una empresa familiar ' + run15 + '.\n\nAtendemos desde 1998.',
+);
+await ownerPageForm.getByRole('button', { name: 'Guardar página' }).click();
+await owner.waitForTimeout(3000);
+ok('owner sparar sidans text', (await ownerPageForm.innerText()).includes('¡Guardado!'));
+
+const subUrl = B + '/' + ownerSlug14 + '/nosotros';
+const home15 = await (await fetch(B + '/' + ownerSlug14)).text();
+ok('startsidan länkar till /nosotros', home15.includes(`href="/${ownerSlug14}/nosotros"`));
+const sub15 = await fetch(subUrl);
+const subHtml = await sub15.text();
+ok(
+  '/nosotros svarar 200 med ownerns text i stycken',
+  sub15.status === 200 && subHtml.includes('Somos una empresa familiar ' + run15) && subHtml.includes('<p>Atendemos desde 1998.</p>'),
+);
+ok('/nosotros har egen canonical', subHtml.includes(`rel="canonical" href="${new URL(B).origin}`) || subHtml.includes(`/${ownerSlug14}/nosotros"`));
+ok('sitemapen listar /nosotros', (await (await fetch(B + '/sitemap.xml')).text()).includes(`/${ownerSlug14}/nosotros</loc>`));
+ok('okänd sida ⇒ 404', (await fetch(B + '/' + ownerSlug14 + '/no-existe')).status === 404);
+
+// Dölj sidan i adminet.
+await adminBiz();
+await nosotrosLi().locator('input[name=isEnabled]').uncheck();
+await nosotrosLi().getByRole('button', { name: 'Guardar página' }).click();
+await p.waitForTimeout(3000);
+ok('dold sida ⇒ 404', (await fetch(subUrl)).status === 404);
+ok('dold sida länkas inte', !(await (await fetch(B + '/' + ownerSlug14)).text()).includes(`/${ownerSlug14}/nosotros"`));
+await nosotrosLi().locator('input[name=isEnabled]').check();
+await nosotrosLi().getByRole('button', { name: 'Guardar página' }).click();
+await p.waitForTimeout(3000);
+ok('synlig igen', (await fetch(subUrl)).status === 200);
+
+// Modulen av: 404, men sidan ligger kvar i databasen.
+await adminBiz();
+await pagesRow().getByRole('button', { name: 'Desactivar' }).click();
+await p.waitForTimeout(2500);
+ok('avstängd modul ⇒ 404', (await fetch(subUrl)).status === 404);
+
+// Städning: modulen på för att komma åt sidan, radera, modulen av.
+await adminBiz();
+await pagesRow().getByRole('button', { name: 'Activar' }).click();
+await p.waitForTimeout(2500);
+await adminBiz();
+await nosotrosLi().getByRole('button', { name: 'Borrar página' }).click();
+await p.waitForTimeout(2500);
+ok('testsidan städas bort', (await nosotrosLi().count()) === 0);
+await pagesRow().getByRole('button', { name: 'Desactivar' }).click();
+await p.waitForTimeout(2500);
+
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForLoadState('networkidle');
 for (let guard = 0; guard < 12; guard++) {

@@ -435,6 +435,11 @@ async function main() {
         modules: new Set<string>(["gallery", "menu", "products"]),
         menu,
         products,
+        // Länkraden till extra sidor (R3-25) granskas under hero-plattan.
+        pages: [
+          { href: "#nosotros", title: "Nosotros" },
+          { href: "#contacto", title: "Contacto" },
+        ],
       },
     }));
 

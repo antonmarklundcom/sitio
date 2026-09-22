@@ -15,4 +15,8 @@ export type ThemeProps = {
   menu: MenuSectionRow[];
   /** Produkterna (products-modulen, PR-14). Tom lista när modulen är av. */
   products: ProductRow[];
+  /** Länkar till extra sidor (extra_pages, R3-25). Tom lista när modulen är av. */
+  pages?: SitePageLink[];
 };
+
+export type SitePageLink = { href: string; title: string };

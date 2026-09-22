@@ -1,7 +1,7 @@
 import { displayPhone } from "@/lib/format";
 import type { OpenState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "./primitives";
-import type { ThemeMedia } from "@/themes/types";
+import type { SitePageLink, ThemeMedia } from "@/themes/types";
 import type { Business } from "@/db/schema";
 
 /**
@@ -63,6 +63,7 @@ export function SiteHero({
   ctaLabel,
   eyebrow,
   chips,
+  pages = [],
 }: {
   business: Business;
   hero: ThemeMedia | null;
@@ -74,6 +75,8 @@ export function SiteHero({
   eyebrow: string;
   /** 0–4 korta fakta. Tomma strängar filtreras bort av anroparen. */
   chips: string[];
+  /** Extra sidor (R3-25). Visas som en rad länkar under plattan. */
+  pages?: SitePageLink[];
 }) {
   // h1 härleds deterministiskt. seoTitle är redigerbar i admin och vinner när
   // den finns — men den får aldrig sönderdelas med strängtrick.
@@ -156,7 +159,29 @@ export function SiteHero({
             </ul>
           ) : null}
         </div>
+        <SitePagesNav pages={pages} />
       </div>
     </header>
+  );
+}
+
+/**
+ * Länkraden till de extra sidorna (R3-25). Delad av startsidans hero och
+ * undersidornas huvud; tom lista renderar ingenting.
+ */
+export function SitePagesNav({ pages, current }: { pages: SitePageLink[]; current?: string }) {
+  if (pages.length === 0) return null;
+  return (
+    <nav className="site-pages-nav" aria-label="Más páginas">
+      <ul>
+        {pages.map((page) => (
+          <li key={page.href}>
+            <a href={page.href} aria-current={page.href === current ? "page" : undefined}>
+              {page.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

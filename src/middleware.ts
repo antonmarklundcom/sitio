@@ -10,7 +10,7 @@ const SESSION_COOKIE = "sitio_session";
  * 1. Skydda /admin/* och /mi-sitio/* som första lager. Varje sida och mutation
  *    kallar ändå requireRole() server-side — middleware finns för att slippa
  *    rendera panelen åt en utloggad besökare.
- * 2. Skriva om /{slug}?preview=<token> till /preview/{slug}. Kunden och du
+ * 2. Skriva om /{slug}[/{sida}]?preview=<token> till /preview/{slug}[/{sida}]. Kunden och du
  *    ser samma URL som planen anger, men den publika /[slug] slipper läsa
  *    searchParams och kan därmed ligga kvar på ISR.
  */
@@ -21,7 +21,8 @@ export async function middleware(req: NextRequest) {
   const isOwner = pathname.startsWith("/mi-sitio");
 
   if (!isAdmin && !isOwner) {
-    if (searchParams.has("preview") && /^\/[^/]+$/.test(pathname)) {
+    // /{slug} och /{slug}/{sida} (extra_pages, R3-25).
+    if (searchParams.has("preview") && /^\/[^/]+(\/[^/]+)?$/.test(pathname)) {
       const url = req.nextUrl.clone();
       url.pathname = `/preview${pathname}`;
       return NextResponse.rewrite(url);

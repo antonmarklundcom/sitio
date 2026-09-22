@@ -21,7 +21,7 @@ import type { ThemeProps } from "../types";
  * Alla block ligger i src/components/site/blocks.tsx och är gemensamma för
  * de fyra temana; det här filen bestämmer ordning, text och CSS.
  */
-export function ServiciosTheme({ business, photos, logo, hero, modules, menu, products }: ThemeProps) {
+export function ServiciosTheme({ business, photos, logo, hero, modules, menu, products, pages }: ThemeProps) {
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const status = openState(business.hoursJson);
 
@@ -43,6 +43,7 @@ export function ServiciosTheme({ business, photos, logo, hero, modules, menu, pr
     <div className="site-root t-servicios">
       <SiteHero
         business={business}
+        pages={pages}
         hero={hero}
         logo={logo}
         status={status}
