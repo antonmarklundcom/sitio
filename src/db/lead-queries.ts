@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { daysUntil } from "@/lib/billing";
 import { logActivity } from "@/lib/auth";
 import { absoluteUrl } from "@/lib/env";
-import { dayKeyAsuncion } from "@/lib/analytics";
+import { dayKeyAsuncion, windowStartAsuncion } from "@/lib/analytics";
 import { hotLeadPayload, pushLead, venderCrmConfig } from "@/lib/vendercrm";
 import { computeUpsellScore, isHotLead, type LeadStage, type UpsellStats } from "@/lib/radar";
 
@@ -58,11 +58,11 @@ export async function runRadar(): Promise<RadarResult> {
       wasHotLead: businesses.hotLead,
       waClicks30d: sql<number>`(
         select coalesce(sum(d.wa_clicks), 0) from analytics_daily d
-        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+        where d.business_id = ${bizId} and d.day >= ${windowStartAsuncion(30)}
       )`,
       views30d: sql<number>`(
         select coalesce(sum(d.views), 0) from analytics_daily d
-        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+        where d.business_id = ${bizId} and d.day >= ${windowStartAsuncion(30)}
       )`,
       galleryPhotos: sql<number>`(
         select count(*) from media m
@@ -183,11 +183,11 @@ export async function listLeads(): Promise<LeadRow[]> {
       adminNotes: businesses.adminNotes,
       views30d: sql<number>`(
         select coalesce(sum(d.views), 0) from analytics_daily d
-        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+        where d.business_id = ${bizId} and d.day >= ${windowStartAsuncion(30)}
       )`,
       waClicks30d: sql<number>`(
         select coalesce(sum(d.wa_clicks), 0) from analytics_daily d
-        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+        where d.business_id = ${bizId} and d.day >= ${windowStartAsuncion(30)}
       )`,
     })
     .from(businesses)

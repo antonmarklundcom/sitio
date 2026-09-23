@@ -49,40 +49,42 @@ export function SaludTheme({ business, photos, logo, hero, modules, menu, produc
         chips={chips}
       />
 
-      <SiteServices
-        services={services}
-        eyebrow="Tratamientos"
-        title="Lo que atendemos"
-        wa={wa}
-        askTitle="¿No estás seguro de qué necesitás?"
-        askBody="Contanos qué te pasa y te decimos qué turno te conviene pedir."
-        askCta="Preguntar por WhatsApp"
-        evLoc="servicios"
-      />
+      <main>
+        <SiteServices
+          services={services}
+          eyebrow="Tratamientos"
+          title="Lo que atendemos"
+          wa={wa}
+          askTitle="¿No estás seguro de qué necesitás?"
+          askBody="Contanos qué te pasa y te decimos qué turno te conviene pedir."
+          askCta="Preguntar por WhatsApp"
+          evLoc="servicios"
+        />
 
-      <SiteWhereWhen
-        business={business}
-        status={status}
-        eyebrow="Turnos"
-        title="Dónde y cuándo atendemos"
-        noHoursNote="Escribinos por WhatsApp y coordinamos el turno."
-      />
+        <SiteWhereWhen
+          business={business}
+          status={status}
+          eyebrow="Turnos"
+          title="Dónde y cuándo atendemos"
+          noHoursNote="Escribinos por WhatsApp y coordinamos el turno."
+        />
 
-      <SitePhotos business={business} photos={rail} eyebrow="El lugar" title="Dónde te atendemos" />
+        <SitePhotos business={business} photos={rail} eyebrow="El lugar" title="Dónde te atendemos" />
 
-      <SiteMenu
-        menu={menu}
-        eyebrow="Precios"
-        title="Precios de referencia"
-        intro="Precios de referencia en guaraníes. Confirmamos el valor exacto al coordinar el turno."
-      />
+        <SiteMenu
+          menu={menu}
+          eyebrow="Precios"
+          title="Precios de referencia"
+          intro="Precios de referencia en guaraníes. Confirmamos el valor exacto al coordinar el turno."
+        />
 
-      <SiteProducts
-        products={products}
-        eyebrow="Productos"
-        title="Productos que usamos"
-        intro="Lo que también vendemos en el consultorio, en guaraníes."
-      />
+        <SiteProducts
+          products={products}
+          eyebrow="Productos"
+          title="Productos que usamos"
+          intro="Lo que también vendemos en el consultorio, en guaraníes."
+        />
+      </main>
 
       <SiteClosing
         business={business}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getSiteBySlug } from "@/db/site-queries";
 import { isReservedSlug } from "@/lib/slug";
 import { verifyPreviewToken } from "@/lib/preview";
@@ -36,6 +36,10 @@ export default async function PreviewPage({ params, searchParams }: Params) {
   const { preview } = await searchParams;
   const site = await previewSite(slug, preview);
   if (!site) notFound();
+  // En giltig länk till en sajt som redan är publicerad: visa den riktiga
+  // sidan i stället för "no es visible al público" + noindex (R3-41). 307,
+  // inte 301 — sajten kan pausas igen.
+  if (site.business.status === "published") redirect(`/${site.business.slug}`);
 
   return <RenderSite site={site} isPreview previewToken={preview} />;
 }

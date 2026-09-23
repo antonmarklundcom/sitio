@@ -70,6 +70,17 @@ export function dayKeyAsuncion(now: Date = new Date()): string {
 }
 
 /**
+ * Första dygnet i ett fönster om `days` dygn som slutar idag i Asunción
+ * (R3-41). "30 días" = idag + de 29 dygnen före — `curdate() - interval 30
+ * day` gav 31 dygn, och räknat på databasens UTC-datum.
+ */
+export function windowStartAsuncion(days: number, now: Date = new Date()): string {
+  const d = new Date(`${dayKeyAsuncion(now)}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - (days - 1));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
  * visitorHash = sha256(ip + ua + dagsalt), trunkerad till 32 tecken.
  *
  * Saltet härleds ur SESSION_SECRET och dagens datum, så det behöver aldrig

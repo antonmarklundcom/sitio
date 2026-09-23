@@ -3,6 +3,7 @@ import { and, desc, eq, gte, inArray, like, or, sql } from "drizzle-orm";
 import { db } from "./index";
 import { businessModules, businesses, pages, payments, subscriptions } from "./schema";
 import type { BusinessStatus } from "@/lib/business";
+import { windowStartAsuncion } from "@/lib/analytics";
 
 export type BusinessListRow = {
   id: number;
@@ -80,11 +81,11 @@ export async function listBusinesses(params: {
       // växer obegränsat.
       views30d: sql<number>`(
         select coalesce(sum(d.views), 0) from analytics_daily d
-        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+        where d.business_id = ${bizId} and d.day >= ${windowStartAsuncion(30)}
       )`,
       waClicks30d: sql<number>`(
         select coalesce(sum(d.wa_clicks), 0) from analytics_daily d
-        where d.business_id = ${bizId} and d.day >= curdate() - interval 30 day
+        where d.business_id = ${bizId} and d.day >= ${windowStartAsuncion(30)}
       )`,
     })
     .from(businesses)
