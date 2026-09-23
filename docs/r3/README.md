@@ -62,3 +62,11 @@ PR-17 WhatsApp Cloud API (Meta verification), PR-20 reminders (need PR-17),
 PR-21 R2 (only if the uploads-persistence test on Hostinger fails), and the
 live-deploy steps from batch 2 (import migrations on Hostinger MariaDB,
 `RESEND_*` env, uploads dir, cron, DB password rotation).
+
+## Batch 4
+
+Handoff prompt: `docs/r3/prompts/batch-4.md` — part A takes batch 3 live
+with Anton at the keyboard (migration import file in `docs/deploy/`, env
+vars, redeploy, live checks, `/admin/diagnostico`), part B is R3-26 … R3-30.
+Log: `docs/log/R3-4.md` (created by that session).
+
