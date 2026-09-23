@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { users, verifications } from "@/db/schema";
 import { sql } from "drizzle-orm";
@@ -110,11 +110,16 @@ export async function verifyOwnerCodeAction(
 
   if (!row || row.expiresAt.getTime() < Date.now() || row.attempts >= OTP_MAX_ATTEMPTS) return generic;
 
+  // Försöket tas atomiskt FÖRE jämförelsen (R3-37). Förr lästes attempts,
+  // jämfördes och räknades upp efteråt — parallella anrop kom alla förbi
+  // "< 5" och fick fler gissningar än taket.
+  const [claim] = await db
+    .update(verifications)
+    .set({ attempts: sql`${verifications.attempts} + 1` })
+    .where(and(eq(verifications.id, row.id), lt(verifications.attempts, OTP_MAX_ATTEMPTS), isNull(verifications.verifiedAt)));
+  if (!claim.affectedRows) return generic;
+
   if (!otpMatches(code, row.codeHash)) {
-    await db
-      .update(verifications)
-      .set({ attempts: sql`${verifications.attempts} + 1` })
-      .where(eq(verifications.id, row.id));
     await logActivity({
       actorUserId: target.userId,
       businessId: target.businessId,
@@ -124,7 +129,12 @@ export async function verifyOwnerCodeAction(
     return generic;
   }
 
-  await db.update(verifications).set({ verifiedAt: new Date() }).where(eq(verifications.id, row.id));
+  // Koden används en gång, även om två rätta inlämningar kommer samtidigt.
+  const [used] = await db
+    .update(verifications)
+    .set({ verifiedAt: new Date() })
+    .where(and(eq(verifications.id, row.id), isNull(verifications.verifiedAt)));
+  if (!used.affectedRows) return generic;
   await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, target.userId));
 
   await establishSession({

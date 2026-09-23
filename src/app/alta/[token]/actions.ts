@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, onboardingTokens, verifications } from "@/db/schema";
 import { getIntakeSession } from "@/db/intake-queries";
@@ -169,16 +169,24 @@ export async function verifyCodeAction(token: string, _prev: IntakeState, formDa
   if (row.expiresAt.getTime() < Date.now()) return { error: "El código venció. Pedí uno nuevo." };
   if (row.attempts >= OTP_MAX_ATTEMPTS) return { error: "Demasiados intentos con ese código. Pedí uno nuevo." };
 
+  // Försöket tas atomiskt före jämförelsen (R3-37), så att parallella anrop
+  // inte kommer förbi taket.
+  const [claim] = await db
+    .update(verifications)
+    .set({ attempts: sql`${verifications.attempts} + 1` })
+    .where(and(eq(verifications.id, row.id), lt(verifications.attempts, OTP_MAX_ATTEMPTS), isNull(verifications.verifiedAt)));
+  if (!claim.affectedRows) return { error: "Demasiados intentos con ese código. Pedí uno nuevo." };
+
   if (!otpMatches(code, row.codeHash)) {
-    await db
-      .update(verifications)
-      .set({ attempts: sql`${verifications.attempts} + 1` })
-      .where(eq(verifications.id, row.id));
     return { error: "Ese código no coincide.", fieldErrors: { code: "Revisá los números." } };
   }
 
   const now = new Date();
-  await db.update(verifications).set({ verifiedAt: now }).where(eq(verifications.id, row.id));
+  const [used] = await db
+    .update(verifications)
+    .set({ verifiedAt: now })
+    .where(and(eq(verifications.id, row.id), isNull(verifications.verifiedAt)));
+  if (!used.affectedRows) return { error: "Ese código ya se usó. Pedí uno nuevo." };
   await db.update(businesses).set({ whatsappVerifiedAt: now }).where(eq(businesses.id, session.business.id));
 
   await logActivity({

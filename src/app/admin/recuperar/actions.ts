@@ -19,7 +19,7 @@ export async function recoverAction(formData: FormData): Promise<void> {
     try {
       const user = await findActiveSuperadminByEmail(email);
       if (user?.email) {
-        const link = absoluteUrl("/admin/recuperar/" + createResetToken(user.id, user.email, Date.now()));
+        const link = absoluteUrl("/admin/recuperar/" + createResetToken(user.id, user.email, Date.now(), user.passwordHash));
         const escapedLink = link.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
         await sendEmail({
           to: user.email,
