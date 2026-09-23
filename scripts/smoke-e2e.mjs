@@ -184,6 +184,19 @@ await cust.goto(B + '/alta/' + token, { waitUntil: 'domcontentloaded' });
 await cust.waitForTimeout(800);
 ok('kundformuläret öppnas utan inloggning', (await cust.locator('h1').innerText()).includes('Panader'));
 
+// R3-38: ett fel från servern ska inte radera det kunden skrev.
+await cust.fill('textarea[name=rawDescription]', 'Pan rico');
+await cust.fill('input[name="service.0.name"]', 'Pan casero');
+await cust.fill('input[name=city]', 'Luque');
+await cust.getByRole('button', { name: /Guardar y seguir/ }).click();
+await cust.waitForTimeout(2500);
+ok(
+  'intakens fel behåller texten',
+  (await cust.locator('.panel-note--err').count()) > 0 &&
+    (await cust.locator('textarea[name=rawDescription]').inputValue()) === 'Pan rico' &&
+    (await cust.locator('input[name="service.0.name"]').inputValue()) === 'Pan casero',
+);
+
 await cust.fill(
   'textarea[name=rawDescription]',
   'Panadería de barrio con pan casero, facturas y tortas por encargo. Atendemos todos los días desde temprano.',

@@ -106,6 +106,24 @@ await owner.waitForTimeout(3000);
 const afterFirst = await owner.locator('body').innerText();
 ok('producto con precio guardado', afterFirst.includes(nombre1) && afterFirst.includes('450.000'));
 
+// R3-38: "35 mil" nekas (R3-32) men namnet och detaljen står kvar.
+await owner.getByRole('button', { name: 'Agregar producto' }).first().click();
+await owner.waitForTimeout(600);
+await owner.locator('.panel-menu-form input[name=name]').first().fill('Banco de algarrobo');
+await owner.locator('.panel-menu-form input[name=description]').first().fill('Hecho a mano');
+await owner.locator('.panel-menu-form input[name=priceGs]').first().fill('35 mil');
+await owner.getByRole('button', { name: 'Agregar producto' }).last().click();
+await owner.waitForTimeout(2500);
+const keptForm = owner.locator('.panel-menu-form').filter({ has: owner.locator('.panel-note--err') }).first();
+ok(
+  'fel pris behåller namn och detalj',
+  (await keptForm.count()) > 0 &&
+    (await keptForm.locator('input[name=name]').inputValue()) === 'Banco de algarrobo' &&
+    (await keptForm.locator('input[name=priceGs]').inputValue()) === '35 mil',
+);
+await owner.reload({ waitUntil: 'domcontentloaded' });
+await owner.waitForTimeout(1000);
+
 const nombre2 = 'Mesa a pedido ' + Date.now().toString().slice(-4);
 await owner.getByRole('button', { name: 'Agregar producto' }).first().click();
 await owner.waitForTimeout(600);
