@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizePyPhone } from "./format";
+import { normalizeIntervals } from "./hours";
 import { validateSlug } from "./slug";
 
 export const CATEGORIES = [
@@ -134,7 +135,8 @@ export const hoursSchema = z.record(
     .array(
       z
         .object({ open: z.string().regex(timeRe, "Tid måste vara HH:MM."), close: z.string().regex(timeRe, "Tid måste vara HH:MM.") })
-        .refine((i) => i.open < i.close, "Stängningstiden måste vara efter öppningstiden."),
+        // "00:00" som stängning är midnatt (samma regel som normalizeIntervals).
+        .refine((i) => i.close === "00:00" || i.open < i.close, "Stängningstiden måste vara efter öppningstiden."),
     )
     .nullable(),
 );
@@ -228,12 +230,14 @@ export function hoursFromFormData(formData: FormData): HoursMap {
       hours[key] = null;
       continue;
     }
-    const intervals: HoursInterval[] = [];
-    for (let i = 0; i < 2; i += 1) {
-      const open = String(formData.get(`hours.${key}.${i}.open`) ?? "").trim();
-      const close = String(formData.get(`hours.${key}.${i}.close`) ?? "").trim();
-      if (open && close) intervals.push({ open, close });
-    }
+    // Samma städning som intaken och ägarpanelen (R3-19, R3-28): felformade
+    // tider faller bort, 00:00 som stängning är midnatt, överlapp slås ihop.
+    const intervals = normalizeIntervals(
+      [0, 1].map((i) => ({
+        open: String(formData.get(`hours.${key}.${i}.open`) ?? ""),
+        close: String(formData.get(`hours.${key}.${i}.close`) ?? ""),
+      })),
+    );
     hours[key] = intervals.length > 0 ? intervals : null;
   }
   return hours;

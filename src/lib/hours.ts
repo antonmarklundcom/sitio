@@ -1,8 +1,11 @@
-import { WEEKDAYS, type HoursInterval, type HoursMap } from "./business";
+import type { HoursInterval, HoursMap } from "./business";
 
 export const PY_TIMEZONE = "America/Asuncion";
 
-const DAY_ORDER: string[] = WEEKDAYS.map((d) => d.key);
+// Egen lista i stället för WEEKDAYS.map: business.ts importerar
+// normalizeIntervals härifrån (R3-28), och en toppnivåläsning av WEEKDAYS
+// skulle då krocka med importordningen. Samma ordning som WEEKDAYS.
+const DAY_ORDER: string[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 /** JS getDay() är 0=söndag; våra nycklar börjar på måndag. */
 const JS_DAY_TO_KEY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;

@@ -7,6 +7,7 @@ import {
   THEME_KEYS,
   canTransition,
   hoursFromFormData,
+  hoursSchema,
   publishBlockers,
   servicesFromFormData,
 } from "@/lib/business";
@@ -116,6 +117,33 @@ describe("hoursFromFormData", () => {
     const fd = new FormData();
     fd.set("hours.wed.0.open", "08:00");
     expect(hoursFromFormData(fd).wed).toBeNull();
+  });
+
+  it("sparar 19:00–00:00 som ett pass till midnatt och schemat godtar det (R3-28)", () => {
+    const fd = new FormData();
+    fd.set("hours.fri.0.open", "19:00");
+    fd.set("hours.fri.0.close", "00:00");
+    const hours = hoursFromFormData(fd);
+    expect(hours.fri).toEqual([{ open: "19:00", close: "00:00" }]);
+    expect(hoursSchema.safeParse(hours).success).toBe(true);
+  });
+
+  it("slår ihop överlappande pass och sorterar dem", () => {
+    const fd = new FormData();
+    fd.set("hours.mon.0.open", "14:00");
+    fd.set("hours.mon.0.close", "19:00");
+    fd.set("hours.mon.1.open", "08:00");
+    fd.set("hours.mon.1.close", "15:00");
+    expect(hoursFromFormData(fd).mon).toEqual([{ open: "08:00", close: "19:00" }]);
+  });
+
+  it("kastar felformade tider och pass som slutar före start", () => {
+    const fd = new FormData();
+    fd.set("hours.thu.0.open", "8");
+    fd.set("hours.thu.0.close", "12:00");
+    fd.set("hours.thu.1.open", "18:00");
+    fd.set("hours.thu.1.close", "09:00");
+    expect(hoursFromFormData(fd).thu).toBeNull();
   });
 });
 
