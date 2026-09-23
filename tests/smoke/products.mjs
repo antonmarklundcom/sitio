@@ -288,6 +288,27 @@ const afterDelete = await owner.locator('body').innerText();
 ok('productos de la corrida borrados', !afterDelete.includes(nombre1) && !afterDelete.includes(nombre2));
 ok('borrar el producto borra su foto', (await status(mesaSrc)) === 404);
 
+// ---------- 7. avstängd owner tappar sin session direkt (R3-34) ----------
+// Cookien är oförändrad hela vägen: det är kontots status som avgör.
+const accesosRow = () => p.locator('tr').filter({ hasText: '/' + ownerSlug }).first();
+await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
+await accesosRow().getByRole('button', { name: 'Desactivar' }).click();
+await p.waitForTimeout(2000);
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+ok('avstängd owner skickas till inloggningen', owner.url().includes('/mi-sitio/login'));
+const uploadAfterDisable = await owner.evaluate(async () => {
+  const body = new FormData();
+  body.set('kind', 'photo');
+  body.set('file', new File([new Uint8Array([1, 2, 3])], 'x.jpg', { type: 'image/jpeg' }));
+  return (await fetch('/api/upload', { method: 'POST', body })).status;
+});
+ok('avstängd owner kan inte ladda upp', uploadAfterDisable === 401, String(uploadAfterDisable));
+await p.goto(B + '/admin/accesos', { waitUntil: 'domcontentloaded' });
+await accesosRow().getByRole('button', { name: 'Activar' }).click();
+await p.waitForTimeout(2000);
+await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
+ok('återaktiverad owner är inne igen med samma cookie', owner.url().endsWith('/mi-sitio'));
+
 // Deja el rubro de la semilla como estaba — otros archivos de la suite (y una
 // relectura humana de business 1) no deben ver un cambio permanente.
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
