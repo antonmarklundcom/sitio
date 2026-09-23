@@ -56,6 +56,25 @@ export function localBusinessJsonLd(params: {
 }
 
 /**
+ * BreadcrumbList för en extra sida (R3-29): startsidan → sidan. Google visar
+ * den som sökvägen under titeln i stället för en rå URL.
+ */
+export function breadcrumbJsonLd(params: {
+  business: Pick<Business, "name" | "slug">;
+  page: { title: string; pageSlug: string };
+}): Record<string, unknown> {
+  const { business, page } = params;
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: business.name, item: absoluteUrl(`/${business.slug}`) },
+      { "@type": "ListItem", position: 2, name: page.title, item: absoluteUrl(`/${business.slug}/${page.pageSlug}`) },
+    ],
+  };
+}
+
+/**
  * JSON för en `<script type="application/ld+json">` via dangerouslySetInnerHTML.
  * `<` blir `<` (giltig JSON, samma värde): utan det avslutar
  * `</script>` i en kundtext — namn, beskrivning, tjänster, som kommer från

@@ -20,6 +20,8 @@ import { SaludTheme } from "../src/themes/salud/salud-theme";
 import { ServiciosTheme } from "../src/themes/servicios/servicios-theme";
 import { paletteFor, paletteToCssVars } from "../src/themes/palettes";
 import { itemImage } from "../src/lib/media-shared";
+import { RenderSubPage } from "../src/components/site/render-subpage";
+import type { PageType } from "../src/lib/pages";
 import type { ThemeProps } from "../src/themes/types";
 import type { Business } from "../src/db/schema";
 
@@ -387,6 +389,46 @@ function emptyBusiness(base: Business): Business {
   } as unknown as Business;
 }
 
+/** Fristående HTML runt en renderad sida: typsnitt, temats CSS, motion-scriptet. */
+function pageHtml(demo: Demo, suffix: string, body: string): string {
+  return `<!doctype html>
+<html lang="es-PY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>QA — ${demo.themeKey} ${suffix}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+:root{--font-display:'Archivo',system-ui,sans-serif;--font-text:'Instrument Sans',system-ui,sans-serif}
+${css(demo.cssFile)}
+</style>
+</head>
+<body>${body}
+<script>document.documentElement.classList.add('js')</script>
+<script>${motionScript()}</script>
+</body>
+</html>`;
+}
+
+/**
+ * En extra sida per tema (R3-29, extra_pages): varje tema visar en sidtyp med
+ * sitt eget block efter texten, så QA-gaten ser skalet, länkraden och blocket.
+ */
+const SUBPAGE_TYPE: Record<string, { type: PageType; title: string; pageSlug: string }> = {
+  servicios: { type: "servicios", title: "Servicios", pageSlug: "servicios" },
+  gastronomia: { type: "menu", title: "Carta", pageSlug: "carta" },
+  comercio: { type: "productos", title: "Productos", pageSlug: "productos" },
+  salud: { type: "contacto", title: "Contacto", pageSlug: "contacto" },
+};
+
+const SUBPAGE_BODY =
+  "Trabajamos en la zona desde hace más de diez años. Cada pedido lo atiende alguien del equipo, no un contestador, y te decimos el precio antes de empezar.\n\nSi no sabés qué necesitás, escribinos igual: te orientamos sin compromiso.";
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const written: string[] = [];
@@ -471,33 +513,34 @@ async function main() {
       const Theme = demo.Theme;
       const body = renderToStaticMarkup(<Theme {...page.props} />);
 
-      const html = `<!doctype html>
-<html lang="es-PY">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>QA — ${demo.themeKey} ${suffix}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box}
-body{margin:0}
-:root{--font-display:'Archivo',system-ui,sans-serif;--font-text:'Instrument Sans',system-ui,sans-serif}
-${css(demo.cssFile)}
-</style>
-</head>
-<body><div style="${vars}">${body}</div>
-<script>document.documentElement.classList.add('js')</script>
-<script>${motionScript()}</script>
-</body>
-</html>`;
+      const html = pageHtml(demo, suffix, `<div style="${vars}">${body}</div>`);
 
       const file = path.join(OUT_DIR, `${demo.themeKey}-${suffix}.html`);
       await writeFile(file, html, "utf8");
       written.push(`${demo.themeKey}-${suffix}.html`);
       console.log(`✓ ${file}  (accent ${palette.accent}, hue ${palette.hue}°)`);
+    }
+
+    const sub = SUBPAGE_TYPE[demo.themeKey];
+    if (sub) {
+      const subPage = { id: 1, ...sub, body: SUBPAGE_BODY, isEnabled: true, sortOrder: 0 };
+      const nosotros = { id: 2, type: "nosotros" as const, title: "Nosotros", pageSlug: "nosotros", body: SUBPAGE_BODY, isEnabled: true, sortOrder: 1 };
+      const site = {
+        business: { ...demo.business, paletteVariant: 1 },
+        photos,
+        logo: null,
+        hero: photos[0],
+        modules: ["gallery", "menu", "products", "extra_pages"],
+        menu,
+        products,
+        pages: [subPage, nosotros],
+      } as unknown as Parameters<typeof RenderSubPage>[0]["site"];
+      const body = renderToStaticMarkup(<RenderSubPage site={site} page={subPage} isPreview={false} />);
+      const suffix = "v1-pagina";
+      const file = path.join(OUT_DIR, `${demo.themeKey}-${suffix}.html`);
+      await writeFile(file, pageHtml(demo, suffix, body), "utf8");
+      written.push(`${demo.themeKey}-${suffix}.html`);
+      console.log(`✓ ${file}  (undersida: ${sub.type})`);
     }
   }
 
