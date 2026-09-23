@@ -6,6 +6,7 @@ import { formatGs } from "@/lib/format";
 import { MENU_MAX_ITEMS_PER_SECTION, MENU_MAX_SECTIONS } from "@/lib/menu-form";
 import type { MenuSectionRow } from "@/db/menu-queries";
 import type { MenuFormState } from "@/app/mi-sitio/menu-actions";
+import { kept, keepSubmittedOnError, type KeptState } from "@/lib/kept-form";
 import { ItemImageField } from "./item-image";
 
 /**
@@ -37,11 +38,17 @@ function ItemForm({
   save: (state: MenuFormState, formData: FormData) => Promise<MenuFormState>;
   onDone?: () => void;
 }) {
-  const [state, formAction] = useActionState<MenuFormState, FormData>(async (prev, formData) => {
-    const result = await save(prev, formData);
-    if (result.ok && onDone) onDone();
-    return result;
-  }, {});
+  // Vid fel behålls det som skrevs (R3-38) — ett pris som "35 mil" ska inte
+  // radera namnet och detaljen.
+  const [state, formAction] = useActionState<MenuFormState & KeptState, FormData>(
+    keepSubmittedOnError(async (prev: MenuFormState, formData: FormData) => {
+      const result = await save(prev, formData);
+      if (result.ok && onDone) onDone();
+      return result;
+    }),
+    {},
+  );
+  const sub = state.submitted;
 
   return (
     <form action={formAction} className="panel-menu-form">
@@ -55,7 +62,7 @@ function ItemForm({
           id={`item-name-${item?.id ?? `new-${sectionId}`}`}
           name="name"
           type="text"
-          defaultValue={item?.name ?? ""}
+          defaultValue={kept(sub, "name", item?.name ?? "")}
           maxLength={120}
           required
         />
@@ -67,7 +74,7 @@ function ItemForm({
           id={`item-desc-${item?.id ?? `new-${sectionId}`}`}
           name="description"
           type="text"
-          defaultValue={item?.description ?? ""}
+          defaultValue={kept(sub, "description", item?.description ?? "")}
           maxLength={300}
         />
       </div>
@@ -79,14 +86,14 @@ function ItemForm({
           name="priceGs"
           type="text"
           inputMode="numeric"
-          defaultValue={item?.priceGs != null ? String(item.priceGs) : ""}
+          defaultValue={kept(sub, "priceGs", item?.priceGs != null ? String(item.priceGs) : "")}
           placeholder="45000"
         />
         <p className="hint">Dejalo vacío y en tu página va a decir “A consultar”.</p>
       </div>
 
       <label className="panel-check">
-        <input type="checkbox" name="isAvailable" defaultChecked={item ? item.isAvailable : true} />
+        <input type="checkbox" name="isAvailable" defaultChecked={sub ? sub.get("isAvailable") === "on" : item ? item.isAvailable : true} />
         Hay hoy
       </label>
 

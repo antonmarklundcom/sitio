@@ -7,6 +7,7 @@ import { WEEKDAYS } from "@/lib/business";
 import { OWNER_MAX_SERVICES } from "@/lib/owner-form";
 import { ACCEPT_ATTR, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
 import type { OwnerFormState } from "@/app/mi-sitio/actions";
+import { kept, keepSubmittedOnError, keptHours, keptServices, type KeptState } from "@/lib/kept-form";
 
 /** Owner-panelen. Spanska (voseo) — det här är kundens yta, inte adminets. */
 
@@ -64,9 +65,27 @@ export function OwnerEditForm({
   action: (state: OwnerFormState, formData: FormData) => Promise<OwnerFormState>;
   defaults: OwnerDefaults;
 }) {
-  const [state, formAction] = useActionState<OwnerFormState, FormData>(action, {});
+  const [state, formAction] = useActionState<OwnerFormState & KeptState, FormData>(keepSubmittedOnError(action), {});
   const err = (k: string) => state.fieldErrors?.[k];
-  const services = [...defaults.services, ...Array(OWNER_MAX_SERVICES).fill(null)].slice(0, OWNER_MAX_SERVICES);
+  // Efter ett fel visas det kunden skrev, inte det som ligger i databasen (R3-38).
+  const sub = state.submitted;
+  const d: OwnerDefaults = sub
+    ? {
+        name: kept(sub, "name", defaults.name),
+        description: kept(sub, "description", defaults.description),
+        address: kept(sub, "address", defaults.address),
+        zone: kept(sub, "zone", defaults.zone),
+        city: kept(sub, "city", defaults.city),
+        secondaryPhone: kept(sub, "secondaryPhone", defaults.secondaryPhone),
+        mapsUrl: kept(sub, "mapsUrl", defaults.mapsUrl),
+        instagram: kept(sub, "instagram", defaults.instagram),
+        facebook: kept(sub, "facebook", defaults.facebook),
+        tiktok: kept(sub, "tiktok", defaults.tiktok),
+        services: keptServices(sub, OWNER_MAX_SERVICES),
+        hours: keptHours(sub, (day, slot, edge) => `hours.${day}.${slot}.${edge}`),
+      }
+    : defaults;
+  const services = [...d.services, ...Array(OWNER_MAX_SERVICES).fill(null)].slice(0, OWNER_MAX_SERVICES);
 
   return (
     <form action={formAction}>
@@ -76,7 +95,7 @@ export function OwnerEditForm({
       <div className="panel-card">
         <h2>Tus textos</h2>
         <Field label="Nombre del negocio" name="name" error={err("name")}>
-          <input id="name" name="name" type="text" defaultValue={defaults.name} maxLength={120} required />
+          <input id="name" name="name" type="text" defaultValue={d.name} maxLength={120} required />
         </Field>
         <Field
           label="Descripción"
@@ -84,7 +103,7 @@ export function OwnerEditForm({
           hint="Es el texto que se ve en tu página. Mínimo 80 caracteres."
           error={err("description")}
         >
-          <textarea id="description" name="description" defaultValue={defaults.description} maxLength={2000} required />
+          <textarea id="description" name="description" defaultValue={d.description} maxLength={2000} required />
         </Field>
       </div>
 
@@ -119,17 +138,17 @@ export function OwnerEditForm({
         <h2>Dónde estás</h2>
         <div className="panel-row panel-row--2">
           <Field label="Ciudad" name="city" error={err("city")}>
-            <input id="city" name="city" type="text" defaultValue={defaults.city} maxLength={80} required />
+            <input id="city" name="city" type="text" defaultValue={d.city} maxLength={80} required />
           </Field>
           <Field label="Barrio o zona" name="zone" error={err("zone")}>
-            <input id="zone" name="zone" type="text" defaultValue={defaults.zone} maxLength={80} />
+            <input id="zone" name="zone" type="text" defaultValue={d.zone} maxLength={80} />
           </Field>
         </div>
         <Field label="Dirección" name="address" error={err("address")}>
-          <input id="address" name="address" type="text" defaultValue={defaults.address} maxLength={200} />
+          <input id="address" name="address" type="text" defaultValue={d.address} maxLength={200} />
         </Field>
         <Field label="Link de Google Maps" name="mapsUrl" error={err("mapsUrl")}>
-          <input id="mapsUrl" name="mapsUrl" type="url" defaultValue={defaults.mapsUrl} maxLength={300} />
+          <input id="mapsUrl" name="mapsUrl" type="url" defaultValue={d.mapsUrl} maxLength={300} />
         </Field>
         <Field
           label="Otro teléfono"
@@ -137,20 +156,20 @@ export function OwnerEditForm({
           hint="Tu WhatsApp principal lo cambiamos nosotros — escribinos, porque hay que verificarlo de nuevo."
           error={err("secondaryPhone")}
         >
-          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={defaults.secondaryPhone} />
+          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={d.secondaryPhone} />
         </Field>
       </div>
 
       <div className="panel-card">
         <h2>Redes</h2>
         <Field label="Instagram" name="instagram" error={err("instagram")}>
-          <input id="instagram" name="instagram" type="url" defaultValue={defaults.instagram} maxLength={300} />
+          <input id="instagram" name="instagram" type="url" defaultValue={d.instagram} maxLength={300} />
         </Field>
         <Field label="Facebook" name="facebook" error={err("facebook")}>
-          <input id="facebook" name="facebook" type="url" defaultValue={defaults.facebook} maxLength={300} />
+          <input id="facebook" name="facebook" type="url" defaultValue={d.facebook} maxLength={300} />
         </Field>
         <Field label="TikTok" name="tiktok" error={err("tiktok")}>
-          <input id="tiktok" name="tiktok" type="url" defaultValue={defaults.tiktok} maxLength={300} />
+          <input id="tiktok" name="tiktok" type="url" defaultValue={d.tiktok} maxLength={300} />
         </Field>
       </div>
 
@@ -159,7 +178,7 @@ export function OwnerEditForm({
         <p>Podés poner dos turnos por día — mañana y tarde.</p>
         <div className="panel-hours">
           {WEEKDAYS.map((day) => {
-            const intervals = defaults.hours?.[day.key] ?? null;
+            const intervals = d.hours?.[day.key] ?? null;
             const closed = intervals === null;
             return (
               <div key={day.key} className="panel-hours-day">

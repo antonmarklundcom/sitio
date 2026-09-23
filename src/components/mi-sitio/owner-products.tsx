@@ -6,6 +6,7 @@ import { formatGs } from "@/lib/format";
 import { PRODUCTS_MAX } from "@/lib/product-form";
 import type { ProductRow } from "@/db/product-queries";
 import type { ProductFormState } from "@/app/mi-sitio/product-actions";
+import { kept, keepSubmittedOnError, type KeptState } from "@/lib/kept-form";
 import { ItemImageField } from "./item-image";
 
 /**
@@ -34,11 +35,17 @@ function ProductForm({
   save: (state: ProductFormState, formData: FormData) => Promise<ProductFormState>;
   onDone?: () => void;
 }) {
-  const [state, formAction] = useActionState<ProductFormState, FormData>(async (prev, formData) => {
-    const result = await save(prev, formData);
-    if (result.ok && onDone) onDone();
-    return result;
-  }, {});
+  // Vid fel behålls det som skrevs (R3-38) — ett pris som "35 mil" ska inte
+  // radera namnet och detaljen.
+  const [state, formAction] = useActionState<ProductFormState & KeptState, FormData>(
+    keepSubmittedOnError(async (prev: ProductFormState, formData: FormData) => {
+      const result = await save(prev, formData);
+      if (result.ok && onDone) onDone();
+      return result;
+    }),
+    {},
+  );
+  const sub = state.submitted;
 
   const idSuffix = product?.id ?? "new";
 
@@ -53,7 +60,7 @@ function ProductForm({
           id={`product-name-${idSuffix}`}
           name="name"
           type="text"
-          defaultValue={product?.name ?? ""}
+          defaultValue={kept(sub, "name", product?.name ?? "")}
           maxLength={120}
           required
         />
@@ -65,7 +72,7 @@ function ProductForm({
           id={`product-desc-${idSuffix}`}
           name="description"
           type="text"
-          defaultValue={product?.description ?? ""}
+          defaultValue={kept(sub, "description", product?.description ?? "")}
           maxLength={300}
         />
       </div>
@@ -77,14 +84,14 @@ function ProductForm({
           name="priceGs"
           type="text"
           inputMode="numeric"
-          defaultValue={product?.priceGs != null ? String(product.priceGs) : ""}
+          defaultValue={kept(sub, "priceGs", product?.priceGs != null ? String(product.priceGs) : "")}
           placeholder="45000"
         />
         <p className="hint">Dejalo vacío y en tu página va a decir “A consultar”.</p>
       </div>
 
       <label className="panel-check">
-        <input type="checkbox" name="isVisible" defaultChecked={product ? product.isVisible : true} />
+        <input type="checkbox" name="isVisible" defaultChecked={sub ? sub.get("isVisible") === "on" : product ? product.isVisible : true} />
         Visible en la página
       </label>
 

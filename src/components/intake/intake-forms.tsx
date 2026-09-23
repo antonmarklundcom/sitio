@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { CATEGORIES, CATEGORY_LABELS, WEEKDAYS } from "@/lib/business";
 import { MAX_UPLOAD_BYTES, ACCEPT_ATTR } from "@/lib/media-shared";
 import type { IntakeState } from "@/app/alta/[token]/actions";
+import { kept, keepSubmittedOnError, keptHours, keptServices, type KeptState } from "@/lib/kept-form";
 
 /**
  * Kundens formulär. Spanska (voseo) genomgående — det här är den enda ytan i
@@ -148,9 +149,27 @@ export function IntakeDataForm({
   action: (state: IntakeState, formData: FormData) => Promise<IntakeState>;
   defaults: IntakeDefaults;
 }) {
-  const [state, formAction] = useActionState<IntakeState, FormData>(action, {});
+  const [state, formAction] = useActionState<IntakeState & KeptState, FormData>(keepSubmittedOnError(action), {});
   const err = (k: string) => state.fieldErrors?.[k];
-  const services = [...defaults.services, ...Array(5).fill(null)].slice(0, 5);
+  // Efter ett fel visas det kunden skrev, inte det som ligger i databasen (R3-38).
+  const sub = state.submitted;
+  const d: IntakeDefaults = sub
+    ? {
+        name: kept(sub, "name", defaults.name),
+        category: kept(sub, "category", defaults.category),
+        rawDescription: kept(sub, "rawDescription", defaults.rawDescription),
+        whatsappPhone: kept(sub, "whatsappPhone", defaults.whatsappPhone),
+        secondaryPhone: kept(sub, "secondaryPhone", defaults.secondaryPhone),
+        address: kept(sub, "address", defaults.address),
+        zone: kept(sub, "zone", defaults.zone),
+        city: kept(sub, "city", defaults.city),
+        instagram: kept(sub, "instagram", defaults.instagram),
+        facebook: kept(sub, "facebook", defaults.facebook),
+        services: keptServices(sub, 5),
+        hours: keptHours(sub, (day, slot, edge) => (slot === 0 ? `hours.${day}.${edge}` : `hours.${day}.1.${edge}`)),
+      }
+    : defaults;
+  const services = [...d.services, ...Array(5).fill(null)].slice(0, 5);
 
   return (
     <form action={formAction}>
@@ -159,10 +178,10 @@ export function IntakeDataForm({
       <div className="panel-card">
         <h2>Tu negocio</h2>
         <Field label="Nombre del negocio" name="name" error={err("name")}>
-          <input id="name" name="name" type="text" defaultValue={defaults.name} maxLength={120} required />
+          <input id="name" name="name" type="text" defaultValue={d.name} maxLength={120} required />
         </Field>
         <Field label="Rubro" name="category" error={err("category")}>
-          <select id="category" name="category" defaultValue={defaults.category}>
+          <select id="category" name="category" defaultValue={d.category}>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {CATEGORY_LABELS[c].split(" / ")[0]}
@@ -179,7 +198,7 @@ export function IntakeDataForm({
           <textarea
             id="rawDescription"
             name="rawDescription"
-            defaultValue={defaults.rawDescription}
+            defaultValue={d.rawDescription}
             maxLength={2000}
             required
           />
@@ -226,31 +245,31 @@ export function IntakeDataForm({
             name="whatsappPhone"
             type="tel"
             inputMode="tel"
-            defaultValue={defaults.whatsappPhone}
+            defaultValue={d.whatsappPhone}
             placeholder="0981 123 456"
             required
           />
         </Field>
         <Field label="Otro teléfono (opcional)" name="secondaryPhone" error={err("secondaryPhone")}>
-          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={defaults.secondaryPhone} />
+          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={d.secondaryPhone} />
         </Field>
         <div className="panel-row panel-row--2">
           <Field label="Ciudad" name="city" error={err("city")}>
-            <input id="city" name="city" type="text" defaultValue={defaults.city} maxLength={80} required />
+            <input id="city" name="city" type="text" defaultValue={d.city} maxLength={80} required />
           </Field>
           <Field label="Barrio o zona" name="zone" error={err("zone")}>
-            <input id="zone" name="zone" type="text" defaultValue={defaults.zone} maxLength={80} />
+            <input id="zone" name="zone" type="text" defaultValue={d.zone} maxLength={80} />
           </Field>
         </div>
         <Field label="Dirección (opcional)" name="address" error={err("address")}>
-          <input id="address" name="address" type="text" defaultValue={defaults.address} maxLength={200} />
+          <input id="address" name="address" type="text" defaultValue={d.address} maxLength={200} />
         </Field>
         <div className="panel-row panel-row--2">
           <Field label="Instagram (link)" name="instagram" error={err("instagram")}>
-            <input id="instagram" name="instagram" type="url" defaultValue={defaults.instagram} maxLength={300} />
+            <input id="instagram" name="instagram" type="url" defaultValue={d.instagram} maxLength={300} />
           </Field>
           <Field label="Facebook (link)" name="facebook" error={err("facebook")}>
-            <input id="facebook" name="facebook" type="url" defaultValue={defaults.facebook} maxLength={300} />
+            <input id="facebook" name="facebook" type="url" defaultValue={d.facebook} maxLength={300} />
           </Field>
         </div>
       </div>
@@ -263,8 +282,8 @@ export function IntakeDataForm({
             <IntakeHoursDay
               key={day.key}
               day={day}
-              intervals={defaults.hours?.[day.key]}
-              closedByDefault={defaults.hours ? defaults.hours[day.key] === null : day.key === "sun"}
+              intervals={d.hours?.[day.key]}
+              closedByDefault={d.hours ? d.hours[day.key] === null : day.key === "sun"}
             />
           ))}
         </div>
