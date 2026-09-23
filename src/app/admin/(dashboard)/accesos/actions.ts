@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users, verifications } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
@@ -90,7 +90,8 @@ export async function setOwnerStatusAction(formData: FormData): Promise<void> {
   const userId = Number(formData.get("userId"));
   const status = String(formData.get("status")) === "disabled" ? "disabled" : "active";
 
-  await db.update(users).set({ status }).where(eq(users.id, userId));
+  // Bara owner-konton: ett id i formuläret ska aldrig kunna stänga av en superadmin.
+  await db.update(users).set({ status }).where(and(eq(users.id, userId), eq(users.role, "owner")));
   await logActivity({
     actorUserId: admin.userId,
     action: "owner_status_changed",
