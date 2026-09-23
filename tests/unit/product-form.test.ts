@@ -64,3 +64,15 @@ describe("product-form", () => {
     expect(PRODUCTS_MAX).toBe(60);
   });
 });
+
+describe("pris som människor skriver det (R3-32)", () => {
+  it("'35 mil' och '15.000,50' nekas i stället för att bli fel belopp", () => {
+    expect(productFromForm(form({ name: "Silla", priceGs: "35 mil", isVisible: "on" })).success).toBe(false);
+    expect(productFromForm(form({ name: "Silla", priceGs: "15.000,50", isVisible: "on" })).success).toBe(false);
+  });
+
+  it("'15.000,00' är femtontusen, inte en och en halv miljon", () => {
+    const parsed = productFromForm(form({ name: "Silla", priceGs: "15.000,00", isVisible: "on" }));
+    expect(parsed.success && parsed.data.priceGs).toBe(15000);
+  });
+});

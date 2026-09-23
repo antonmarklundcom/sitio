@@ -210,5 +210,10 @@ describe("ownerPaymentReportSchema (R3-21)", () => {
     expect(ownerPaymentReportSchema.safeParse({ amountGs: "0", method: "efectivo" }).success).toBe(false);
     expect(ownerPaymentReportSchema.safeParse({ amountGs: "1000", method: "bitcoin" }).success).toBe(false);
     expect(ownerPaymentReportSchema.safeParse({ amountGs: "1000.5", method: "efectivo" }).success).toBe(false);
+    // R3-32: tusentalspunkter är tusental, tomt är ett fel.
+    const dotted = ownerPaymentReportSchema.safeParse({ amountGs: "300.000", method: "efectivo" });
+    expect(dotted.success && dotted.data.amountGs).toBe(300000);
+    expect(ownerPaymentReportSchema.safeParse({ amountGs: "", method: "efectivo" }).success).toBe(false);
+    expect(paymentFormSchema.safeParse({ amountGs: "", method: "efectivo", periodStart: "2026-01-01", periodEnd: "2027-01-01" }).success).toBe(false);
   });
 });

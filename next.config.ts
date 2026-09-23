@@ -49,6 +49,16 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Kvittot i "Informar pago" och adminets betalningsformulär skickas via
+      // serveråtgärder, och Nexts standardtak är 1 MB — en vanlig mobilbild av
+      // en överföring (2–5 MB) kraschade åtgärden innan receipt.ts hann säga
+      // "más de 10 MB" (R3-32). Samma tak som storeReceipt plus marginal för
+      // övriga fält.
+      bodySizeLimit: "11mb",
+    },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
