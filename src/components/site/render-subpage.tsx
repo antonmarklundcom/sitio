@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/env";
+import { breadcrumbJsonLd, jsonLdHtml } from "@/lib/jsonld";
 import { waLink } from "@/lib/format";
 import { openState } from "@/lib/hours";
 import { pageDescription, paragraphs } from "@/lib/pages";
@@ -129,6 +130,10 @@ export function RenderSubPage({
         <WaDock wa={wa} label="Escribir por WhatsApp" />
       </div>
 
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(breadcrumbJsonLd({ business, page })) }}
+      />
       <MotionScript />
       {isPreview ? null : <AnalyticsScript businessId={business.id} />}
     </div>
