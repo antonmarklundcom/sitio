@@ -1,5 +1,5 @@
 /**
- * Tre små inline-script. Inget av dem laddar en extern resurs.
+ * Fyra små inline-script. Inget av dem laddar en extern resurs.
  *
  * Beaconen skickar `l` (vilken CTA som klickades, `data-ev-loc`) både till
  * dataLayer och till /api/ev, som sparar det i `analytics_events.cta_loc`
@@ -8,6 +8,8 @@
  * JS_FLAG måste köra före paint: reveal-animationen är progressiv förbättring
  * och innehållet göms bara när JS faktiskt finns.
  */
+
+import { OPEN_NOW_CORE } from "@/lib/open-now-script";
 
 export const JS_FLAG = `document.documentElement.classList.add('js')`;
 
@@ -60,6 +62,29 @@ var io=new IntersectionObserver(function(entries){
 },{rootMargin:'0px 0px -12% 0px',threshold:.12});
 els.forEach(function(el){io.observe(el)});
 })();`;
+
+/**
+ * "Abierto ahora" räknas om i webbläsaren (R3-35) — se OPEN_NOW_CORE.
+ */
+const OPEN_NOW = `(function(){
+${OPEN_NOW_CORE}
+var n=sitioNow(new Date());
+document.querySelectorAll('[data-hours]').forEach(function(el){
+  try{
+    var st=sitioOpenState(JSON.parse(el.getAttribute('data-hours')),n.dayKey,n.minutes);
+    var t=sitioStatusText(st);
+    var txt=el.querySelector('.status-text'),dot=el.querySelector('.dot');
+    if(!t||!txt)return;
+    txt.textContent=t;
+    if(dot)dot.className=st&&st.open?'dot dot--open':'dot';
+  }catch(e){}
+});
+})();`;
+
+/** Räknar om "Abierto ahora" i webbläsaren. Körs även i förhandsvisning. */
+export function OpenNowScript() {
+  return <script dangerouslySetInnerHTML={{ __html: OPEN_NOW }} />;
+}
 
 /** Rörelse. Körs alltid — även i förhandsvisning, annars ser du inte sajten. */
 export function MotionScript() {

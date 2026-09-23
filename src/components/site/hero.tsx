@@ -1,5 +1,5 @@
 import { displayPhone } from "@/lib/format";
-import type { OpenState } from "@/lib/hours";
+import { statusText, type OpenState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "./primitives";
 import type { SitePageLink, ThemeMedia } from "@/themes/types";
 import type { Business } from "@/db/schema";
@@ -35,21 +35,23 @@ export function initials(name: string): string {
   return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-/** "Abierto ahora · cierra 18:00" — samma mening överallt den visas. */
-export function statusText(status: OpenState | null): string | null {
-  if (!status) return null;
-  if (status.open) return `Abierto ahora · cierra ${status.closesAt}`;
-  if (status.opensAt) return `Cerrado · abre ${status.opensDay ? `${status.opensDay} ` : ""}${status.opensAt}`;
-  return "Consultanos el horario por WhatsApp";
-}
 
-export function StatusPill({ status }: { status: OpenState | null }) {
+/**
+ * Servern renderar pillret som det såg ut vid bygget; OpenNowScript räknar om
+ * det från `data-hours` när sidan öppnas (R3-35) — ISR-sidan kan vara en
+ * timme gammal. Skriptet körs medan HTML:en parsas, alltså före hydreringen.
+ */
+export function StatusPill({ status, hours }: { status: OpenState | null; hours?: Business["hoursJson"] }) {
   const text = statusText(status);
   if (!text) return null;
   return (
-    <p className="status">
-      <span className={status?.open ? "dot dot--open" : "dot"} aria-hidden="true" />
-      {text}
+    <p className="status" data-hours={hours ? JSON.stringify(hours) : undefined}>
+      {/* Skriptet skriver om texten och pricken före hydreringen; utan
+          suppressHydrationWarning lägger React tillbaka serverns version. */}
+      <span className={status?.open ? "dot dot--open" : "dot"} aria-hidden="true" suppressHydrationWarning />
+      <span className="status-text" suppressHydrationWarning>
+        {text}
+      </span>
     </p>
   );
 }
@@ -129,7 +131,7 @@ export function SiteHero({
           <span className="eyebrow">{eyebrow}</span>
           <h1>{headline}</h1>
           {business.description ? <p className="lede">{business.description}</p> : null}
-          <StatusPill status={status} />
+          <StatusPill status={status} hours={business.hoursJson} />
 
           {/* En enda uppmaning i plattan. Andratelefonen ligger i avslutsblocket:
               två knappar sida vid sida på 360 px radbryter numret och delar

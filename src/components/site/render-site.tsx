@@ -4,7 +4,7 @@ import { jsonLdHtml, localBusinessJsonLd } from "@/lib/jsonld";
 import { largestVariant } from "@/lib/media-shared";
 import { paletteFor, paletteToCssVars } from "@/themes/palettes";
 import { themeComponent } from "@/themes/registry";
-import { AnalyticsScript, MotionScript } from "./site-scripts";
+import { AnalyticsScript, MotionScript, OpenNowScript } from "./site-scripts";
 import type { SiteData } from "@/db/site-queries";
 import type { SitePageLink } from "@/themes/types";
 
@@ -98,6 +98,7 @@ export function RenderSite({
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
       <MotionScript />
+      <OpenNowScript />
       {/* Preview-besök är dina egna — de ska aldrig räknas i kundens statistik. */}
       {isPreview ? null : <AnalyticsScript businessId={business.id} />}
     </div>

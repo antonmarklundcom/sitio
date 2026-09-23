@@ -174,9 +174,19 @@ export function openingHoursSpecification(hours: HoursMap | null | undefined) {
         "@type": "OpeningHoursSpecification",
         dayOfWeek: SCHEMA_DAY[key],
         opens: interval.open,
-        closes: interval.close,
+        // 00:00–00:00 är dygnet runt; Google läser opens=closes=00:00 som
+        // stängt hela dagen och vill ha 23:59 för en apotek-24h (R3-35).
+        closes: interval.open === "00:00" && interval.close === "00:00" ? "23:59" : interval.close,
       });
     }
   }
   return spec.length > 0 ? spec : undefined;
+}
+
+/** "Abierto ahora · cierra 18:00" — samma mening överallt den visas. */
+export function statusText(status: OpenState | null): string | null {
+  if (!status) return null;
+  if (status.open) return `Abierto ahora · cierra ${status.closesAt}`;
+  if (status.opensAt) return `Cerrado · abre ${status.opensDay ? `${status.opensDay} ` : ""}${status.opensAt}`;
+  return "Consultanos el horario por WhatsApp";
 }
