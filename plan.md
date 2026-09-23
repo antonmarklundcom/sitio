@@ -598,6 +598,11 @@ closed them.
   render today, no conflict but duplicated info — S1, KNOWN-ISSUES.md).
   **Waiting on Anton** (`docs/decisions-needed.md`).
 - ~~Shared logged-in `storageState` in `tests/smoke/_lib.mjs`~~ — done, R3-5 (#37).
+- Batch 4 (2026-09-23, `docs/log/R3-4.md`): `/admin/diagnostico` (R3-26),
+  one client-IP helper with `CLIENT_IP_SOURCE` (R3-27, source still to be
+  chosen on Hostinger), and eight fixes from a whole-app review (R3-31…R3-38).
+  Next: `docs/r3/prompts/batch-5.md` — go live with batches 3+4, then
+  R3-39…R3-43.
 
 ## 11. Round 3: Fable-led refinement, Astra workers
 
