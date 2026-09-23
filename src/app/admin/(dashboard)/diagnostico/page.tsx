@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/auth";
 import { clientIp } from "@/lib/analytics";
+import { CLIENT_IP_SOURCES, clientIpFrom, clientIpSource } from "@/lib/client-ip";
 import { checkUploads, dbClock, envPresence, pickHeaders } from "@/lib/diagnostics";
 import { env } from "@/lib/env";
 import { Badge, Card, SectionTitle } from "@/components/admin/ui";
@@ -48,14 +49,19 @@ export default async function DiagnosticoPage() {
       </div>
 
       <Card>
-        <SectionTitle hint="Qué deja pasar el proxy de Hostinger. Decide en qué IP se basan los límites de intentos (R3-27).">
+        <SectionTitle hint="Qué deja pasar el proxy de Hostinger. Decide en qué IP se basan los límites de intentos (R3-27): la fuente correcta es la que muestra tu IP real aunque mandes una x-forwarded-for inventada.">
           Cabeceras de la solicitud
         </SectionTitle>
         <Table>
           {pickHeaders(hdrs).map((h) => (
             <Row key={h.name} label={h.name}>{h.value ?? <span className="text-admin-muted">—</span>}</Row>
           ))}
-          <Row label="clientIp() hoy">{clientIp(hdrs)}</Row>
+          <Row label="clientIp() hoy">
+            {clientIp(hdrs)} <span className="text-admin-muted">(CLIENT_IP_SOURCE = {clientIpSource()})</span>
+          </Row>
+          {CLIENT_IP_SOURCES.map((source) => (
+            <Row key={source} label={`si fuera ${source}`}>{clientIpFrom(hdrs, source)}</Row>
+          ))}
         </Table>
       </Card>
 

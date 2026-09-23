@@ -26,3 +26,8 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
   dynamic rendering — the customer sites are ISR by design. All other
   directives are locked to self (R3-24). Revisit if Next gets hash-based CSP
   for static output, or if the sites ever leave ISR. (R3-24)
+- **Rate limits still key on the first `x-forwarded-for` entry by default**
+  (`CLIENT_IP_SOURCE=xff-first`). If Hostinger's proxy appends instead of
+  replacing the header, a bot can rotate it and skip the 5/h signup limit.
+  One env var fixes it once `/admin/diagnostico` shows which source carries
+  the real IP (R3-27, batch 4).

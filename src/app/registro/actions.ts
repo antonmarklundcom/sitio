@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createDraftBusinessWithToken, registroSchema, RegistrationUnavailableError } from "@/lib/intake-create";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom } from "@/lib/client-ip";
 
 export type RegistroState = { error?: string; ok?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> };
 
 export async function registerAction(_prev: RegistroState, formData: FormData): Promise<RegistroState> {
   const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0].trim() || h.get("x-real-ip") || "unknown";
+  const ip = clientIpFrom(h);
   if (!rateLimit(`registro:${ip}`, 5, 60 * 60 * 1000).ok) {
     return { error: "Hiciste demasiados intentos. Probá de nuevo en una hora." };
   }

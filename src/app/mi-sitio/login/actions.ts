@@ -11,13 +11,13 @@ import { establishSession, logActivity } from "@/lib/auth";
 import { findOwnerLoginTarget } from "@/lib/owner";
 import { normalizePyPhone } from "@/lib/format";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom } from "@/lib/client-ip";
 import { OTP_MAX_ATTEMPTS, otpMatches } from "@/lib/intake";
 
 export type OwnerLoginState = { error?: string; ok?: string; phone?: string; step?: "phone" | "code" };
 
 async function clientIp(): Promise<string> {
-  const hdrs = await headers();
-  return hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  return clientIpFrom(await headers());
 }
 
 /**

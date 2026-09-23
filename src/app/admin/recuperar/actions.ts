@@ -8,10 +8,11 @@ import { absoluteUrl } from "@/lib/env";
 import { sendEmail } from "@/lib/email";
 import { createResetToken } from "@/lib/password-reset";
 import { pruneRateLimits, rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom } from "@/lib/client-ip";
 
 export async function recoverAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = clientIpFrom(await headers());
   pruneRateLimits();
   const ipAllowed = rateLimit(`reset:ip:${ip}`, 10, 15 * 60_000).ok;
   const emailAllowed = rateLimit(`reset:email:${email}`, 3, 15 * 60_000).ok;

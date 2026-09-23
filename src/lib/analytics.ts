@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash, createHmac } from "node:crypto";
+import { clientIpFrom } from "./client-ip";
 import { env } from "./env";
 import { PY_TIMEZONE } from "./hours";
 
@@ -81,16 +82,9 @@ export function visitorHash(ip: string, userAgent: string, day: string): string 
   return createHash("sha256").update(`${ip}|${userAgent}|${salt}`).digest("hex").slice(0, 32);
 }
 
-/**
- * Klient-IP bakom Hostingers proxy. Första posten i x-forwarded-for är
- * klienten; resten är proxykedjan. Saknas headern faller vi tillbaka på en
- * konstant — då blir alla besökare "samma" unika, vilket är fel men synligt
- * fel, till skillnad från att tappa mätningen helt.
- */
+/** Klient-IP: se src/lib/client-ip.ts (R3-27). Behåller namnet för anroparna. */
 export function clientIp(headers: Headers): string {
-  const xff = headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return headers.get("x-real-ip")?.trim() || "unknown";
+  return clientIpFrom(headers);
 }
 
 /** Bara värdnamnet sparas — en full referrer kan innehålla söktermer och id:n. */
