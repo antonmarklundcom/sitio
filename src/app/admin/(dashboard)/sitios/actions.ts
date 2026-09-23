@@ -9,6 +9,7 @@ import { getBusinessById } from "@/db/queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import { ensureOwnerAccount } from "@/lib/owner";
 import {
+  businessFieldErrors,
   businessFormSchema,
   canTransition,
   hoursFromFormData,
@@ -24,7 +25,7 @@ export type BusinessFormState = {
 };
 
 function parseForm(formData: FormData) {
-  return businessFormSchema.safeParse({
+  const parsed = businessFormSchema.safeParse({
     name: formData.get("name") ?? "",
     slug: formData.get("slug") ?? "",
     category: formData.get("category") ?? "otro",
@@ -50,15 +51,9 @@ function parseForm(formData: FormData) {
     seoDescription: formData.get("seoDescription") ?? "",
     adminNotes: formData.get("adminNotes") ?? "",
   });
-}
-
-function toFieldErrors(issues: { path: PropertyKey[]; message: string }[]): Record<string, string> {
-  const fieldErrors: Record<string, string> = {};
-  for (const issue of issues) {
-    const key = issue.path.map(String).join(".") || "_";
-    fieldErrors[key] ??= issue.message;
-  }
-  return fieldErrors;
+  return parsed.success
+    ? parsed
+    : { ...parsed, fieldErrors: businessFieldErrors(parsed.error.issues, servicesFromFormData(formData)) };
 }
 
 function cleanSocials(socials: { instagram?: string | null; facebook?: string | null; tiktok?: string | null }) {
@@ -73,7 +68,7 @@ export async function createBusinessAction(
 ): Promise<BusinessFormState> {
   const user = await requireRole("superadmin");
   const parsed = parseForm(formData);
-  if (!parsed.success) return { error: "El formulario contiene errores.", fieldErrors: toFieldErrors(parsed.error.issues) };
+  if (!parsed.success) return { error: "El formulario contiene errores.", fieldErrors: parsed.fieldErrors };
 
   const values = parsed.data;
 
@@ -116,7 +111,7 @@ export async function updateBusinessAction(
   if (!existing) return { error: "El sitio no existe." };
 
   const parsed = parseForm(formData);
-  if (!parsed.success) return { error: "El formulario contiene errores.", fieldErrors: toFieldErrors(parsed.error.issues) };
+  if (!parsed.success) return { error: "El formulario contiene errores.", fieldErrors: parsed.fieldErrors };
 
   const values = parsed.data;
   const slugChanged = values.slug !== existing.slug;

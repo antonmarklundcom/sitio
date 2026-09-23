@@ -124,14 +124,14 @@ export function ServicesEditor({ defaultValue }: { defaultValue: ServiceRow[] })
             name="service.name"
             defaultValue={row.name}
             placeholder="Instalaciones eléctricas"
-            maxLength={80}
+            maxLength={120}
             className="w-full rounded-md border border-admin-line bg-admin-surface px-3 py-2 text-sm outline-none focus:border-admin-accent sm:w-1/3"
           />
           <input
             name="service.desc"
             defaultValue={row.desc ?? ""}
             placeholder="Descripción breve (se muestra debajo del título)"
-            maxLength={200}
+            maxLength={300}
             className="w-full rounded-md border border-admin-line bg-admin-surface px-3 py-2 text-sm outline-none focus:border-admin-accent"
           />
           <button

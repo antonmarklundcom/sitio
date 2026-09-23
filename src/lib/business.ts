@@ -141,10 +141,12 @@ export const hoursSchema = z.record(
     .nullable(),
 );
 
+// Samma gränser som intaken och ägarpanelen (120/300): adminet måste kunna
+// spara det kunden skrev (R3-39).
 export const servicesSchema = z.array(
   z.object({
-    name: z.string().trim().min(1).max(80),
-    desc: z.string().trim().max(200).optional(),
+    name: z.string().trim().min(1, "Namn krävs.").max(120, "Max 120 tecken."),
+    desc: z.string().trim().max(300, "Max 300 tecken.").optional(),
   }),
 );
 
@@ -220,6 +222,37 @@ export function publishBlockers(
   if (photoCount < 1) blockers.push("Minst ett foto krävs (hero-ytan står annars tom).");
 
   return blockers;
+}
+
+/**
+ * Zod-felen från adminets formulär som ett fält → meddelande-objekt (R3-39).
+ * Nästlade fel (`servicesJson.0.name`, `hoursJson.fri.0`) samlas under
+ * `servicesJson` resp. `hoursJson` med vilken rad det gäller, annars visas de
+ * aldrig: formuläret har inget fält som heter `servicesJson.0.name`.
+ */
+export function businessFieldErrors(
+  issues: { path: PropertyKey[]; message: string }[],
+  services: { name: string }[],
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of issues) {
+    const path = issue.path.map(String);
+    let key = path.join(".") || "_";
+    let message = issue.message;
+    if (path[0] === "servicesJson" && path.length > 1) {
+      const i = Number(path[1]);
+      const name = services[i]?.name ?? "";
+      const short = name.length > 30 ? `${name.slice(0, 30)}…` : name;
+      key = "servicesJson";
+      message = `Servicio ${i + 1}${short ? ` («${short}»)` : ""}: ${message}`;
+    } else if (path[0] === "hoursJson" && path.length > 1) {
+      const day = WEEKDAYS.find((d) => d.key === path[1]);
+      key = "hoursJson";
+      message = `${day?.label ?? path[1]}: ${message}`;
+    }
+    out[key] ??= message;
+  }
+  return out;
 }
 
 /** Parsar hours-fälten från ett FormData-formulär till HoursMap. */
