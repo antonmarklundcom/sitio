@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { establishSession, findActiveSuperadminByEmail, logActivity } from "@/lib/auth";
 import { pruneRateLimits, rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom } from "@/lib/client-ip";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Correo no válido."),
@@ -28,7 +29,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   pruneRateLimits();
   const hdrs = await headers();
-  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = clientIpFrom(hdrs);
   const limited =
     !rateLimit(`login:ip:${ip}`, 10, 15 * 60_000).ok ||
     !rateLimit(`login:email:${email}`, 5, 15 * 60_000).ok;

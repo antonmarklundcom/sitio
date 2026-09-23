@@ -45,6 +45,7 @@ Alla finns dokumenterade i [`.env.example`](.env.example). De kritiska:
 | `SESSION_SECRET` | ≥32 tecken. `openssl rand -base64 48` |
 | `CRON_SECRET` | Skyddar rollup-/livscykel-routen mot publika anrop. |
 | `ANALYTICS_TZ_OFFSET_HOURS` | Valfri. Databasklocka → Asunción-dygn i rollupen. Default −3 (förutsätter UTC). |
+| `CLIENT_IP_SOURCE` | Valfri. Klient-IP för rate limits: `xff-first` (default), `xff-last` eller `x-real-ip` — välj efter `/admin/diagnostico` på Hostinger (R3-27). |
 | `UPLOADS_DIR` | Absolut sökväg **utanför** deploy-trädet, t.ex. `/home/<user>/uploads/sitio`. |
 
 ### Regeln som gäller från PR-01
