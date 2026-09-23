@@ -156,6 +156,9 @@ export async function verifyCodeAction(token: string, _prev: IntakeState, formDa
       and(
         eq(verifications.businessId, session.business.id),
         eq(verifications.purpose, "onboarding"),
+        // Koden gäller numret den skickades till (R3-33). Byter kunden nummer
+        // efter att ha fått koden ska den inte verifiera det nya numret.
+        eq(verifications.phone, session.business.whatsappPhone),
         isNull(verifications.verifiedAt),
       ),
     )

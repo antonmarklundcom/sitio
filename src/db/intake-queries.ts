@@ -34,8 +34,11 @@ export async function getIntakeSession(token: string): Promise<IntakeSession | n
   const row = rows[0];
   if (!row) return null;
   if (row.tokenRow.usedAt) return null;
-  // Ett arkiverat utkast ska inte gå att fylla i vidare.
-  if (row.business.status === "archived") return null;
+  // Bara ett utkast går att fylla i (R3-33). Förr stoppades bara arkiverade:
+  // publicerade du ett utkast innan kunden skickat in kunde länken fortfarande
+  // skriva om namn, telefon och öppettider på den live sajten i upp till 14
+  // dagar, och en inlämning skickade den tillbaka till granskning.
+  if (row.business.status !== "draft") return null;
 
   const [counts] = await db
     .select({
