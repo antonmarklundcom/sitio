@@ -7,7 +7,7 @@ import { env } from "./env";
 /**
  * Nattlig rollup av analytics_events → analytics_daily, plus prunning av
  * råeventen. Körs av /api/cron/rollup (hPanel-cron med CRON_SECRET) och som
- * lazy fallback vid första adminläsningen per dygn — Hostinger-cron är inte
+ * lazy fallback högst var tionde minut vid läsning — Hostinger-cron är inte
  * garanterad, och statistiken är säljargumentet vid förnyelsen, så den får
  * inte tyst sluta uppdateras.
  *
@@ -115,26 +115,34 @@ export async function runRollup(days = MAX_BACKFILL_DAYS): Promise<RollupResult>
 }
 
 /**
- * Lazy fallback. Rullar upp de senaste tre dygnen högst en gång per
- * processlivstid och dygn — så att adminets siffror stämmer även om cron-jobbet
+ * Lazy fallback. Rullar upp de senaste tre dygnen högst var tionde minut per
+ * process — så att adminets och ägarens siffror stämmer även om cron-jobbet
  * aldrig sattes upp i hPanel, utan att varje sidladdning kostar en aggregering.
+ * Tidigare en gång per dygn: ägarens "hoy" frös på dygnets första läsning
+ * (R3-41).
  *
  * Håller inte över flera processer (samma begränsning som rate-limiten), men
  * en dubbelkörning är ofarlig: aggregatet är idempotent.
  */
-let lastLazyDay: string | null = null;
+export const LAZY_ROLLUP_INTERVAL_MS = 10 * 60 * 1000;
+
+/** Ska den lata uppdateringen köras nu? Ren, för testet. */
+export function lazyRollupDue(lastRunAt: number | null, now: number): boolean {
+  return lastRunAt === null || now - lastRunAt >= LAZY_ROLLUP_INTERVAL_MS || now < lastRunAt;
+}
+
+let lastLazyRunAt: number | null = null;
 let inFlight: Promise<void> | null = null;
 
 export async function ensureRollupFresh(): Promise<void> {
-  const today = dayKeyAsuncion();
-  if (lastLazyDay === today) return;
+  if (!lazyRollupDue(lastLazyRunAt, Date.now())) return;
   if (inFlight) return inFlight;
 
   inFlight = (async () => {
     try {
       const range = dayRange(3);
       await aggregate(range[0], range[range.length - 1]);
-      lastLazyDay = today;
+      lastLazyRunAt = Date.now();
     } finally {
       inFlight = null;
     }

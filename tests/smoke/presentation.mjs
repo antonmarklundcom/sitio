@@ -71,6 +71,7 @@ ok(
 );
 
 const tallerHtml = await previewHtml(p);
+ok('utkastets preview visar bannern (ingen redirect)', tallerHtml.includes('Vista previa'));
 // Varje tema bär sin egen t-klass på roten (theme.css v2). Accenten är det
 // som skiljer variant 1 från 2 inom temat.
 ok('sidroten bär t-servicios', /class="site-root t-servicios"/.test(tallerHtml));

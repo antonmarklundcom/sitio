@@ -53,42 +53,44 @@ export function ServiciosTheme({ business, photos, logo, hero, modules, menu, pr
         chips={chips}
       />
 
-      <SiteServices
-        services={services}
-        eyebrow="Servicios"
-        title="Lo que hacemos"
-        wa={wa}
-        askTitle="¿No ves lo que buscás?"
-        askBody="Contanos qué necesitás. Si lo hacemos, te pasamos precio hoy mismo."
-        askCta="Preguntar por WhatsApp"
-        evLoc="servicios"
-      />
+      <main>
+        <SiteServices
+          services={services}
+          eyebrow="Servicios"
+          title="Lo que hacemos"
+          wa={wa}
+          askTitle="¿No ves lo que buscás?"
+          askBody="Contanos qué necesitás. Si lo hacemos, te pasamos precio hoy mismo."
+          askCta="Preguntar por WhatsApp"
+          evLoc="servicios"
+        />
 
-      {/* `servicios` säljer inte rätter utan tjänster till pris, så
-          menu-modulen får rubriken "Precios" — samma data, ärlig rubrik. */}
-      <SiteMenu
-        menu={menu}
-        eyebrow="Precios"
-        title="Lo que cuesta"
-        intro="Precios de referencia en guaraníes. Escribinos y te pasamos el presupuesto exacto."
-      />
+        {/* `servicios` säljer inte rätter utan tjänster till pris, så
+            menu-modulen får rubriken "Precios" — samma data, ärlig rubrik. */}
+        <SiteMenu
+          menu={menu}
+          eyebrow="Precios"
+          title="Lo que cuesta"
+          intro="Precios de referencia en guaraníes. Escribinos y te pasamos el presupuesto exacto."
+        />
 
-      <SiteProducts
-        products={products}
-        eyebrow="Catálogo"
-        title="Repuestos y materiales"
-        intro="Lo que tenemos en el taller. Consultanos por lo que no esté en la lista."
-      />
+        <SiteProducts
+          products={products}
+          eyebrow="Catálogo"
+          title="Repuestos y materiales"
+          intro="Lo que tenemos en el taller. Consultanos por lo que no esté en la lista."
+        />
 
-      <SitePhotos business={business} photos={rail} eyebrow="Trabajos" title="Trabajos hechos" />
+        <SitePhotos business={business} photos={rail} eyebrow="Trabajos" title="Trabajos hechos" />
 
-      <SiteWhereWhen
-        business={business}
-        status={status}
-        eyebrow="Dónde y cuándo"
-        title="Zona de trabajo y horario"
-        noHoursNote="Escribinos por WhatsApp y coordinamos día y horario."
-      />
+        <SiteWhereWhen
+          business={business}
+          status={status}
+          eyebrow="Dónde y cuándo"
+          title="Zona de trabajo y horario"
+          noHoursNote="Escribinos por WhatsApp y coordinamos día y horario."
+        />
+      </main>
 
       <SiteClosing
         business={business}

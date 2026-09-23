@@ -49,40 +49,42 @@ export function ComercioTheme({ business, photos, logo, hero, modules, menu, pro
         chips={chips}
       />
 
-      <SiteProducts
-        products={products}
-        eyebrow="Catálogo"
-        title="Nuestro catálogo"
-        intro="Precios en guaraníes. Consultanos por WhatsApp si buscás algo que no está acá."
-      />
+      <main>
+        <SiteProducts
+          products={products}
+          eyebrow="Catálogo"
+          title="Nuestro catálogo"
+          intro="Precios en guaraníes. Consultanos por WhatsApp si buscás algo que no está acá."
+        />
 
-      <SiteServices
-        services={services}
-        eyebrow="Rubros"
-        title="Lo que tenemos"
-        wa={wa}
-        askTitle="¿Buscás algo puntual?"
-        askBody="Pasanos el nombre o la marca. Si no lo tenemos, te decimos para cuándo lo conseguimos."
-        askCta="Consultar stock"
-        evLoc="productos"
-      />
+        <SiteServices
+          services={services}
+          eyebrow="Rubros"
+          title="Lo que tenemos"
+          wa={wa}
+          askTitle="¿Buscás algo puntual?"
+          askBody="Pasanos el nombre o la marca. Si no lo tenemos, te decimos para cuándo lo conseguimos."
+          askCta="Consultar stock"
+          evLoc="productos"
+        />
 
-      <SitePhotos business={business} photos={rail} eyebrow="El local" title="Así es el local" />
+        <SitePhotos business={business} photos={rail} eyebrow="El local" title="Así es el local" />
 
-      <SiteMenu
-        menu={menu}
-        eyebrow="Precios"
-        title="Lista de precios"
-        intro="Precios en guaraníes. Consultanos por WhatsApp si buscás algo que no está acá."
-      />
+        <SiteMenu
+          menu={menu}
+          eyebrow="Precios"
+          title="Lista de precios"
+          intro="Precios en guaraníes. Consultanos por WhatsApp si buscás algo que no está acá."
+        />
 
-      <SiteWhereWhen
-        business={business}
-        status={status}
-        eyebrow="Dónde y cuándo"
-        title="Dónde estamos"
-        noHoursNote="Escribinos por WhatsApp y te decimos si estamos abiertos."
-      />
+        <SiteWhereWhen
+          business={business}
+          status={status}
+          eyebrow="Dónde y cuándo"
+          title="Dónde estamos"
+          noHoursNote="Escribinos por WhatsApp y te decimos si estamos abiertos."
+        />
+      </main>
 
       <SiteClosing
         business={business}

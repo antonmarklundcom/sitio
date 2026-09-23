@@ -94,9 +94,14 @@ ok('nya slugen svarar 200', nyaSajten.status === 200);
 // 6. preview-token krävs för utkast
 const previewLink = await p.locator('a[href*="preview="]').first().getAttribute('href');
 const previewUrl = new URL(previewLink, B);
-const prev = await fetch(B+previewUrl.pathname+previewUrl.search);
-const prevHtml = await prev.text();
-ok('preview med token', prev.status===200 && prevHtml.includes('Vista previa'));
+// Business 1 är publicerad: en giltig länk leder till den riktiga sidan i
+// stället för "no es visible al público" (R3-41). Utkastens preview täcks av
+// presentation.mjs.
+const prev = await fetch(B+previewUrl.pathname+previewUrl.search, { redirect: 'manual' });
+const prevLoc = prev.headers.get('location') ?? '';
+ok('preview-länk på publicerad sajt ⇒ 307 till publika sidan', prev.status === 307 && new URL(prevLoc, B).pathname === '/' + newSlug, `${prev.status} → ${prevLoc}`);
+const pubHome = await (await fetch(B + '/' + newSlug)).text();
+ok('startsidan har ett <main>', (pubHome.match(/<main[\s>]/g) ?? []).length === 1);
 const bad = await fetch(B+previewUrl.pathname+'?preview=fel');
 ok('preview med fel token nekas', bad.status === 404, String(bad.status));
 

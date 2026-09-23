@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getSiteBySlug } from "@/db/site-queries";
 import { isReservedSlug } from "@/lib/slug";
 import { verifyPreviewToken } from "@/lib/preview";
@@ -35,5 +35,8 @@ export default async function PreviewSubPage({ params, searchParams }: Params) {
   const { preview } = await searchParams;
   const found = await previewPage(slug, page, preview);
   if (!found) notFound();
+  // Publicerad sajt: samma sida finns publikt (site.pages är samma urval som
+  // /[slug]/[page] visar), så länken leder dit i stället (R3-41).
+  if (found.site.business.status === "published") redirect(`/${found.site.business.slug}/${found.page.pageSlug}`);
   return <RenderSubPage site={found.site} page={found.page} isPreview previewToken={preview} />;
 }

@@ -47,40 +47,42 @@ export function GastronomiaTheme({ business, photos, logo, hero, modules, menu, 
         chips={chips}
       />
 
-      <SiteMenu
-        menu={menu}
-        eyebrow="La carta"
-        title="Nuestra carta"
-        intro="Precios en guaraníes. Si algo se terminó por hoy, lo sacamos de acá."
-      />
+      <main>
+        <SiteMenu
+          menu={menu}
+          eyebrow="La carta"
+          title="Nuestra carta"
+          intro="Precios en guaraníes. Si algo se terminó por hoy, lo sacamos de acá."
+        />
 
-      <SiteServices
-        services={services}
-        eyebrow="La casa"
-        title="Lo que sale de la cocina"
-        wa={wa}
-        askTitle="¿Querés encargar algo?"
-        askBody="Viandas, bandejas y pedidos para llevar. Escribinos y lo dejamos listo."
-        askCta="Encargar por WhatsApp"
-        evLoc="especialidades"
-      />
+        <SiteServices
+          services={services}
+          eyebrow="La casa"
+          title="Lo que sale de la cocina"
+          wa={wa}
+          askTitle="¿Querés encargar algo?"
+          askBody="Viandas, bandejas y pedidos para llevar. Escribinos y lo dejamos listo."
+          askCta="Encargar por WhatsApp"
+          evLoc="especialidades"
+        />
 
-      <SitePhotos business={business} photos={rail} eyebrow="El local" title="Así es acá adentro" />
+        <SitePhotos business={business} photos={rail} eyebrow="El local" title="Así es acá adentro" />
 
-      <SiteWhereWhen
-        business={business}
-        status={status}
-        eyebrow="Dónde y cuándo"
-        title="Dónde estamos"
-        noHoursNote="Escribinos por WhatsApp y te decimos si estamos abiertos."
-      />
+        <SiteWhereWhen
+          business={business}
+          status={status}
+          eyebrow="Dónde y cuándo"
+          title="Dónde estamos"
+          noHoursNote="Escribinos por WhatsApp y te decimos si estamos abiertos."
+        />
 
-      <SiteProducts
-        products={products}
-        eyebrow="Para llevar"
-        title="Otros productos"
-        intro="Lo que también vendemos en el local, en guaraníes."
-      />
+        <SiteProducts
+          products={products}
+          eyebrow="Para llevar"
+          title="Otros productos"
+          intro="Lo que también vendemos en el local, en guaraníes."
+        />
+      </main>
 
       <SiteClosing
         business={business}
