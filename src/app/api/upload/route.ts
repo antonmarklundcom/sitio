@@ -24,7 +24,11 @@ function isKind(v: string): v is Kind {
 
 export async function POST(req: Request) {
   const form = await req.formData();
-  const user = await currentUser();
+  // En intake-token går före sessionen (R3-33): en owner som fortfarande är
+  // inloggad på telefonen och fyller i intaken för sitt andra företag ska få
+  // bilderna på det företag länken gäller, inte på sin publicerade sajt.
+  const hasToken = String(form.get("token") ?? "").trim().length > 0;
+  const user = hasToken ? null : await currentUser();
 
   /**
    * Två sätt att vara behörig: en inloggad session (admin/owner), eller en

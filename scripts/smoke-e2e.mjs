@@ -208,6 +208,18 @@ await cust.locator('input[type=file]').last().setInputFiles({ name: 'pan.jpg', m
 await cust.waitForTimeout(4000);
 ok('foto uppladdat via intake-token', (await cust.locator('.panel-photos img').count()) > 0);
 
+// R3-33: token går före sessionen. Superadmin (inloggad i `p`) som laddar upp
+// med intake-token hamnar på tokens business, inte på "Ogiltigt businessId".
+const withSession = await p.evaluate(async ({ bytes, token }) => {
+  const body = new FormData();
+  body.set('kind', 'photo');
+  body.set('token', token);
+  body.set('file', new File([new Uint8Array(bytes)], 'sesion.jpg', { type: 'image/jpeg' }));
+  const res = await fetch('/api/upload', { method: 'POST', body });
+  return res.status;
+}, { bytes: [...jpeg], token });
+ok('uppladdning med token och inloggad session går till tokens business', withSession === 200, String(withSession));
+
 // Behörighetsgränserna för tokenläget i uppladdningsrouten.
 const anon = new FormData();
 anon.set('kind', 'photo');
@@ -232,6 +244,24 @@ await p.getByRole('button', { name: 'Generar código' }).first().click();
 await p.waitForTimeout(2500);
 const code = ((await p.locator('body').innerText()).match(/\b\d{6}\b/) || [])[0];
 ok('OTP-kod genererad och visad en gång för admin', Boolean(code));
+
+// R3-33: koden gäller numret den skickades till. Kunden byter nummer ⇒ koden
+// verifierar inte det nya; tillbaka till rätt nummer ⇒ koden fungerar igen.
+const setIntakePhone = async (phone) => {
+  await cust.goto(B + '/alta/' + token, { waitUntil: 'domcontentloaded' });
+  await cust.waitForTimeout(800);
+  await cust.fill('input[name=whatsappPhone]', phone);
+  await cust.getByRole('button', { name: /Guardar y seguir/ }).click();
+  await cust.waitForTimeout(2500);
+  await cust.goto(B + '/alta/' + token + '?paso=verificacion', { waitUntil: 'domcontentloaded' });
+  await cust.waitForTimeout(1000);
+};
+await setIntakePhone('0985 334 299');
+await cust.fill('input[name=code]', code ?? '');
+await cust.getByRole('button', { name: /Verificar/ }).click();
+await cust.waitForTimeout(2000);
+ok('koden verifierar inte ett annat nummer', (await cust.locator('body').innerText()).includes('no hay un código activo'));
+await setIntakePhone('0985 334 221');
 
 await cust.fill('input[name=code]', '000000');
 await cust.getByRole('button', { name: /Verificar/ }).click();
