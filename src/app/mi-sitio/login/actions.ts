@@ -12,6 +12,7 @@ import { findOwnerLoginTarget } from "@/lib/owner";
 import { normalizePyPhone } from "@/lib/format";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIpFrom } from "@/lib/client-ip";
+import { safeNext } from "@/lib/safe-next";
 import { OTP_MAX_ATTEMPTS, otpMatches } from "@/lib/intake";
 
 export type OwnerLoginState = { error?: string; ok?: string; phone?: string; step?: "phone" | "code" };
@@ -152,7 +153,8 @@ export async function verifyOwnerCodeAction(
   });
 
   revalidatePath("/admin/accesos");
-  redirect("/mi-sitio");
+  // Tillbaka dit middleware skickade från (R3-42) — bara en relativ /mi-sitio-sökväg.
+  redirect(safeNext(formData.get("next"), "owner", "/mi-sitio"));
 }
 
 export async function ownerLogoutAction(): Promise<void> {

@@ -31,9 +31,6 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
   replacing the header, a bot can rotate it and skip the 5/h signup limit.
   One env var fixes it once `/admin/diagnostico` shows which source carries
   the real IP (R3-27, batch 4).
-- **Batch 4 review leftovers** (R3-39…R3-42, `docs/r3/prompts/batch-5.md`):
-  ~~the admin business form can't save services longer than 80 characters and
-  hides nested errors~~ (R3-39); ~~no confirmation before deleting a menu section~~ (R3-40); ~~owners'
-  "today" count can lag a day; "30 días" counts are 31 days~~ (R3-41); small input
-  hygiene items. None loses data silently. (R3-4)
-
+- ~~Batch 4 review leftovers R3-39…R3-42~~ — fixed in batch 5
+  (`docs/log/R3-5.md`). Three small R3-42 remnants (redirect tag
+  revalidation, photo-cap race, admin `?ok=`) are inbox lines. (R3-5)

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeIntervals } from "./hours";
+import { optionalHttpUrlEs, optionalPyPhoneEs } from "./form-fields";
 
 /**
  * Whitelistan för /mi-sitio. Fälten som INTE står här kan inte ändras av en
@@ -17,11 +18,11 @@ export const ownerFormSchema = z.object({
   address: trimmed(200).optional().or(z.literal("")),
   zone: trimmed(80).optional().or(z.literal("")),
   city: trimmed(80).min(2, "¿En qué ciudad estás?"),
-  secondaryPhone: trimmed(20).optional().or(z.literal("")),
-  mapsUrl: trimmed(300).optional().or(z.literal("")),
-  instagram: trimmed(300).optional().or(z.literal("")),
-  facebook: trimmed(300).optional().or(z.literal("")),
-  tiktok: trimmed(300).optional().or(z.literal("")),
+  secondaryPhone: optionalPyPhoneEs,
+  mapsUrl: optionalHttpUrlEs("https://maps.app.goo.gl/…"),
+  instagram: optionalHttpUrlEs("https://instagram.com/tu-negocio"),
+  facebook: optionalHttpUrlEs("https://facebook.com/tu-negocio"),
+  tiktok: optionalHttpUrlEs("https://tiktok.com/@tu-negocio"),
 });
 
 export type OwnerFormValues = z.infer<typeof ownerFormSchema>;

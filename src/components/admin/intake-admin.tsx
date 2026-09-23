@@ -76,8 +76,9 @@ export function OtpButton({
   businessName: string;
   phone: string;
 }) {
-  const [state, formAction] = useActionState<OtpState, FormData>(action, {});
-  const { pending } = useFormStatus();
+  // useFormStatus() här läste statusen för ett formulär OVANFÖR komponenten —
+  // det finns inget — så knappen var aldrig upptagen (R3-42).
+  const [state, formAction, pending] = useActionState<OtpState, FormData>(action, {});
 
   if (state.code) {
     const waHref = `https://wa.me/${phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
@@ -102,7 +103,7 @@ export function OtpButton({
         disabled={pending}
         className="rounded-md border border-admin-line px-2.5 py-1.5 text-xs hover:border-admin-muted"
       >
-        Generar código
+        {pending ? "Generando…" : "Generar código"}
       </button>
     </form>
   );

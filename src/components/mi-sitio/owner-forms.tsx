@@ -149,7 +149,7 @@ export function OwnerEditForm({
           <input id="address" name="address" type="text" defaultValue={d.address} maxLength={200} />
         </Field>
         <Field label="Link de Google Maps" name="mapsUrl" error={err("mapsUrl")}>
-          <input id="mapsUrl" name="mapsUrl" type="url" defaultValue={d.mapsUrl} maxLength={300} />
+          <input id="mapsUrl" name="mapsUrl" type="url" defaultValue={d.mapsUrl} maxLength={300} placeholder="https://maps.app.goo.gl/…" />
         </Field>
         <Field
           label="Otro teléfono"
@@ -157,20 +157,20 @@ export function OwnerEditForm({
           hint="Tu WhatsApp principal lo cambiamos nosotros — escribinos, porque hay que verificarlo de nuevo."
           error={err("secondaryPhone")}
         >
-          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={d.secondaryPhone} />
+          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={d.secondaryPhone} placeholder="021 234 567" maxLength={30} />
         </Field>
       </div>
 
       <div className="panel-card">
         <h2>Redes</h2>
         <Field label="Instagram" name="instagram" error={err("instagram")}>
-          <input id="instagram" name="instagram" type="url" defaultValue={d.instagram} maxLength={300} />
+          <input id="instagram" name="instagram" type="url" defaultValue={d.instagram} maxLength={300} placeholder="https://instagram.com/tu-negocio" />
         </Field>
         <Field label="Facebook" name="facebook" error={err("facebook")}>
-          <input id="facebook" name="facebook" type="url" defaultValue={d.facebook} maxLength={300} />
+          <input id="facebook" name="facebook" type="url" defaultValue={d.facebook} maxLength={300} placeholder="https://facebook.com/tu-negocio" />
         </Field>
         <Field label="TikTok" name="tiktok" error={err("tiktok")}>
-          <input id="tiktok" name="tiktok" type="url" defaultValue={d.tiktok} maxLength={300} />
+          <input id="tiktok" name="tiktok" type="url" defaultValue={d.tiktok} maxLength={300} placeholder="https://tiktok.com/@tu-negocio" />
         </Field>
       </div>
 

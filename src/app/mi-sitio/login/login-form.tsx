@@ -22,9 +22,12 @@ function Submit({ label, busy }: { label: string; busy: string }) {
 export function OwnerLoginForm({
   requestCode,
   verifyCode,
+  next,
 }: {
   requestCode: (state: OwnerLoginState, formData: FormData) => Promise<OwnerLoginState>;
   verifyCode: (state: OwnerLoginState, formData: FormData) => Promise<OwnerLoginState>;
+  /** Redan kontrollerad av safeNext() på servern; tom = ingen. */
+  next: string;
 }) {
   const [reqState, reqAction] = useActionState<OwnerLoginState, FormData>(requestCode, {});
   const [verState, verAction] = useActionState<OwnerLoginState, FormData>(verifyCode, {});
@@ -62,6 +65,7 @@ export function OwnerLoginForm({
       {showCode ? (
         <form action={verAction} style={{ marginTop: "1.5rem" }}>
           <input type="hidden" name="phone" value={phone} />
+          {next ? <input type="hidden" name="next" value={next} /> : null}
           {verState.error ? <p className="panel-note panel-note--err">{verState.error}</p> : null}
           <div className="panel-field">
             <label htmlFor="code">Código</label>

@@ -163,6 +163,17 @@ async function saveItem(editor: EditorContext | null, _prev: MenuFormState, form
   if (itemIdRaw && !existing) return { error: "Ese plato ya no existe." };
 
   if (existing) {
+    // Flyttas rätten till en annan sektion gäller den sektionens tak (R3-42):
+    // annars kunde en sektion fyllas förbi 40 genom att flytta in rätter.
+    if (existing.sectionId !== sectionId) {
+      const inTarget = await db
+        .select({ id: menuItems.id })
+        .from(menuItems)
+        .where(and(eq(menuItems.businessId, ctx.business.id), eq(menuItems.sectionId, sectionId)));
+      if (inTarget.length >= MENU_MAX_ITEMS_PER_SECTION) {
+        return { error: `Esa sección ya tiene ${MENU_MAX_ITEMS_PER_SECTION} platos, el máximo.` };
+      }
+    }
     await db
       .update(menuItems)
       .set({

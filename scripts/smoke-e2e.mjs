@@ -136,6 +136,45 @@ if (imgSrc) {
   ok('media serveras med immutable-cache', media.status === 200 && (media.headers.get('cache-control') ?? '').includes('immutable'), `${media.status} ${media.headers.get('cache-control')}`);
 }
 
+// 7b. R3-42: byte av logga raderar den gamla loggans filer, två gånger i rad.
+const logoPng = (r) => sharp({ create: { width: 300, height: 300, channels: 4, background: { r, g: 40, b: 40, alpha: 1 } } }).png().toBuffer();
+const uploadLogo = async (buf) => {
+  await p.goto(B + '/admin/sitios/1');
+  await p.waitForLoadState('networkidle');
+  await p.waitForTimeout(1000);
+  await p.locator('input[name=logo]').first().setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: buf });
+  await p.waitForTimeout(4000);
+  await p.goto(B + '/admin/sitios/1');
+  return p.locator('img[src*="-logo.png"]').first().getAttribute('src').catch(() => null);
+};
+const logoA = await uploadLogo(await logoPng(10));
+const logoBBuf = await logoPng(200);
+const logoB = await uploadLogo(logoBBuf);
+ok('ny logga serveras', Boolean(logoB) && logoB !== logoA && (await fetch(B + logoB)).status === 200, `${logoA} → ${logoB}`);
+ok('gamla loggans fil raderas', Boolean(logoA) && (await fetch(B + logoA)).status === 404);
+const logoB2 = await uploadLogo(logoBBuf);
+ok('samma bild igen: ny fil serveras, den förra raderas', Boolean(logoB2) && logoB2 !== logoB && (await fetch(B + logoB2)).status === 200 && (await fetch(B + logoB)).status === 404);
+
+// 7c. R3-42: ?next= efter inloggning, och ingen öppen redirect.
+{
+  const anon = await b.newContext();
+  const ap = await anon.newPage();
+  await ap.goto(B + '/admin/pagos');
+  ok('utloggad /admin/pagos ⇒ login med next', new URL(ap.url()).searchParams.get('next') === '/admin/pagos', ap.url());
+  const { EMAIL, PASS } = await import('../tests/smoke/_lib.mjs');
+  await ap.fill('input[name=email]', EMAIL);
+  await ap.fill('input[name=password]', PASS);
+  await ap.click('button[type=submit]');
+  await ap.waitForURL((u) => !u.pathname.startsWith('/admin/login'), { timeout: 30000 }).catch(() => {});
+  ok('efter inloggning tillbaka till /admin/pagos', new URL(ap.url()).pathname === '/admin/pagos', ap.url());
+  for (const evil of ['//evil.example', '/\\evil.example', 'https://evil.example/admin']) {
+    await ap.goto(B + '/admin/login?next=' + encodeURIComponent(evil));
+    const u = new URL(ap.url());
+    ok('next=' + evil + ' stannar på sajten', u.origin === new URL(B).origin && u.pathname === '/admin', ap.url());
+  }
+  await anon.close();
+}
+
 // 8. betalningar: prenumeration → betalning → bekräftelse → förnyelsevy
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { establishSession, findActiveSuperadminByEmail, logActivity } from "@/lib/auth";
 import { pruneRateLimits, rateLimit } from "@/lib/rate-limit";
 import { clientIpFrom } from "@/lib/client-ip";
+import { safeNext } from "@/lib/safe-next";
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Correo no válido."),
@@ -53,7 +54,8 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   await establishSession({ userId: user.id, role: "superadmin", name: user.name });
   await logActivity({ actorUserId: user.id, action: "login", meta: { ip } });
 
-  redirect("/admin");
+  // Tillbaka dit middleware skickade från (R3-42) — bara en relativ /admin-sökväg.
+  redirect(safeNext(formData.get("next"), "admin", "/admin"));
 }
 
 export async function logoutAction(): Promise<void> {

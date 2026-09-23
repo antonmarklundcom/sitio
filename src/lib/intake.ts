@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { optionalHttpUrlEs, optionalPyPhoneEs } from "./form-fields";
 import { env } from "./env";
 import { normalizePyPhone } from "./format";
 import { normalizeIntervals } from "./hours";
@@ -88,12 +89,12 @@ export const intakeDataSchema = z.object({
       }
       return normalized;
     }),
-  secondaryPhone: trimmed(20).optional().or(z.literal("")),
+  secondaryPhone: optionalPyPhoneEs,
   address: trimmed(200).optional().or(z.literal("")),
   zone: trimmed(80).optional().or(z.literal("")),
   city: trimmed(80).min(2, "¿En qué ciudad estás?"),
-  instagram: trimmed(300).optional().or(z.literal("")),
-  facebook: trimmed(300).optional().or(z.literal("")),
+  instagram: optionalHttpUrlEs("https://instagram.com/tu-negocio"),
+  facebook: optionalHttpUrlEs("https://facebook.com/tu-negocio"),
 });
 
 export type IntakeDataValues = z.infer<typeof intakeDataSchema>;
