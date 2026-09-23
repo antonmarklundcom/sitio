@@ -11,6 +11,7 @@ import {
   SUBSCRIPTION_STATUSES,
   SUBSCRIPTION_STATUS_LABELS,
   daysUntil,
+  ownerReportPeriod,
   type SubscriptionStatus,
 } from "@/lib/billing";
 import { formatGs } from "@/lib/format";
@@ -102,6 +103,13 @@ export function BillingPanel({
   const [payState, payAction] = useActionState<BillingFormState, FormData>(registerPayment, {});
 
   const left = subscription ? daysUntil(subscription.expiresAt, today) : null;
+  // Ett nytt betalningsformulär gäller nästa period (R3-36), samma regel som
+  // kundens egen rapport. Förr var förvalet nuvarande period, så en bekräftad
+  // förnyelse lämnade förfallodatumet orört och sajten pausades senare trots
+  // betalning.
+  const nextPeriod = subscription
+    ? ownerReportPeriod({ status: subscription.status as SubscriptionStatus, expiresAt: subscription.expiresAt }, today)
+    : null;
   const back = `/admin/sitios/${businessId}`;
 
   return (
@@ -234,10 +242,10 @@ export function BillingPanel({
               />
             </Field>
             <Field label="Período desde" name="periodStart" required error={payState.fieldErrors?.periodStart}>
-              <TextInput name="periodStart" type="date" defaultValue={subscription?.startsAt ?? today} required />
+              <TextInput name="periodStart" type="date" defaultValue={nextPeriod?.periodStart ?? today} required />
             </Field>
             <Field label="Período hasta" name="periodEnd" required error={payState.fieldErrors?.periodEnd}>
-              <TextInput name="periodEnd" type="date" defaultValue={subscription?.expiresAt ?? defaultExpiry} required />
+              <TextInput name="periodEnd" type="date" defaultValue={nextPeriod?.periodEnd ?? defaultExpiry} required />
             </Field>
           </div>
           <Field label="Nota" name="notes" error={payState.fieldErrors?.notes}>

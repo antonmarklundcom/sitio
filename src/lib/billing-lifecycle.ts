@@ -3,7 +3,7 @@ import { and, eq, inArray, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, subscriptions } from "@/db/schema";
 import { logActivity } from "./auth";
-import { GRACE_DAYS, addDays, lifecycleStatus, toDayString, type SubscriptionStatus } from "./billing";
+import { GRACE_DAYS, addDays, lifecycleStatus, toDayString, todayAsuncion, type SubscriptionStatus } from "./billing";
 
 export type LifecycleResult = {
   toGrace: number;
@@ -26,7 +26,7 @@ export type LifecycleResult = {
  * serveråtgärd. Anroparen som VET att den får revalidera gör det.
  */
 export async function runBillingLifecycle(actorUserId?: number | null): Promise<LifecycleResult> {
-  const today = new Date();
+  const today = todayAsuncion();
 
   const due = await db
     .select({
@@ -39,7 +39,7 @@ export async function runBillingLifecycle(actorUserId?: number | null): Promise<
     .where(
       and(
         inArray(subscriptions.status, ["trial", "active", "grace"]),
-        lt(subscriptions.expiresAt, new Date(`${toDayString(today)}T00:00:00Z`)),
+        lt(subscriptions.expiresAt, new Date(`${today}T00:00:00Z`)),
       ),
     )
     .limit(1000);

@@ -117,6 +117,14 @@ await p.waitForTimeout(2500);
 ok('prenumeration sparad', (await p.locator('body').innerText()).includes('450.000'));
 
 const payForm = p.locator('form').filter({ has: p.locator('select[name=method]') });
+// R3-36: förvalet är NÄSTA period (där nuvarande slutar + ett år), inte den
+// nuvarande — annars förlängde en bekräftad förnyelse ingenting.
+await p.reload({ waitUntil: 'domcontentloaded' });
+ok(
+  'betalningens förvalda period är nästa period',
+  (await payForm.locator('input[name=periodStart]').inputValue()) === day(10) &&
+    (await payForm.locator('input[name=periodEnd]').inputValue()) === day(375),
+);
 const ref = 'OP-' + Date.now().toString().slice(-6);
 await payForm.locator('input[name=amountGs]').fill('450000');
 await payForm.locator('select[name=method]').selectOption('transferencia');

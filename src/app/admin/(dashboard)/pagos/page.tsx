@@ -12,6 +12,7 @@ import {
   daysUntil,
   renewalMessage,
   toDayString,
+  todayAsuncion,
   type SubscriptionStatus,
 } from "@/lib/billing";
 import { Badge, Card, EmptyState, Notice, SectionTitle } from "@/components/admin/ui";
@@ -37,7 +38,7 @@ export default async function PaymentsPage({
   const sp = await searchParams;
 
   const [pending, expiring] = await Promise.all([listPendingPayments(), listExpiringSoon()]);
-  const today = toDayString(new Date());
+  const today = todayAsuncion();
 
   return (
     <div className="space-y-6">
