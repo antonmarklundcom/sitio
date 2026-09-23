@@ -291,6 +291,8 @@ await owner.waitForTimeout(1000);
 ok('och i kundens panel', (await owner.locator('body').innerText()).includes(nombreAdmin));
 await adminCard().locator('.panel-menu-items li').filter({ hasText: nombreAdmin }).first()
   .getByRole('button', { name: 'Borrar', exact: true }).click();
+await adminCard().locator('.panel-menu-items li').filter({ hasText: nombreAdmin }).first()
+  .getByRole('button', { name: 'Sí, borrar el producto' }).click();
 await p.waitForTimeout(2500);
 ok('superadmin raderar produkten', !(await adminCard().innerText()).includes(nombreAdmin));
 
@@ -300,6 +302,9 @@ await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
 await owner.waitForLoadState('networkidle');
 for (const name of [nombre1, nombre2]) {
   await productLi(name).getByRole('button', { name: 'Borrar', exact: true }).click();
+  await owner.waitForTimeout(500);
+  ok('Borrar frågar först: ' + name, (await owner.locator('body').innerText()).includes(name));
+  await productLi(name).getByRole('button', { name: 'Sí, borrar el producto' }).click();
   await owner.waitForTimeout(2500);
 }
 const afterDelete = await owner.locator('body').innerText();

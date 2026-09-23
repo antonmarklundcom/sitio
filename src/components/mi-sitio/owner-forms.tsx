@@ -8,6 +8,7 @@ import { OWNER_MAX_SERVICES } from "@/lib/owner-form";
 import { ACCEPT_ATTR, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
 import type { OwnerFormState } from "@/app/mi-sitio/actions";
 import { kept, keepSubmittedOnError, keptHours, keptServices, type KeptState } from "@/lib/kept-form";
+import { ConfirmSubmit } from "./confirm-submit";
 
 /** Owner-panelen. Spanska (voseo) — det här är kundens yta, inte adminets. */
 
@@ -355,9 +356,7 @@ export function OwnerPhotos({
                 {photos.length > 1 ? (
                   <form action={deletePhoto}>
                     <input type="hidden" name="mediaId" value={photo.id} />
-                    <button type="submit" className="danger">
-                      Borrar
-                    </button>
+                    <ConfirmSubmit label="Borrar" confirmLabel="Sí, borrar la foto" />
                   </form>
                 ) : null}
               </figcaption>

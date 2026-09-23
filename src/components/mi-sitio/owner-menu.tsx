@@ -8,6 +8,7 @@ import type { MenuSectionRow } from "@/db/menu-queries";
 import type { MenuFormState } from "@/app/mi-sitio/menu-actions";
 import { kept, keepSubmittedOnError, type KeptState } from "@/lib/kept-form";
 import { ItemImageField } from "./item-image";
+import { ConfirmSubmit } from "./confirm-submit";
 
 /**
  * Menyredigeraren i owner-panelen. Spanska (voseo) — kundens yta.
@@ -185,9 +186,14 @@ export function OwnerMenu({
             </span>
             <form action={deleteSection}>
               <input type="hidden" name="sectionId" value={section.id} />
-              <button type="submit" className="danger">
-                Borrar sección
-              </button>
+              <ConfirmSubmit
+                label="Borrar sección"
+                confirmLabel={
+                  section.items.length > 0
+                    ? `Sí, borrar la sección y sus ${section.items.length} platos`
+                    : "Sí, borrar la sección"
+                }
+              />
             </form>
           </div>
 
@@ -241,9 +247,7 @@ export function OwnerMenu({
                     </span>
                     <form action={deleteItem}>
                       <input type="hidden" name="itemId" value={item.id} />
-                      <button type="submit" className="danger">
-                        Borrar
-                      </button>
+                      <ConfirmSubmit label="Borrar" confirmLabel="Sí, borrar el plato" />
                     </form>
                   </div>
 

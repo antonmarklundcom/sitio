@@ -8,6 +8,7 @@ import type { ProductRow } from "@/db/product-queries";
 import type { ProductFormState } from "@/app/mi-sitio/product-actions";
 import { kept, keepSubmittedOnError, type KeptState } from "@/lib/kept-form";
 import { ItemImageField } from "./item-image";
+import { ConfirmSubmit } from "./confirm-submit";
 
 /**
  * Produktredigeraren i owner-panelen (PR-14). Spanska (voseo) — kundens yta.
@@ -187,9 +188,7 @@ export function OwnerProducts({
                 </span>
                 <form action={deleteProduct}>
                   <input type="hidden" name="productId" value={product.id} />
-                  <button type="submit" className="danger">
-                    Borrar
-                  </button>
+                  <ConfirmSubmit label="Borrar" confirmLabel="Sí, borrar el producto" />
                 </form>
               </div>
 
