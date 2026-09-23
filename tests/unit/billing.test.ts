@@ -11,6 +11,7 @@ import {
   addYear,
   daysUntil,
   lifecycleStatus,
+  todayAsuncion,
   paymentFormSchema,
   renewalMessage,
   subscriptionFormSchema,
@@ -215,5 +216,17 @@ describe("ownerPaymentReportSchema (R3-21)", () => {
     expect(dotted.success && dotted.data.amountGs).toBe(300000);
     expect(ownerPaymentReportSchema.safeParse({ amountGs: "", method: "efectivo" }).success).toBe(false);
     expect(paymentFormSchema.safeParse({ amountGs: "", method: "efectivo", periodStart: "2026-01-01", periodEnd: "2027-01-01" }).success).toBe(false);
+  });
+});
+
+describe("todayAsuncion (R3-36)", () => {
+  it("är gårdagen i UTC efter 21:00 lokal tid", () => {
+    expect(todayAsuncion(new Date("2026-09-24T01:30:00Z"))).toBe("2026-09-23");
+    expect(todayAsuncion(new Date("2026-09-24T03:30:00Z"))).toBe("2026-09-24");
+  });
+
+  it("livscykeln räknar på Asunción-dygnet: förfaller i dag lokalt ⇒ fortfarande aktiv", () => {
+    const lateEvening = todayAsuncion(new Date("2026-09-24T01:30:00Z"));
+    expect(lifecycleStatus("active", "2026-09-23", lateEvening)).toBe("active");
   });
 });

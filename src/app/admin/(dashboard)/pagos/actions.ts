@@ -2,9 +2,9 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, payments, subscriptions } from "@/db/schema";
+import { activityLog, businesses, payments, subscriptions } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { getCurrentSubscription } from "@/db/billing-queries";
 import { logActivity, requireRole } from "@/lib/auth";
@@ -166,6 +166,18 @@ async function loadPayment(paymentId: number) {
   return rows[0] ?? null;
 }
 
+/** Senaste pausen kom från livscykeln (status_paused med reason subscription_expired). */
+async function pausedForNonPayment(businessId: number): Promise<boolean> {
+  const [last] = await db
+    .select({ meta: activityLog.metaJson })
+    .from(activityLog)
+    .where(and(eq(activityLog.businessId, businessId), eq(activityLog.action, "status_paused")))
+    .orderBy(desc(activityLog.id))
+    .limit(1);
+  const meta = last?.meta as { reason?: string } | null | undefined;
+  return meta?.reason === "subscription_expired";
+}
+
 /**
  * Bekräfta betalning: förlänger prenumerationen till betalningens periodslut
  * och sätter den till `active`. En pausad sajt som pausades av utebliven
@@ -205,9 +217,11 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
     .where(eq(businesses.id, payment.businessId))
     .limit(1);
 
-  // Betalt igen ⇒ sajten upp. Bara om den pausades — ett utkast ska inte
-  // publiceras av en betalning.
-  if (business?.status === "paused") {
+  // Betalt igen ⇒ sajten upp. Bara om den pausades för utebliven betalning
+  // (R3-36): en sajt du pausat för hand — klagomål, kundens egen begäran —
+  // ska inte tyst publiceras av en betalning. Ett utkast rörs aldrig.
+  const reactivate = business?.status === "paused" && (await pausedForNonPayment(business.id));
+  if (business && reactivate) {
     await db.update(businesses).set({ status: "published" }).where(eq(businesses.id, business.id));
     revalidateTag(`biz:${business.slug}`);
     revalidatePath("/sitemap.xml");
@@ -221,7 +235,7 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
       paymentId,
       amountGs: payment.amountGs,
       expiresAt: toDayString(nextExpiry),
-      reactivated: business?.status === "paused",
+      reactivated: reactivate,
     },
   });
 

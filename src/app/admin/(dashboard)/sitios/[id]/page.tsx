@@ -24,7 +24,7 @@ import {
   rejectPaymentAction,
   saveSubscriptionAction,
 } from "../../pagos/actions";
-import { addYear, renewalMessage, toDayString } from "@/lib/billing";
+import { addYear, renewalMessage, toDayString, todayAsuncion } from "@/lib/billing";
 import {
   deleteMediaAction,
   listMediaForBusiness,
@@ -256,8 +256,8 @@ export default async function EditBusinessPage({
       <BillingPanel
         businessId={business.id}
         businessName={business.name}
-        today={toDayString(new Date())}
-        defaultExpiry={toDayString(addYear(new Date()))}
+        today={todayAsuncion()}
+        defaultExpiry={toDayString(addYear(todayAsuncion()))}
         yearStats={yearStats}
         reportHref={reportPath(business.id, business.slug)}
         renewalHref={waLink(

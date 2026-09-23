@@ -2,7 +2,7 @@ import { and, count, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptions } from "@/db/schema";
 import { requireRole } from "@/lib/auth";
-import { parseDay } from "@/lib/billing";
+import { parseDay, todayAsuncion } from "@/lib/billing";
 import { getPromoSettings } from "@/lib/settings";
 import { savePromoAction } from "./actions";
 
@@ -12,7 +12,7 @@ export default async function PromocionesPage({ searchParams }: { searchParams: 
   await requireRole("superadmin");
   const promo = await getPromoSettings();
   const sp = await searchParams;
-  const today = parseDay(new Date());
+  const today = parseDay(todayAsuncion());
   const [active] = await db.select({ total: count() }).from(subscriptions).where(and(
     eq(subscriptions.status, "trial"), lte(subscriptions.startsAt, today), gte(subscriptions.expiresAt, today),
   ));

@@ -70,6 +70,21 @@ export const EXPIRING_SOON_DAYS = 45;
 // ---------- datum ----------
 
 /** Datum som "YYYY-MM-DD". Drizzles date-kolumner tar Date, listorna sträng. */
+/**
+ * Dagens datum i Asunción som YYYY-MM-DD (R3-36). Faktureringen räknade med
+ * UTC-dygnet: efter 21:00 lokal tid var det "i morgon", så en körning från
+ * /admin/pagos på kvällen flyttade prenumerationer till grace/expired och
+ * pausade sajter en dag för tidigt. Klientsäker (bara Intl).
+ */
+export function todayAsuncion(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Asuncion",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
 export function toDayString(value: Date | string): string {
   return typeof value === "string" ? value.slice(0, 10) : value.toISOString().slice(0, 10);
 }
@@ -95,7 +110,7 @@ export function addYear(value: Date | string): Date {
   return d;
 }
 
-export function daysUntil(expiresAt: Date | string, today: Date | string = new Date()): number {
+export function daysUntil(expiresAt: Date | string, today: Date | string = todayAsuncion()): number {
   const ms = parseDay(expiresAt).getTime() - parseDay(today).getTime();
   return Math.round(ms / 86_400_000);
 }
@@ -110,7 +125,7 @@ export function daysUntil(expiresAt: Date | string, today: Date | string = new D
 export function lifecycleStatus(
   current: SubscriptionStatus,
   expiresAt: Date | string,
-  today: Date | string = new Date(),
+  today: Date | string = todayAsuncion(),
 ): SubscriptionStatus {
   if (current === "canceled") return "canceled";
 
@@ -204,7 +219,7 @@ export type PaymentFormValues = z.infer<typeof paymentFormSchema>;
  */
 export function ownerReportPeriod(
   subscription: { status: SubscriptionStatus; expiresAt: Date | string },
-  today: Date | string = new Date(),
+  today: Date | string = todayAsuncion(),
 ): { periodStart: string; periodEnd: string } {
   const startFromToday = subscription.status === "trial" || daysUntil(subscription.expiresAt, today) < 0;
   const start = startFromToday ? parseDay(today) : parseDay(subscription.expiresAt);
