@@ -76,6 +76,20 @@ await owner.getByRole('button', { name: 'Entrar' }).click();
 await owner.waitForTimeout(3000);
 ok('owner-inloggning ok', owner.url().endsWith('/mi-sitio'));
 
+// ---------- 2b. /admin/diagnostico (R3-26): bara superadmin, aldrig ett env-värde ----------
+await p.goto(B + '/admin/diagnostico', { waitUntil: 'domcontentloaded' });
+const diag = await p.locator('main').innerText();
+ok('superadmin ser diagnostiksidan', p.url().endsWith('/admin/diagnostico') && diag.includes('clientIp() hoy'));
+ok('diagnostik visar databasens klocka och uploads', diag.includes('utc_timestamp()') && /se puede escribir\s*sí/.test(diag));
+ok('diagnostik visar env som sí/no, inte värdet', /CRON_SECRET\s*sí/.test(diag) && !diag.includes(process.env.CRON_SECRET || 'dev-cron-secret'));
+ok('diagnostik är noindex', (await p.locator('meta[name=robots]').first().getAttribute('content'))?.includes('noindex'));
+await owner.goto(B + '/admin/diagnostico', { waitUntil: 'domcontentloaded' });
+ok('owner omdirigeras från diagnostiken', owner.url().includes('/admin/login'));
+const anon = await b.newPage();
+await anon.goto(B + '/admin/diagnostico', { waitUntil: 'domcontentloaded' });
+ok('anonym omdirigeras från diagnostiken', anon.url().includes('/admin/login'));
+await anon.close();
+
 // ---------- 3. panelen dyker upp, produkter skapas ----------
 await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
 await owner.waitForTimeout(1200);
