@@ -122,7 +122,10 @@ export async function ownerDeletePhotoAction(formData: FormData): Promise<void> 
     .from(media)
     .where(and(eq(media.id, mediaId), eq(media.businessId, ctx.business.id)))
     .limit(1);
-  if (!row) return;
+  // Bara fotot och loggan (R3-37). Kvitton är betalningsbevis, och bilder på
+  // rätter och produkter tas bort via raden de sitter på — annars pekar en rätt
+  // på en raderad bild.
+  if (!row || (row.kind !== "photo" && row.kind !== "logo")) return;
 
   // Sista fotot får inte tas bort: en publicerad sajt utan bild ser trasig ut,
   // och det är kundens egen sajt som skulle se trasig ut.

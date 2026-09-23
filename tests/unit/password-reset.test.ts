@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createResetToken, validatePassword, verifyResetToken } from "@/lib/password-reset";
+import { createResetToken, passwordVersion, validatePassword, verifyResetToken } from "@/lib/password-reset";
 import { sendEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import { changePasswordAction } from "@/app/admin/(dashboard)/cuenta/actions";
@@ -30,14 +30,14 @@ afterEach(() => {
 
 describe("password reset tokens", () => {
   it("round trips the signed identity and expires exactly after 30 minutes", () => {
-    const token = createResetToken(42, "admin@example.test", now);
+    const token = createResetToken(42, "admin@example.test", now, "$2a$10$oldhash");
     expect(verifyResetToken(token, now)).toMatchObject({ userId: 42, email: "admin@example.test", expiresAt: now + 1_800_000 });
     expect(verifyResetToken(token, now + 1_799_999)).not.toBeNull();
     expect(verifyResetToken(token, now + 1_800_000)).toBeNull();
   });
 
   it("rejects a changed email, user ID, expiry or purpose", () => {
-    const [payload, mac] = createResetToken(42, "admin@example.test", now).split(".");
+    const [payload, mac] = createResetToken(42, "admin@example.test", now, "$2a$10$oldhash").split(".");
     const original = JSON.parse(Buffer.from(payload, "base64url").toString());
     for (const change of [{ email: "other@example.test" }, { userId: 43 }, { expiresAt: now + 9_000_000 }, { purpose: "login" }]) {
       const changed = Buffer.from(JSON.stringify({ ...original, ...change })).toString("base64url");
@@ -46,7 +46,7 @@ describe("password reset tokens", () => {
   });
 
   it("rejects malformed signatures and tokens", () => {
-    const token = createResetToken(42, "admin@example.test", now);
+    const token = createResetToken(42, "admin@example.test", now, "$2a$10$oldhash");
     for (const invalid of ["", ".", "x.y", token + ".extra", token.slice(0, -5), "!" + token]) {
       expect(verifyResetToken(invalid, now)).toBeNull();
     }
@@ -63,7 +63,7 @@ describe("password reset tokens", () => {
 
   it("rejects a token after signing secret changes", () => {
     vi.stubEnv("SESSION_SECRET", "first-test-only-".repeat(4));
-    const token = createResetToken(42, "admin@example.test", now);
+    const token = createResetToken(42, "admin@example.test", now, "$2a$10$oldhash");
     vi.stubEnv("SESSION_SECRET", "second-test-only-".repeat(4));
     expect(verifyResetToken(token, now)).toBeNull();
   });
@@ -166,5 +166,15 @@ describe("account password action redirects", () => {
     accountMocks.currentUser.mockResolvedValue(null);
     await expect(changePasswordAction(form("wrong-password"))).rejects.toThrow("REDIRECT:/admin/login");
     expect(accountMocks.select).not.toHaveBeenCalled();
+  });
+});
+
+describe("engångslänk (R3-37)", () => {
+  it("bär lösenordsversionen, och en ny hash ger en annan version", () => {
+    const now = Date.UTC(2026, 8, 23);
+    const claims = verifyResetToken(createResetToken(42, "admin@example.test", now, "$2a$10$oldhash"), now);
+    expect(claims?.pv).toBe(passwordVersion("$2a$10$oldhash"));
+    expect(claims?.pv).not.toBe(passwordVersion("$2a$10$newhash"));
+    expect(claims?.pv).not.toContain("oldhash");
   });
 });

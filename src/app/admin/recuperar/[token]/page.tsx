@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { verifyResetToken } from "@/lib/password-reset";
+import { findActiveSuperadminByEmail } from "@/lib/auth";
+import { passwordVersion, verifyResetToken } from "@/lib/password-reset";
 import { resetAction } from "./actions";
 
 export default async function ResetPage({ params, searchParams }: {
@@ -8,7 +9,11 @@ export default async function ResetPage({ params, searchParams }: {
 }) {
   const { token } = await params;
   const { error } = await searchParams;
-  const claims = verifyResetToken(token, Date.now());
+  const signed = verifyResetToken(token, Date.now());
+  // En använd länk (lösenordet har bytts sedan dess) visas som ogiltig direkt,
+  // inte först efter att man skrivit ett nytt lösenord (R3-37).
+  const user = signed ? await findActiveSuperadminByEmail(signed.email) : null;
+  const claims = signed && user?.id === signed.userId && passwordVersion(user.passwordHash) === signed.pv ? signed : null;
   return (
     <main className="flex min-h-dvh items-center justify-center bg-admin-bg px-6 py-16 text-admin-text">
       <div className="w-full max-w-sm">
