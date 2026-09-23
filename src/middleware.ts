@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getIronSession } from "iron-session";
 import type { SessionData } from "@/lib/session";
+import { routeArea } from "@/lib/route-area";
 
 const SESSION_COOKIE = "sitio_session";
 
@@ -17,8 +18,10 @@ const SESSION_COOKIE = "sitio_session";
 export async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
-  const isAdmin = pathname.startsWith("/admin");
-  const isOwner = pathname.startsWith("/mi-sitio");
+  // Hela segment (R3-31): en kund med sluggen "administradora-…" är publik.
+  const area = routeArea(pathname);
+  const isAdmin = area === "admin";
+  const isOwner = area === "owner";
 
   if (!isAdmin && !isOwner) {
     // /{slug} och /{slug}/{sida} (extra_pages, R3-25).
@@ -59,5 +62,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   // Statiska filer, bilder och API-routes går aldrig genom middleware.
-  matcher: ["/((?!api|_next/static|_next/image|media|favicon.ico|robots.txt|sitemap.xml).*)"],
+  // `api/` och `media/` med snedstreck (R3-31): utan det hoppade även
+  // kundsluggar som "medialunas-…" och "apicultura-…" över preview-omskrivningen.
+  matcher: ["/((?!api/|_next/static|_next/image|media/|favicon.ico|robots.txt|sitemap.xml).*)"],
 };
