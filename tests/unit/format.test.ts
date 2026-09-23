@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayPhone, formatGs, normalizePyPhone, waLink } from "@/lib/format";
+import { displayPhone, formatGs, normalizePyPhone, parseGs, waLink } from "@/lib/format";
 
 describe("formatGs", () => {
   it("skriver guaraníes utan decimaler", () => {
@@ -79,5 +79,30 @@ describe("waLink", () => {
 
   it("utelämnar text-parametern när meddelandet är tomt", () => {
     expect(waLink("+595981123456", "")).toBe("https://wa.me/595981123456");
+  });
+});
+
+describe("parseGs (R3-32)", () => {
+  it.each([
+    ["300000", 300000],
+    ["300.000", 300000],
+    ["1.500.000", 1500000],
+    ["₲ 300.000", 300000],
+    ["Gs. 300.000", 300000],
+    ["300 000", 300000],
+    ["15.000,00", 15000],
+    [" 45000 ", 45000],
+  ])("%s ⇒ %d", (raw, expected) => {
+    expect(parseGs(raw)).toBe(expected);
+  });
+
+  it("tomt är null", () => {
+    expect(parseGs("")).toBeNull();
+    expect(parseGs("   ")).toBeNull();
+    expect(parseGs(null)).toBeNull();
+  });
+
+  it.each(["35 mil", "1.5", "1,5", "15.000,50", "30.00", "abc", "-5"])("%s är ogiltigt", (raw) => {
+    expect(Number.isNaN(parseGs(raw))).toBe(true);
   });
 });

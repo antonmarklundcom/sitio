@@ -319,7 +319,14 @@ const venceAntes = (planText.match(/vence el (\d{2}\/\d{2}\/\d{4})/) || [])[1] ?
 const ownerRef = 'OWN-' + Date.now().toString().slice(-6);
 await planCard.locator('select[name=method]').selectOption('tigo_money');
 await planCard.locator('input[name=reference]').fill(ownerRef);
-await planCard.locator('input[name=receipt]').setInputFiles({ name: 'tigo.jpg', mimeType: 'image/jpeg', buffer: jpeg });
+// R3-32: ett belopp med tusentalspunkter och en kvittobild över Nexts gamla
+// 1 MB-tak för serveråtgärder — en vanlig mobilbild av en överföring.
+await planCard.locator('input[name=amountGs]').fill('300.000');
+const bigReceipt = await sharp({
+  create: { width: 2400, height: 1800, channels: 3, noise: { type: 'gaussian', mean: 128, sigma: 60 } },
+}).jpeg({ quality: 95 }).toBuffer();
+ok('kvittot är större än 1 MB', bigReceipt.length > 1.5 * 1024 * 1024);
+await planCard.locator('input[name=receipt]').setInputFiles({ name: 'tigo.jpg', mimeType: 'image/jpeg', buffer: bigReceipt });
 await planCard.getByRole('button', { name: 'Informar pago' }).click();
 await owner.waitForTimeout(3500);
 ok('owner-rapporten kvitteras', /Recibimos tu pago|Lo estamos revisando/.test(await planCard.innerText()));
@@ -329,6 +336,7 @@ ok('en rapport i taget: formuläret är borta', (await planCard.locator('form').
 await p.goto(B + '/admin/pagos', { waitUntil: 'domcontentloaded' });
 const ownerRow = p.locator('tr').filter({ hasText: ownerRef }).first();
 ok('rapporten ligger i Cobros-kön', (await ownerRow.count()) > 0);
+ok('"300.000" sparas som ₲ 300.000, inte ₲ 300', /300\.000/.test(await ownerRow.innerText()));
 await ownerRow.getByRole('button', { name: 'Confirmar' }).click();
 await p.waitForTimeout(3000);
 await owner.reload({ waitUntil: 'domcontentloaded' });

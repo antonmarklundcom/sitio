@@ -6,6 +6,28 @@ export function formatGs(amount: number | null | undefined): string {
 }
 
 /**
+ * Ett belopp i guaraníes som en människa skriver det (R3-32): "300000",
+ * "300.000", "₲ 300.000", "Gs. 300.000", "300 000", "15.000,00". Punkter
+ * räknas bara som tusentalsavgränsare när grupperna är tre siffror, och en
+ * decimaldel godtas bara om den är noll — guaraníes har inga decimaler.
+ * Tomt ⇒ null. Allt annat ("35 mil", "1.5", "1,5") ⇒ NaN, så att schemat
+ * säger till i stället för att gissa: förr blev "300.000" ₲300 och "35 mil" ₲35.
+ */
+export function parseGs(raw: unknown): number | null {
+  if (raw == null) return null;
+  const s = String(raw)
+    .trim()
+    .replace(/^(₲|gs\.?)\s*/i, "")
+    .replace(/\s*(₲|gs\.?)$/i, "")
+    .replace(/\s/g, "")
+    .replace(/,0{1,2}$/, "");
+  if (s === "") return null;
+  if (/^\d+$/.test(s)) return Number(s);
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) return Number(s.replace(/\./g, ""));
+  return Number.NaN;
+}
+
+/**
  * Normaliserar ett paraguayanskt nummer till E.164 (+595XXXXXXXXX).
  * Accepterar "0981 123 456", "981123456", "+595981123456", "595981123456".
  * Returnerar null om det inte går att tolka som ett giltigt PY-nummer.

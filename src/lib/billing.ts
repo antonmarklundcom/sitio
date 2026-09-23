@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatGs } from "./format";
+import { formatGs, parseGs } from "./format";
 
 /**
  * Prenumerationer och betalningar, manuellt bekräftade (PLAN.md §1.7).
@@ -158,11 +158,16 @@ export function renewalMessage(params: {
 
 // ---------- formulärscheman ----------
 
-const gsAmount = z.coerce
-  .number({ message: "Ange ett belopp i guaraníes." })
-  .int("Guaraníes har inga decimaler.")
-  .min(0, "Beloppet kan inte vara negativt.")
-  .max(1_000_000_000, "Beloppet ser fel ut.");
+// parseGs (R3-32): "300.000" är trehundratusen, inte trehundra, och tomt är
+// ett fel — inte 0 som z.coerce gjorde.
+const gsAmount = z.preprocess(
+  (raw) => parseGs(raw) ?? undefined,
+  z
+    .number({ message: "Ange ett belopp i guaraníes." })
+    .int("Guaraníes har inga decimaler.")
+    .min(0, "Beloppet kan inte vara negativt.")
+    .max(1_000_000_000, "Beloppet ser fel ut."),
+);
 
 const dayString = z
   .string()
@@ -208,11 +213,14 @@ export function ownerReportPeriod(
 
 /** Kundens formulär: metod, referens och belopp. Spanska (voseo) — kundens yta. */
 export const ownerPaymentReportSchema = z.object({
-  amountGs: z.coerce
-    .number({ message: "Poné el monto en guaraníes." })
-    .int("Los guaraníes no tienen decimales.")
-    .min(1, "Poné el monto que pagaste.")
-    .max(1_000_000_000, "El monto parece estar mal."),
+  amountGs: z.preprocess(
+    (raw) => parseGs(raw) ?? undefined,
+    z
+      .number({ message: "Poné el monto en guaraníes, por ejemplo 300.000." })
+      .int("Los guaraníes no tienen decimales.")
+      .min(1, "Poné el monto que pagaste.")
+      .max(1_000_000_000, "El monto parece estar mal."),
+  ),
   method: z.enum(PAYMENT_METHODS, { message: "Elegí cómo pagaste." }),
   reference: z.string().trim().max(120, "El número de operación es muy largo.").optional().or(z.literal("")),
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseGs } from "./format";
 
 /**
  * Produktlistans whitelist. Samma princip som menu-form.ts: en owner får röra
@@ -11,15 +12,13 @@ import { z } from "zod";
  */
 export const PRODUCTS_MAX = 60;
 
-/** Guaraníes är heltal utan decimaler. Tomt fält = "A consultar". */
+/** Guaraníes är heltal utan decimaler. Tomt fält = "A consultar". "45.000" godtas (parseGs). */
 const priceField = z
   .string()
   .trim()
-  .transform((raw) => raw.replace(/[^\d]/g, ""))
-  .refine((digits) => digits.length <= 12, { message: "Ese precio es demasiado grande." })
-  .transform((digits) => (digits === "" ? null : Number(digits)))
+  .transform((raw) => parseGs(raw))
   .refine((n) => n === null || (Number.isSafeInteger(n) && n >= 0 && n <= 999_999_999), {
-    message: "Poné un precio en guaraníes, sin puntos ni decimales.",
+    message: "Poné el precio en guaraníes, por ejemplo 45.000.",
   });
 
 export const productSchema = z.object({
