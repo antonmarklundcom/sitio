@@ -11,6 +11,15 @@ run of the phase reads it.
   Options: (a) hide `menu` in the `comercio` theme once `products` is on,
   (b) leave both. Answer here; (a) becomes an R3 ticket at normal tier.
 
+- 2026-09-23 — **Admin language.** The admin UI is Spanish (nav, headings,
+  buttons) but the publish blockers ("Beskrivningen måste vara minst 80
+  tecken…"), the admin form validation and some billing/upload messages are
+  Swedish. Options: (a) translate them to Spanish (R3-43), (b) keep Swedish
+  for you and stop there. Customer-facing text is already Spanish.
+- 2026-09-23 — **When does the free trial start?** Today at registration
+  (`src/lib/intake-create.ts`), so days spent waiting for your review count
+  against the trial. Options: (a) start it at publication, (b) leave it.
+
 ## Answered
 
 - 2026-09-14 — §7-synken (prompt-filerna mot §1.11–§1.13). **Klar.**
