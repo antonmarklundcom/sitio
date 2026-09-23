@@ -603,6 +603,10 @@ closed them.
   chosen on Hostinger), and eight fixes from a whole-app review (R3-31…R3-38).
   Next: `docs/r3/prompts/batch-5.md` — go live with batches 3+4, then
   R3-39…R3-43.
+- Batch 5 (2026-09-23, `docs/log/R3-5.md`): review leftovers R3-39…R3-42
+  merged (admin form limits/errors/kept values, delete confirmation, rollup
+  and 30-day windows, preview redirect, `<main>`, input hygiene, `?next=`).
+  Go-live (part A) still to run; R3-30 and R3-43 wait on Anton's answers.
 
 ## 11. Round 3: Fable-led refinement, Astra workers
 
