@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { CATEGORIES, CATEGORY_LABELS, type HoursMap } from "@/lib/business";
+import { kept, keepSubmittedOnError, keptHours, type KeptState } from "@/lib/kept-form";
 import type { BusinessFormState } from "@/app/admin/(dashboard)/sitios/actions";
 import { Card, Notice, SectionTitle } from "./ui";
 import { Field, HoursEditor, Select, ServicesEditor, TextArea, TextInput } from "./fields";
@@ -31,6 +32,49 @@ export type BusinessFormDefaults = {
   adminNotes: string | null;
 };
 
+// Varje felsvar får ett eget nummer: ServicesEditor och HoursEditor håller
+// rader och "Cerrado" i state, så de monteras om för att visa det inskickade.
+const submissionIds = new WeakMap<FormData, number>();
+let nextSubmissionId = 1;
+function submissionId(fd: FormData): number {
+  let id = submissionIds.get(fd);
+  if (!id) submissionIds.set(fd, (id = nextSubmissionId++));
+  return id;
+}
+
+/** Formulärets värden som de skickades, efter ett fel (R3-39, som R3-38). */
+function keptDefaults(sub: FormData, d: BusinessFormDefaults): BusinessFormDefaults {
+  const t = (name: string, fallback: string | null) => kept(sub, name, fallback ?? "");
+  const names = sub.getAll("service.name").map(String);
+  const descs = sub.getAll("service.desc").map(String);
+  return {
+    name: t("name", d.name),
+    slug: t("slug", d.slug),
+    category: t("category", d.category),
+    rawDescription: t("rawDescription", d.rawDescription),
+    description: t("description", d.description),
+    services: names.map((name, i) => ({ name, desc: descs[i] ?? "" })),
+    whatsappPhone: t("whatsappPhone", d.whatsappPhone),
+    secondaryPhone: t("secondaryPhone", d.secondaryPhone),
+    address: t("address", d.address),
+    zone: t("zone", d.zone),
+    city: t("city", d.city),
+    lat: t("lat", d.lat),
+    lng: t("lng", d.lng),
+    mapsUrl: t("mapsUrl", d.mapsUrl),
+    socials: {
+      instagram: t("social.instagram", d.socials.instagram ?? ""),
+      facebook: t("social.facebook", d.socials.facebook ?? ""),
+      tiktok: t("social.tiktok", d.socials.tiktok ?? ""),
+    },
+    hours: keptHours(sub, (day, slot, edge) => `hours.${day}.${slot}.${edge}`),
+    ruc: t("ruc", d.ruc),
+    seoTitle: t("seoTitle", d.seoTitle),
+    seoDescription: t("seoDescription", d.seoDescription),
+    adminNotes: t("adminNotes", d.adminNotes),
+  };
+}
+
 function SaveButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
@@ -46,7 +90,7 @@ function SaveButton({ label }: { label: string }) {
 
 export function BusinessForm({
   action,
-  defaults,
+  defaults: saved,
   submitLabel,
   slugLocked,
 }: {
@@ -56,8 +100,11 @@ export function BusinessForm({
   /** Slug ändras bara medvetet — låset skyddar en publicerad sajts ranking. */
   slugLocked?: boolean;
 }) {
-  const [state, formAction] = useActionState<BusinessFormState, FormData>(action, {});
+  const [state, formAction] = useActionState<BusinessFormState & KeptState, FormData>(keepSubmittedOnError(action), {});
   const err = (k: string) => state.fieldErrors?.[k];
+  const sub = state.submitted;
+  const defaults = sub ? keptDefaults(sub, saved) : saved;
+  const rev = sub ? submissionId(sub) : 0;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -94,7 +141,7 @@ export function BusinessForm({
             />
           </Field>
 
-          <PresentationBlock defaultCategory={defaults.category} />
+          <PresentationBlock key={rev} defaultCategory={defaults.category} />
         </div>
       </Card>
 
@@ -115,7 +162,7 @@ export function BusinessForm({
             <TextArea name="description" defaultValue={defaults.description} rows={5} maxLength={2000} />
           </Field>
           <Field label="Servicios" name="services" error={err("servicesJson")} hint="Se requieren al menos dos para publicar.">
-            <ServicesEditor defaultValue={defaults.services} />
+            <ServicesEditor key={rev} defaultValue={defaults.services} />
           </Field>
         </div>
       </Card>
@@ -156,7 +203,8 @@ export function BusinessForm({
         <SectionTitle hint="Determina 'Abierto ahora' en el sitio y openingHoursSpecification en el esquema.">
           Horario
         </SectionTitle>
-        <HoursEditor defaultValue={defaults.hours} />
+        <HoursEditor key={rev} defaultValue={defaults.hours} />
+        {err("hoursJson") ? <p className="mt-2 text-xs text-admin-danger">{err("hoursJson")}</p> : null}
       </Card>
 
       <Card>

@@ -46,6 +46,40 @@ await p.waitForTimeout(3000);
 const pub = await (await fetch(B+'/'+currentSlug)).text();
 ok('CRUD sparar + ISR invalideras', pub.includes(newName));
 
+// 4b. R3-39: adminet sparar det kunden får skriva (tjänstenamn upp till 120
+// tecken), nästlade fel syns och det inskrivna ligger kvar efter felet.
+await p.goto(B+'/admin/sitios/1');
+await p.waitForLoadState('networkidle');
+const svcName = businessForm.locator('input[name="service.name"]').first();
+const svcDesc = businessForm.locator('input[name="service.desc"]').first();
+const origSvcName = await svcName.inputValue();
+const origSvcDesc = await svcDesc.inputValue();
+const longSvc = 'Instalación completa '.padEnd(110, 'x');
+await svcName.fill(longSvc);
+await save();
+await p.waitForTimeout(3000);
+const pubLong = await (await fetch(B+'/'+currentSlug)).text();
+ok('admin sparar tjänst med 110 tecken', pubLong.includes(longSvc));
+await p.goto(B+'/admin/sitios/1');
+await p.waitForLoadState('networkidle');
+// maxLength stoppar 301 tecken i webbläsaren — ta bort den för att nå servern.
+await svcDesc.evaluate((el) => el.removeAttribute('maxlength'));
+await svcDesc.fill('d'.repeat(301));
+const typedName = 'Nombre tipeado '+Date.now().toString().slice(-4);
+await p.fill('input[name=name]', typedName);
+await save();
+await p.waitForTimeout(2500);
+const errText = await businessForm.innerText();
+ok('nästlat tjänstefel visas', /Servicio 1 .*Max 300/.test(errText), errText.match(/Servicio 1[^\n]*/)?.[0] ?? 'inget');
+ok('namnet ligger kvar efter felet', (await p.locator('input[name=name]').inputValue()) === typedName);
+ok('tjänsten ligger kvar efter felet', (await svcName.inputValue()) === longSvc);
+await svcName.fill(origSvcName);
+await svcDesc.fill(origSvcDesc);
+await p.fill('input[name=name]', newName);
+await save();
+await p.waitForTimeout(3000);
+ok('tjänsten återställd', !(await (await fetch(B+'/'+currentSlug)).text()).includes(longSvc));
+
 // 5. slug-byte → 301 från gammal slug
 const newSlug = 'electricidad-mendoza-'+Date.now().toString().slice(-4);
 await p.goto(B+'/admin/sitios/1');

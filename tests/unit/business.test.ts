@@ -5,11 +5,13 @@ import {
   CATEGORY_LABELS,
   STATUS_TRANSITIONS,
   THEME_KEYS,
+  businessFieldErrors,
   canTransition,
   hoursFromFormData,
   hoursSchema,
   publishBlockers,
   servicesFromFormData,
+  servicesSchema,
 } from "@/lib/business";
 
 describe("canTransition", () => {
@@ -165,5 +167,41 @@ describe("servicesFromFormData", () => {
     fd.append("service.name", "   ");
     fd.append("service.desc", "föräldralös");
     expect(servicesFromFormData(fd)).toEqual([]);
+  });
+});
+
+describe("servicesSchema + businessFieldErrors (R3-39)", () => {
+  it("tar emot det intaken och ägarpanelen tar emot: 120/300 tecken", () => {
+    const ok = servicesSchema.safeParse([{ name: "a".repeat(120), desc: "b".repeat(300) }]);
+    expect(ok.success).toBe(true);
+    const tooLong = servicesSchema.safeParse([{ name: "a".repeat(121) }]);
+    expect(tooLong.success).toBe(false);
+  });
+
+  it("samlar nästlade fel under servicesJson och hoursJson med raden", () => {
+    const services = [{ name: "Corte" }, { name: "x".repeat(121) }];
+    const errors = businessFieldErrors(
+      [
+        { path: ["servicesJson", 1, "name"], message: "Max 120 tecken." },
+        { path: ["hoursJson", "fri", 0], message: "Stängningstiden måste vara efter öppningstiden." },
+        { path: ["name"], message: "Namn krävs." },
+      ],
+      services,
+    );
+    expect(errors.servicesJson).toBe(`Servicio 2 («${"x".repeat(30)}…»): Max 120 tecken.`);
+    expect(errors.hoursJson).toBe("Viernes: Stängningstiden måste vara efter öppningstiden.");
+    expect(errors.name).toBe("Namn krävs.");
+    expect(errors["servicesJson.1.name"]).toBeUndefined();
+  });
+
+  it("första felet per fält vinner", () => {
+    const errors = businessFieldErrors(
+      [
+        { path: ["servicesJson", 0, "name"], message: "A" },
+        { path: ["servicesJson", 1, "desc"], message: "B" },
+      ],
+      [{ name: "" }, { name: "Y" }],
+    );
+    expect(errors.servicesJson).toBe("Servicio 1: A");
   });
 });
