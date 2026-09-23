@@ -176,7 +176,7 @@ export function SiteWhereWhen({
         </div>
 
         <div>
-          <StatusPill status={status} />
+          <StatusPill status={status} hours={business.hoursJson} />
           {hours.length > 0 ? (
             <dl className="hours-list reveal">
               {hours.map((row) => (

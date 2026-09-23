@@ -9,7 +9,7 @@ import { SitePagesNav } from "./hero";
 import { SiteClosing, SitePhotos, SiteServices, SiteWhereWhen, WaDock } from "./blocks";
 import { SiteMenu } from "./menu-section";
 import { SiteProducts } from "./products-section";
-import { AnalyticsScript, MotionScript } from "./site-scripts";
+import { AnalyticsScript, MotionScript, OpenNowScript } from "./site-scripts";
 import { pageLinks } from "./render-site";
 import type { SiteData } from "@/db/site-queries";
 import type { PageRow } from "@/db/page-queries";
@@ -135,6 +135,7 @@ export function RenderSubPage({
         dangerouslySetInnerHTML={{ __html: jsonLdHtml(breadcrumbJsonLd({ business, page })) }}
       />
       <MotionScript />
+      <OpenNowScript />
       {isPreview ? null : <AnalyticsScript businessId={business.id} />}
     </div>
   );

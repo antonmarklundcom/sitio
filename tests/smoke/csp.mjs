@@ -43,4 +43,19 @@ for (const path of pages) {
 ok('kundsajt hittad i sitemapen', Boolean(sitePath), sitePath ?? '');
 ok('inga CSP-överträdelser på ' + pages.length + ' sidor', violations.length === 0, violations.join(' | '));
 
+// "Abierto ahora" räknas i webbläsaren (R3-35), inte i den ISR-cachade HTML:en.
+// Seedens pizzeria är stängd på måndagar och öppen tisdag 11:30–14:30; en
+// fejkad klocka ska synas i pillret även efter hydreringen.
+const clockCtx = await b.newContext();
+const clockPage = await clockCtx.newPage();
+const pillAt = async (iso) => {
+  await clockPage.clock.setFixedTime(new Date(iso));
+  await clockPage.goto(B + '/pizzeria-la-nona', { waitUntil: 'networkidle' });
+  await clockPage.waitForTimeout(1500);
+  return clockPage.locator('.status-text').first().innerText();
+};
+ok('pillret räknas om i webbläsaren: måndag stängt', (await pillAt('2026-09-21T13:00:00Z')) === 'Cerrado · abre Martes 11:30');
+ok('pillret räknas om i webbläsaren: tisdag lunch öppet', (await pillAt('2026-09-22T15:00:00Z')) === 'Abierto ahora · cierra 14:30');
+await clockCtx.close();
+
 await finish(b, failed());
