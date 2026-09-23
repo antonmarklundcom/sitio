@@ -707,7 +707,11 @@ if (ownerSlug14) {
 // fylls på av gamla körningar.
 await owner.goto(B + '/mi-sitio', { waitUntil: 'domcontentloaded' });
 await owner.waitForTimeout(1500);
+// R3-40: första trycket frågar, andra raderar.
 await seccionBox().getByRole('button', { name: 'Borrar sección' }).click();
+await owner.waitForTimeout(800);
+ok('Borrar sección frågar först', (await owner.locator('body').innerText()).includes(seccion));
+await seccionBox().getByRole('button', { name: /^Sí, borrar la sección/ }).click();
 await owner.waitForTimeout(2500);
 ok('testsektionen städas bort', !(await owner.locator('body').innerText()).includes(seccion));
 ok('rättens bild raderas med sektionen', !dishImg || (await fetch(B + dishImg)).status === 404);
