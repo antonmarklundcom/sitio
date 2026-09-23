@@ -8,7 +8,7 @@ import { getIntakeBusinessId } from "@/db/intake-queries";
 import { tokenFingerprint } from "@/lib/intake";
 import { rateLimit } from "@/lib/rate-limit";
 import { logActivity } from "@/lib/auth";
-import { processImage } from "@/lib/media";
+import { deleteMediaFiles, processImage } from "@/lib/media";
 import { ALLOWED_MIME, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
 import { photoLimitFor } from "@/db/module-queries";
 import { itemImageTarget, setItemImage } from "@/db/item-media";
@@ -166,9 +166,14 @@ export async function POST(req: Request) {
     );
   }
 
-  // En logga i taget: den gamla ersätts.
+  // En logga i taget: den gamla ersätts, raden och filerna (R3-42 — filerna
+  // blev tidigare kvar på disken). Varje uppladdning får egna filnamn
+  // (slumpsalt i hashen), så den nya loggans filer rörs inte.
   if (kindRaw === "logo") {
-    await db.delete(media).where(and(eq(media.businessId, businessId), eq(media.kind, "logo")));
+    const logoScope = and(eq(media.businessId, businessId), eq(media.kind, "logo"));
+    const oldLogos = await db.select({ variantsJson: media.variantsJson }).from(media).where(logoScope);
+    await db.delete(media).where(logoScope);
+    for (const old of oldLogos) await deleteMediaFiles(businessId, old.variantsJson ?? {});
   }
 
   const [{ nextSort }] = await db

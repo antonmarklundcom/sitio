@@ -251,7 +251,7 @@ export function IntakeDataForm({
           />
         </Field>
         <Field label="Otro teléfono (opcional)" name="secondaryPhone" error={err("secondaryPhone")}>
-          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={d.secondaryPhone} />
+          <input id="secondaryPhone" name="secondaryPhone" type="tel" defaultValue={d.secondaryPhone} placeholder="021 234 567" maxLength={30} />
         </Field>
         <div className="panel-row panel-row--2">
           <Field label="Ciudad" name="city" error={err("city")}>
@@ -266,10 +266,10 @@ export function IntakeDataForm({
         </Field>
         <div className="panel-row panel-row--2">
           <Field label="Instagram (link)" name="instagram" error={err("instagram")}>
-            <input id="instagram" name="instagram" type="url" defaultValue={d.instagram} maxLength={300} />
+            <input id="instagram" name="instagram" type="url" defaultValue={d.instagram} maxLength={300} placeholder="https://instagram.com/tu-negocio" />
           </Field>
           <Field label="Facebook (link)" name="facebook" error={err("facebook")}>
-            <input id="facebook" name="facebook" type="url" defaultValue={d.facebook} maxLength={300} />
+            <input id="facebook" name="facebook" type="url" defaultValue={d.facebook} maxLength={300} placeholder="https://facebook.com/tu-negocio" />
           </Field>
         </div>
       </div>
@@ -461,14 +461,14 @@ export function IntakeSubmit({
   action: (state: IntakeState, formData: FormData) => Promise<IntakeState>;
   disabled: boolean;
 }) {
-  const [state, formAction] = useActionState<IntakeState, FormData>(action, {});
+  const [state, formAction, pending] = useActionState<IntakeState, FormData>(action, {});
 
   return (
     <form action={formAction}>
       {state.error ? <p className="panel-note panel-note--err">{state.error}</p> : null}
       <div className="panel-actions">
-        <button type="submit" className="panel-btn" disabled={disabled}>
-          Enviar mis datos
+        <button type="submit" className="panel-btn" disabled={disabled || pending}>
+          {pending ? "Enviando…" : "Enviar mis datos"}
         </button>
       </div>
       {disabled ? <p className="hint">Completá los pasos anteriores para poder enviar.</p> : null}
