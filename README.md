@@ -424,6 +424,10 @@ redeploy, databasens tidszon, och att hPanel-cron faktiskt når rollup-routen.
    Vitlista datorns publika IPv4 som servern rapporterar i hPanel. Anslut
    till serverns IP-adress i stället för värdnamnet för att undvika IPv6.
 
+Efter deployen: öppna `/admin/diagnostico` (superadmin). Den visar proxyns
+headers, databasens klocka mot UTC, om `UPLOADS_DIR` finns, är skrivbar och
+ligger utanför appen, och vilka env-varsar som är satta (bara ja/nej).
+
 Temp-domänen är för intern validering. **Ingen kund får någonsin en temp-URL.**
 
 ### Steg B — riktig domän (före första betalande kund)
