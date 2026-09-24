@@ -121,6 +121,7 @@ export function RenderSubPage({
 
         <SiteClosing
           business={business}
+          booking={site.modules.includes("booking")}
           wa={wa}
           statement={business.name}
           ctaTitle="Escribinos por WhatsApp"

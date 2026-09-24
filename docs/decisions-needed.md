@@ -16,11 +16,13 @@ run of the phase reads it.
   tecken…"), the admin form validation and some billing/upload messages are
   Swedish. Options: (a) translate them to Spanish (R3-43), (b) keep Swedish
   for you and stop there. Customer-facing text is already Spanish.
-- 2026-09-23 — **When does the free trial start?** Today at registration
-  (`src/lib/intake-create.ts`), so days spent waiting for your review count
-  against the trial. Options: (a) start it at publication, (b) leave it.
 
 ## Answered
+
+- 2026-09-23 — **When does the free trial start?** (a) at publication —
+  Anton asked for faster publishing (idea 15) on 2026-09-24. Built in
+  growth-1: `startTrialAtPublish()` moves the trial window to the first
+  publication day, same length, for manual and automatic publishing.
 
 - 2026-09-14 — §7-synken (prompt-filerna mot §1.11–§1.13). **Klar.**
   `prompts/sonnet-7-category-lock.md` skriven från plan §6.5.

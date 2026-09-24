@@ -43,9 +43,11 @@ export class RegistrationUnavailableError extends Error {
   }
 }
 
-export async function createDraftBusinessWithToken({ name, phone, category, city, source, actorUserId }: {
+export async function createDraftBusinessWithToken({ name, phone, category, city, source, actorUserId, referral = null }: {
   name: string; phone: string | null; category: string; city: string;
   source: "admin" | "registro"; actorUserId: number | null;
+  /** ?ref= från /registro (growth-1): en kund som värvade eller en säljare. */
+  referral?: { businessId?: number; partnerId?: number } | null;
 }) {
   let createdByUserId = actorUserId;
   if (createdByUserId === null) {
@@ -73,6 +75,8 @@ export async function createDraftBusinessWithToken({ name, phone, category, city
     // spärrar publicering, inte fältets existens.
     whatsappPhone: phone ?? "+595000000000",
     status: "draft",
+    referredByBusinessId: referral?.businessId ?? null,
+    partnerId: referral?.partnerId ?? null,
     ...(source === "registro" ? { adminNotes: "Auto-registro desde /registro el " + registrationDate() } : {}),
   });
 
@@ -107,7 +111,7 @@ export async function createDraftBusinessWithToken({ name, phone, category, city
     actorUserId: actorUserId,
     businessId,
     action: source === "registro" ? "registro_publico" : "intake_link_created",
-    meta: { tokenFingerprint: tokenFingerprint(token), expiresAt: expiresAt.toISOString() },
+    meta: { tokenFingerprint: tokenFingerprint(token), expiresAt: expiresAt.toISOString(), referral: referral ?? undefined },
   });
 
   return { businessId, token, expiresAt };

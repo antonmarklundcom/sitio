@@ -94,6 +94,7 @@ export function ServiciosTheme({ business, photos, logo, hero, modules, menu, pr
 
       <SiteClosing
         business={business}
+        booking={modules.has("booking")}
         wa={wa}
         statement="¿Lo arreglamos esta semana?"
         ctaTitle="Escribinos por WhatsApp"

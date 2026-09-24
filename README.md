@@ -359,6 +359,23 @@ Företagaren loggar in med WhatsApp-OTP — inget lösenord att glömma, och num
 - Superadmin når `/mi-sitio?sitio=<id>` för att se en kunds vy. Motsatsen
   gäller aldrig: en owner har inget i `/admin` att göra.
 
+## Tillväxt (growth-1)
+
+Se [`docs/log/growth-1.md`](docs/log/growth-1.md). Kort:
+
+- **Kundsajten**: "Dejanos tu número"-formulär under WhatsApp-knappen
+  (`/api/consulta`), turno-förfrågan när `booking` är på, "Dejanos una reseña"
+  och "Hecho con sitio.com.py" — alla tre av/på för ägaren.
+- **/mi-sitio**: Consultas (inkorg med svar via wa.me), Hacé crecer tu negocio
+  (dina tjänster, "Me interesa" ⇒ `/admin/leads` + WhatsApp till dig),
+  Recomendá y ganá (`/registro?ref=<kod>`, bonusdagar vid första betalningen),
+  Opciones de tu página.
+- **Admin**: `/admin/mensajes` (förnyelse 30/15/7 + månadens siffror, ett tryck
+  per kund), `/admin/socios` (säljare, provision, `/socio/<token>`),
+  `/admin/crecimiento` (bonusdagar, provision, autopublicering, tjänstekatalog,
+  "Para revisar").
+- Hostinger: `docs/deploy/hostinger-import-0004.sql` efter 0001–0003.
+
 ## Röktest mot riktig databas
 
 `npm run smoke` kör en riktig genomgång med Playwright mot en byggd app och en

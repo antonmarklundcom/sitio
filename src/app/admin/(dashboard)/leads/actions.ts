@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses } from "@/db/schema";
+import { businesses, serviceRequests } from "@/db/schema";
 import { logActivity, requireRole } from "@/lib/auth";
 import { LEAD_STAGES, type LeadStage } from "@/lib/radar";
 
@@ -66,4 +66,16 @@ export async function saveLeadNoteAction(formData: FormData): Promise<void> {
 
   revalidatePath("/admin/leads");
   redirect("/admin/leads");
+}
+
+/** "Me interesa" från owner-panelen (growth-1): flytta förfrågan i säljkön. */
+export async function setServiceRequestStatusAction(formData: FormData): Promise<void> {
+  const user = await requireRole("superadmin");
+  const id = Number(formData.get("requestId"));
+  const status = String(formData.get("status"));
+  const allowed = ["nuevo", "contactado", "vendido", "descartado"] as const;
+  if (!Number.isInteger(id) || !(allowed as readonly string[]).includes(status)) return;
+  await db.update(serviceRequests).set({ status: status as (typeof allowed)[number] }).where(eq(serviceRequests.id, id));
+  await logActivity({ actorUserId: user.userId, action: "servicio_estado", meta: { requestId: id, status } });
+  revalidatePath("/admin/leads");
 }

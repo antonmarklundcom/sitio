@@ -222,3 +222,29 @@
 .panel-chart-axis { display: flex; gap: 3px; font-size: 0.7rem; color: var(--muted); }
 .panel-chart-axis span { flex: 1; text-align: center; }
 .panel-report-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.5rem; }
+
+/* ---------- tillväxt (growth-1): consultas, opciones, recomendá, servicios ---------- */
+.panel-badge { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--accent); color: var(--on-accent); vertical-align: middle; margin-left: 0.4rem; }
+.panel-btn--small { min-height: 44px; font-size: 0.9rem; padding: 0 1rem; width: auto; }
+.panel-leads { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.panel-lead { border: 1px solid var(--line); border-radius: 12px; padding: 0.85rem; }
+.panel-lead--nuevo { border-color: var(--accent); }
+.panel-lead--cerrado { opacity: 0.65; }
+.panel-lead-head { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; align-items: baseline; }
+.panel-lead p { margin: 0.4rem 0 0; }
+.panel-lead-msg { white-space: pre-wrap; overflow-wrap: anywhere; }
+.panel-lead-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+.panel-toggles { border: 0; padding: 0; margin: 0; display: grid; gap: 0.9rem; }
+.panel-toggle { display: flex; gap: 0.7rem; align-items: flex-start; cursor: pointer; }
+.panel-toggle input { width: 22px; height: 22px; flex: none; margin-top: 0.1rem; }
+.panel-toggle > span { display: grid; gap: 0.15rem; }
+.panel-toggle .hint { font-size: 0.8rem; color: var(--muted); }
+.panel-copy code { display: block; padding: 0.6rem 0.75rem; border: 1px dashed var(--line); border-radius: 10px; overflow-wrap: anywhere; font-size: 0.9rem; user-select: all; }
+.panel-services { display: grid; gap: 0.75rem; }
+@media (min-width: 640px) { .panel-services { grid-template-columns: 1fr 1fr; } }
+.panel-service { border: 1px solid var(--line); border-radius: 12px; padding: 0.9rem; display: grid; gap: 0.4rem; align-content: start; }
+.panel-service--rec { border-color: var(--accent); }
+.panel-service h3 { margin: 0; font-size: 1rem; }
+.panel-service p { margin: 0; font-size: 0.9rem; }
+.panel-service .panel-badge { margin-left: 0; justify-self: start; }
+.panel-service-price { font-weight: 600; }

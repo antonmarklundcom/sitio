@@ -531,7 +531,7 @@ const galleryRowFor = (page) => modulesCardFor(page).locator('li').filter({ hasT
 await p.goto(B + '/admin/sitios/1', { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1500);
 ok('modulpanelen finns i admin', await modulesCardFor(p).getByText('gallery').first().isVisible());
-ok('obyggda moduler flaggas som obyggda', /todavía no está/i.test(await modulesCardFor(p).innerText()));
+ok('alla moduler är byggda — booking byggdes i growth-1', !/todavía no está/i.test(await modulesCardFor(p).innerText()));
 
 // Utgångsläget beror på seeden och på tidigare körningar — nolla det först.
 if ((await galleryRowFor(p).innerText()).includes('Desactivar')) {

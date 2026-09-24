@@ -1,4 +1,7 @@
 import { displayPhone } from "@/lib/format";
+import { absoluteUrl } from "@/lib/env";
+import { siteOptions } from "@/lib/growth";
+import { LeadForm } from "./lead-form";
 import { groupedHours, type OpenState } from "@/lib/hours";
 import { SiteImage, WhatsAppGlyph } from "./primitives";
 import { StatusPill } from "./hero";
@@ -204,9 +207,12 @@ export function SiteClosing({
   ctaTitle,
   ctaBody,
   ctaLabel,
+  booking = false,
 }: {
   business: Business;
   wa: string;
+  /** booking-modulen på ⇒ formuläret blir en turno-förfrågan (growth-1). */
+  booking?: boolean;
   /** Temats egen slutrad. Kort — den sätts i display-snittet, stort. */
   statement: string;
   ctaTitle: string;
@@ -215,6 +221,13 @@ export function SiteClosing({
 }) {
   const socials = business.socialsJson ?? {};
   const hasSocials = Boolean(socials.instagram || socials.facebook || socials.tiktok);
+  const options = siteOptions(business.siteOptionsJson);
+  const showForm = booking || options.leadForm;
+  const reviewUrl = options.reviewButton ? business.googleReviewUrl : null;
+  const services = (Array.isArray(business.servicesJson) ? business.servicesJson : [])
+    .map((s) => s?.name)
+    .filter((n): n is string => typeof n === "string" && n.length > 0)
+    .slice(0, 12);
 
   return (
     <section id="contacto" className="closing grain">
@@ -249,6 +262,12 @@ export function SiteClosing({
               {displayPhone(business.secondaryPhone ?? business.whatsappPhone)}
             </a>
           </p>
+          {showForm ? <LeadForm businessId={business.id} booking={booking} services={services} /> : null}
+          {reviewUrl ? (
+            <a href={reviewUrl} target="_blank" rel="noreferrer noopener" className="btn btn--quiet btn--block" data-ev="social_click" data-ev-loc="resena">
+              ★ Dejanos una reseña en Google
+            </a>
+          ) : null}
         </div>
       </div>
 
@@ -277,6 +296,11 @@ export function SiteClosing({
                   </a>
                 ) : null}
               </span>
+            ) : null}
+            {options.credit ? (
+              <a href={absoluteUrl(business.referralCode ? `/registro?ref=${business.referralCode}` : "/")} className="footer-credit">
+                Hecho con sitio.com.py
+              </a>
             ) : null}
           </div>
         </footer>

@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { autoPublishAfterIntake } from "@/lib/auto-publish";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
@@ -228,6 +230,9 @@ export async function submitIntakeAction(token: string, _prev: IntakeState, _for
     action: "intake_submitted",
     meta: { photos: session.photoCount, hasLogo: session.hasLogo },
   });
+
+  // Autopublicering (growth-1): efter svaret, så kunden inte väntar på AI:n.
+  after(() => autoPublishAfterIntake(b.id));
 
   revalidatePath("/admin");
   revalidatePath("/admin/alta");

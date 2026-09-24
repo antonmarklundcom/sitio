@@ -86,6 +86,7 @@ export function GastronomiaTheme({ business, photos, logo, hero, modules, menu, 
 
       <SiteClosing
         business={business}
+        booking={modules.has("booking")}
         wa={wa}
         statement="¿Qué te servimos hoy?"
         ctaTitle="Pedí por WhatsApp"
