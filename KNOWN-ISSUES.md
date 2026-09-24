@@ -34,3 +34,11 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
 - ~~Batch 4 review leftovers R3-39…R3-42~~ — fixed in batch 5
   (`docs/log/R3-5.md`). Three small R3-42 remnants (redirect tag
   revalidation, photo-cap race, admin `?ok=`) are inbox lines. (R3-5)
+- **A new consulta/turno doesn't notify the owner.** It shows up in
+  `/mi-sitio` → Consultas, but nothing pushes it to the owner's phone until
+  WhatsApp Cloud API exists (PR-17). The visitor gets a WhatsApp link after
+  submitting, so an urgent customer can still write directly. (growth-1)
+- **Instagram import (idea 14) not built.** Needs a Meta app with app review,
+  the same process as PR-17. (growth-1)
+- **The lead-form limits live in process memory** (5/10 min per IP, 60/day
+  per site), like every other rate limit — see the single-process note. (growth-1)

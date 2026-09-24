@@ -113,10 +113,34 @@ export const businesses = mysqlTable(
       .notNull()
       .default("ninguno"),
     adminNotes: text("admin_notes"),
+    // ---------- tillväxt (growth-1) ----------
+    // Kundens egna av/på-val för den publika sajten. Saknad nyckel = default
+    // (se siteOptions() i src/lib/growth.ts), så gamla rader behöver ingen backfill.
+    siteOptionsJson: json("site_options_json").$type<{
+      leadForm?: boolean;
+      reviewButton?: boolean;
+      credit?: boolean;
+    }>(),
+    // "Dejanos una reseña": Googles skriv-recension-länk, inte Maps-länken.
+    googleReviewUrl: varchar("google_review_url", { length: 300 }),
+    // Kundens egen värvningskod (/registro?ref=<kod>). Sätts lazily första
+    // gången owner-panelen visas.
+    referralCode: varchar("referral_code", { length: 16 }),
+    // Vem som värvade: en annan kund ELLER en säljare (partner), aldrig båda.
+    referredByBusinessId: fk("referred_by_business_id"),
+    partnerId: fk("partner_id"),
+    // Satt när värvningsbonusen delats ut (första bekräftade betalningen) —
+    // idempotensspärren, så en andra betalning aldrig ger bonus igen.
+    referralRewardedAt: datetime("referral_rewarded_at"),
+    // Autopublicerad utan granskning: ligger i "Revisar"-kön tills du tittat.
+    needsReview: boolean("needs_review").notNull().default(false),
     ...timestamps,
   },
   (t) => [
     uniqueIndex("u_slug").on(t.slug),
+    uniqueIndex("u_referral_code").on(t.referralCode),
+    index("i_partner").on(t.partnerId),
+    index("i_referred_by").on(t.referredByBusinessId),
     index("i_status").on(t.status),
     index("i_category").on(t.category),
     index("i_hotlead").on(t.hotLead),
@@ -392,6 +416,98 @@ export const activityLog = mysqlTable(
   (t) => [index("i_biz").on(t.businessId), index("i_action").on(t.action)],
 );
 
+// ---------- tillväxt (growth-1) ----------
+
+/**
+ * Consultas från den publika sajten: kontaktformuläret och turno-förfrågan
+ * (booking-modulen). Kundens egen inkorg i /mi-sitio — besökarens nummer
+ * sparas så att ägaren kan svara på WhatsApp även om besökaren aldrig skrev.
+ */
+export const siteLeads = mysqlTable(
+  "site_leads",
+  {
+    id: id(),
+    businessId: fk("business_id").notNull(),
+    kind: mysqlEnum("kind", ["consulta", "turno"]).notNull().default("consulta"),
+    name: varchar("name", { length: 80 }).notNull(),
+    phone: varchar("phone", { length: 20 }).notNull(), // E.164
+    message: varchar("message", { length: 600 }),
+    serviceName: varchar("service_name", { length: 120 }),
+    requestedDay: date("requested_day"),
+    requestedTime: varchar("requested_time", { length: 5 }), // "HH:MM"
+    status: mysqlEnum("status", ["nuevo", "contactado", "cerrado"]).notNull().default("nuevo"),
+    ...timestamps,
+  },
+  (t) => [index("i_biz_status").on(t.businessId, t.status), index("i_biz_created").on(t.businessId, t.createdAt)],
+);
+
+/** Säljare på provision. Loggar inte in — de får en tokenad rapportlänk. */
+export const partners = mysqlTable(
+  "partners",
+  {
+    id: id(),
+    name: varchar("name", { length: 120 }).notNull(),
+    phone: varchar("phone", { length: 20 }),
+    code: varchar("code", { length: 16 }).notNull(),
+    commissionPct: tinyint("commission_pct", { unsigned: true }).notNull().default(30),
+    token: char("token", { length: 32 }).notNull(),
+    status: mysqlEnum("status", ["active", "disabled"]).notNull().default("active"),
+    notes: varchar("notes", { length: 300 }),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("u_partner_code").on(t.code), uniqueIndex("u_partner_token").on(t.token)],
+);
+
+/** En provision per bekräftad betalning — paymentId unik = idempotent. */
+export const partnerCommissions = mysqlTable(
+  "partner_commissions",
+  {
+    id: id(),
+    partnerId: fk("partner_id").notNull(),
+    businessId: fk("business_id").notNull(),
+    paymentId: fk("payment_id").notNull(),
+    amountGs: bigint("amount_gs", { mode: "number" }).notNull(),
+    status: mysqlEnum("status", ["pending", "paid", "void"]).notNull().default("pending"),
+    paidAt: datetime("paid_at"),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("u_payment").on(t.paymentId), index("i_partner_status").on(t.partnerId, t.status)],
+);
+
+/** "Me interesa" från owner-panelens tjänstekort — din säljkö. */
+export const serviceRequests = mysqlTable(
+  "service_requests",
+  {
+    id: id(),
+    businessId: fk("business_id").notNull(),
+    serviceKey: varchar("service_key", { length: 40 }).notNull(),
+    serviceTitle: varchar("service_title", { length: 120 }).notNull(),
+    status: mysqlEnum("status", ["nuevo", "contactado", "vendido", "descartado"]).notNull().default("nuevo"),
+    ...timestamps,
+  },
+  (t) => [index("i_status").on(t.status), index("i_biz").on(t.businessId)],
+);
+
+/**
+ * Utgående WhatsApp-meddelanden till kunderna (månadssiffror, förnyelse-
+ * påminnelser). Idag skickar du dem för hand via wa.me; raden är spärren mot
+ * att samma meddelande går två gånger. När Cloud API finns (PR-17) skriver
+ * avsändaren samma rad med channel "api".
+ */
+export const outboundMessages = mysqlTable(
+  "outbound_messages",
+  {
+    id: id(),
+    businessId: fk("business_id").notNull(),
+    kind: varchar("kind", { length: 32 }).notNull(), // monthly_stats | renewal_30 | renewal_15 | renewal_7 | renewal_overdue
+    periodKey: varchar("period_key", { length: 32 }).notNull(), // "2026-09" eller "<subscriptionId>:<expiresAt>"
+    channel: mysqlEnum("channel", ["manual", "api"]).notNull().default("manual"),
+    actorUserId: fk("actor_user_id"),
+    sentAt: datetime("sent_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [uniqueIndex("u_biz_kind_period").on(t.businessId, t.kind, t.periodKey)],
+);
+
 // ---------- härledda typer ----------
 export type User = typeof users.$inferSelect;
 export type Business = typeof businesses.$inferSelect;
@@ -399,3 +515,5 @@ export type NewBusiness = typeof businesses.$inferInsert;
 export type Media = typeof media.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
+export type SiteLead = typeof siteLeads.$inferSelect;
+export type Partner = typeof partners.$inferSelect;

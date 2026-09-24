@@ -58,9 +58,9 @@ export const MODULES: ModuleMeta[] = [
   {
     key: "booking",
     label: "Reservas",
-    summary: "Solicitud de turno con un mensaje de WhatsApp precompletado.",
-    effect: "Formulario en el tema que genera un enlace wa.me.",
-    plannedIn: "fase 3",
+    summary: "Pedido de turno desde la página: servicio, día y hora, directo a la bandeja del dueño.",
+    effect:
+      "El formulario del cierre pasa a ser un pedido de turno (servicio, día, hora). Cada pedido queda en /mi-sitio → Consultas con un botón para responder por WhatsApp. Pensado para el plan Pro (growth-1).",
   },
 ];
 

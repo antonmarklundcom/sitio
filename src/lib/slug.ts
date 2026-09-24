@@ -11,6 +11,7 @@ export const RESERVED_SLUGS = new Set([
   "preview",
   "reporte",
   "registro",
+  "socio",
   "opengraph-image",
   "twitter-image",
   "login",

@@ -28,7 +28,7 @@ describe("modulregistret", () => {
     expect(isModuleBuilt("gallery")).toBe(true);
     expect(isModuleBuilt("menu")).toBe(true);
     expect(isModuleBuilt("extra_pages")).toBe(true);
-    expect(isModuleBuilt("booking")).toBe(false);
+    expect(isModuleBuilt("booking")).toBe(true);
   });
 
   it("zod-schemat släpper bara igenom kända nycklar", () => {

@@ -49,6 +49,19 @@ import {
   updateOwnerBusinessAction,
 } from "./actions";
 import { ownerLogoutAction } from "./login/actions";
+import {
+  ensureReferralCode,
+  getGrowthSettings,
+  getReferralStats,
+  getUpsellCatalog,
+  listSiteLeads,
+  openServiceRequestKeys,
+} from "@/db/growth-queries";
+import { recommendedServiceKey, referralShareMessage, siteOptions } from "@/lib/growth";
+import { waLink } from "@/lib/format";
+import { OwnerInbox, OwnerReferral, OwnerServices } from "@/components/mi-sitio/owner-growth";
+import { OwnerSiteOptions } from "@/components/mi-sitio/owner-site-options";
+import { requestServiceAction, saveSiteOptionsAction, setLeadStatusAction } from "./growth-actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Mi sitio", robots: { index: false, follow: false } };
@@ -56,7 +69,7 @@ export const metadata = { title: "Mi sitio", robots: { index: false, follow: fal
 export default async function MiSitioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sitio?: string }>;
+  searchParams: Promise<{ sitio?: string; pedido?: string }>;
 }) {
   const session = await requireRole("owner", "superadmin");
   const user = await currentUser();
@@ -122,6 +135,18 @@ export default async function MiSitioPage({
   const services = Array.isArray(business.servicesJson) ? business.servicesJson : [];
   const liveUrl = absoluteUrl(`/${business.slug}`);
 
+  // Tillväxtpaketet (growth-1).
+  const [leads, growth, catalog, openKeys, referralCode, referralStats] = await Promise.all([
+    listSiteLeads(businessId),
+    getGrowthSettings(),
+    getUpsellCatalog(),
+    openServiceRequestKeys(businessId),
+    ensureReferralCode(businessId),
+    getReferralStats(businessId),
+  ]);
+  const readOnly = session.role !== "owner";
+  const referralLink = absoluteUrl(`/registro?ref=${referralCode}`);
+
   return (
     <div className="panel-wrap">
       <div className="panel-top">
@@ -144,6 +169,8 @@ export default async function MiSitioPage({
         contenido. Tu WhatsApp es {displayPhone(business.whatsappPhone)}.
       </p>
 
+      <OwnerInbox leads={leads} businessName={business.name} readOnly={readOnly} setStatus={setLeadStatusAction} />
+
       <OwnerStats analytics={analytics} reportHref={reportPath(businessId, business.slug)} />
 
       {subscription ? (
@@ -157,6 +184,31 @@ export default async function MiSitioPage({
           reportPayment={reportPaymentAction}
         />
       ) : null}
+
+      <OwnerServices
+        services={catalog}
+        recommendedKey={recommendedServiceKey({ views30: analytics.last30.views, waClicks30: analytics.last30.waClicks })}
+        openKeys={openKeys}
+        showPlanUpgrade={subscription?.plan === "basico"}
+        requested={sp.pedido === "1"}
+        readOnly={readOnly}
+        request={requestServiceAction}
+      />
+
+      <OwnerReferral
+        link={referralLink}
+        shareHref={waLink("", referralShareMessage(referralLink, growth.referredBonusDays))}
+        rewardDays={growth.referralRewardDays}
+        stats={referralStats}
+      />
+
+      <OwnerSiteOptions
+        options={siteOptions(business.siteOptionsJson)}
+        googleReviewUrl={business.googleReviewUrl ?? ""}
+        booking={modules.has("booking")}
+        readOnly={readOnly}
+        save={saveSiteOptionsAction}
+      />
 
       <OwnerPhotos
         photos={photos}

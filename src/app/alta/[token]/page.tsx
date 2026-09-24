@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { getGrowthSettings } from "@/db/growth-queries";
 import { notFound } from "next/navigation";
 import { getIntakeSession, listIntakeMedia } from "@/db/intake-queries";
 import { displayPhone } from "@/lib/format";
@@ -45,14 +47,25 @@ export default async function IntakePage({
   // Inlämningen stänger länken, så tacksidan måste renderas innan tokenen
   // slås upp — annars ser kunden en 404 direkt efter att ha skickat in.
   if (sp.listo === "1") {
+    // Autopublicering (growth-1): sidan går ut inom någon minut, och kunden
+    // loggar in i /mi-sitio med samma nummer.
+    const auto = (await getGrowthSettings()).autoPublish;
     return (
       <div className="panel-wrap panel-done">
         <p className="tick">✓</p>
         <h1>¡Listo, gracias!</h1>
-        <p>
-          Ya tenemos todo. Revisamos tus datos, armamos tu página y te escribimos por WhatsApp cuando esté
-          lista. Si necesitás cambiar algo, respondenos por ahí.
-        </p>
+        {auto ? (
+          <p>
+            Ya tenemos todo. Tu página se publica en unos minutos. Después entrás a{" "}
+            <Link href="/mi-sitio/login">sitio.com.py/mi-sitio</Link> con tu número de WhatsApp para ver tus consultas y tus
+            números.
+          </p>
+        ) : (
+          <p>
+            Ya tenemos todo. Revisamos tus datos, armamos tu página y te escribimos por WhatsApp cuando esté
+            lista. Si necesitás cambiar algo, respondenos por ahí.
+          </p>
+        )}
       </div>
     );
   }

@@ -88,6 +88,7 @@ export function ComercioTheme({ business, photos, logo, hero, modules, menu, pro
 
       <SiteClosing
         business={business}
+        booking={modules.has("booking")}
         wa={wa}
         statement="¿Te lo guardamos?"
         ctaTitle="Consultanos por WhatsApp"

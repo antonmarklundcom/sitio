@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { createDraftBusinessWithToken, registroSchema, RegistrationUnavailableError } from "@/lib/intake-create";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIpFrom } from "@/lib/client-ip";
+import { resolveRefCode } from "@/db/growth-queries";
+import { normalizeRefCode } from "@/lib/growth";
 
 export type RegistroState = { error?: string; ok?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> };
 
@@ -25,7 +27,8 @@ export async function registerAction(_prev: RegistroState, formData: FormData): 
   }
   let token: string;
   try {
-    ({ token } = await createDraftBusinessWithToken({ ...result.data, source: "registro", actorUserId: null }));
+    const referral = await resolveRefCode(normalizeRefCode(formData.get("ref")));
+    ({ token } = await createDraftBusinessWithToken({ ...result.data, source: "registro", actorUserId: null, referral }));
   } catch (error) {
     if (error instanceof RegistrationUnavailableError) return { error: error.message, values };
     return { error: "No pudimos crear tu página. Probá de nuevo en unos minutos.", values };

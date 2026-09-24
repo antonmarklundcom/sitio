@@ -555,6 +555,7 @@ empty; pre-push green; PR merged; log + §9 line.
 | R3 batch 2 | #41–#49 | docs/log/R3-2.md |
 | Themes v2 "Placa" | #50 | docs/log/placa.md |
 | R3 batch 3 | see log | docs/log/R3-3.md |
+| Growth 1 (ideas 4–7, 11, 15, 16) | see log | docs/log/growth-1.md |
 
 (Phases append one line each: `| O1 | #nn | docs/log/O1.md |`.)
 
@@ -571,7 +572,9 @@ closed them.
   payments (owner reports method + reference + receipt ⇒ payment `reported`,
   admin confirms)~~ — done, R3-21 (#62).
 - PR-20 Renewal automation (reminders via Cloud API templates — blocked on
-  PR-17). ~~"tu año en cifras" (the yearly report page is separable)~~ —
+  PR-17). Growth 1 built the manual half: `/admin/mensajes` queues the
+  30/15/7-day reminders and monthly stats and remembers what was sent; PR-17
+  only has to send the same rows. ~~"tu año en cifras" (the yearly report page is separable)~~ —
   done, R3-23 (#64).
 - PR-21 R2 migration (only if the uploads-persistence test fails — Anton's
   step after deploy A; not run yet, so not started).

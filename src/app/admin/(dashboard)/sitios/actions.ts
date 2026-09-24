@@ -1,5 +1,6 @@
 "use server";
 
+import { startTrialAtPublish } from "@/lib/auto-publish";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, ne, sql } from "drizzle-orm";
@@ -197,6 +198,9 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
   // logga in på. Misslyckas det (numret hör redan till ett annat konto) ska
   // publiceringen stå kvar — kontot fixas för hand i /admin/accesos, och
   // publishBlockers har redan garanterat att numret är verifierat.
+  // Provperioden räknas från första publiceringen (growth-1).
+  if (to === "published" && !business.publishedAt) await startTrialAtPublish(businessId, user.userId);
+
   let ownerNote = "";
   if (to === "published") {
     const owner = await ensureOwnerAccount({ ...business, status: to });

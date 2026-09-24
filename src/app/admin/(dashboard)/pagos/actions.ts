@@ -11,6 +11,7 @@ import { logActivity, requireRole } from "@/lib/auth";
 import { storeReceipt } from "@/lib/receipt";
 import { paymentFormSchema, subscriptionFormSchema, toDayString } from "@/lib/billing";
 import { extendedExpiry, runBillingLifecycle } from "@/lib/billing-lifecycle";
+import { applyGrowthOnPaymentConfirmed } from "@/db/growth-queries";
 
 export type BillingFormState = { error?: string; fieldErrors?: Record<string, string>; ok?: string };
 
@@ -210,6 +211,9 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
     .update(subscriptions)
     .set({ status: "active", expiresAt: nextExpiry })
     .where(eq(subscriptions.id, subscription.id));
+
+  // Värvningsbonus och säljarprovision (growth-1). Kastar aldrig.
+  await applyGrowthOnPaymentConfirmed(paymentId, user.userId);
 
   const [business] = await db
     .select({ id: businesses.id, slug: businesses.slug, status: businesses.status })

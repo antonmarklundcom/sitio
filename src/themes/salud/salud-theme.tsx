@@ -88,6 +88,7 @@ export function SaludTheme({ business, photos, logo, hero, modules, menu, produc
 
       <SiteClosing
         business={business}
+        booking={modules.has("booking")}
         wa={wa}
         statement="Pedí tu turno hoy."
         ctaTitle="Pedí tu turno por WhatsApp"

@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { CATEGORIES, CATEGORY_LABELS } from "@/lib/business";
 import type { RegistroState } from "@/app/registro/actions";
 
-export function RegistroForm({ action }: { action: (state: RegistroState, data: FormData) => Promise<RegistroState> }) {
+export function RegistroForm({ action, refCode = "" }: { action: (state: RegistroState, data: FormData) => Promise<RegistroState>; refCode?: string }) {
   const [state, submit, pending] = useActionState(action, {});
   if (state.ok) return <p role="status">{state.ok}</p>;
   return (
@@ -25,6 +25,7 @@ export function RegistroForm({ action }: { action: (state: RegistroState, data: 
           <p id={`${key}-error`} className="err" aria-live="polite">{state.fieldErrors?.[key]}</p>
         </div>
       ))}
+      {refCode ? <input type="hidden" name="ref" value={refCode} /> : null}
       <input type="text" name="website" hidden tabIndex={-1} autoComplete="off" aria-hidden="true" />
       <button className="panel-btn" type="submit" disabled={pending}>{pending ? "Creando…" : "Crear mi página"}</button>
     </form>
