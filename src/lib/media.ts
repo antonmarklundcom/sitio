@@ -8,6 +8,11 @@ import { LOGO_WIDTH, PHOTO_WIDTHS, type MediaVariants } from "./media-shared";
 
 export * from "./media-shared";
 
+// En libvips-tråd per bild. På Hostinger räknas varje tråd mot kontots gemensamma
+// tak på 200 "Max Processes", och sharps standard är en tråd per synlig CPU-kärna
+// i hela värdmaskinen så fort MALLOC_ARENA_MAX eller jemalloc finns i miljön.
+sharp.concurrency(1);
+
 
 export type ProcessedMedia = {
   fileKey: string;
