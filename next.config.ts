@@ -49,7 +49,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Kundbilder serveras som färdiga varianter (media-shared.ts), next/image
+  // används inte. Utan detta kan vem som helst driva Nexts bildoptimerare
+  // (sharp-trådar) via /_next/image mot vilken lokal fil som helst.
+  images: { unoptimized: true },
   experimental: {
+    // Next startar annars os.cpus().length - 1 byggarbetare, och på Hostingers
+    // delade server är det värdmaskinens kärnor, inte kontots andel. Varje
+    // arbetare är en Node-process mot kontots tak på 200 "Max Processes".
+    cpus: 1,
     serverActions: {
       // Kvittot i "Informar pago" och adminets betalningsformulär skickas via
       // serveråtgärder, och Nexts standardtak är 1 MB — en vanlig mobilbild av
