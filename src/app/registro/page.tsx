@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPromoSettings } from "@/lib/settings";
 import { PLAN_LABELS } from "@/lib/billing";
 import { RegistroForm } from "@/components/registro/registro-form";
@@ -19,6 +20,7 @@ export default async function RegistroPage({ searchParams }: { searchParams: Pro
       <p>En el próximo paso verificás tu número con un código por WhatsApp.</p>
       {ref ? <p data-testid="ref-offer">Te recomendó un negocio amigo: al pagar tu primer año sumás días extra gratis.</p> : null}
       <RegistroForm action={registerAction} refCode={ref} />
+      <p>Al registrarte aceptás los <Link href="/terminos">Términos</Link> y la <Link href="/privacidad">Política de Privacidad</Link>.</p>
     </main>
   );
 }

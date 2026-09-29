@@ -298,9 +298,13 @@ export function SiteClosing({
               </span>
             ) : null}
             {options.credit ? (
-              <a href={absoluteUrl(business.referralCode ? `/registro?ref=${business.referralCode}` : "/")} className="footer-credit">
-                Hecho con sitio.com.py
-              </a>
+              <>
+                <a href={absoluteUrl(business.referralCode ? `/registro?ref=${business.referralCode}` : "/")} className="footer-credit">
+                  Hecho con sitio.com.py
+                </a>
+                <a href={absoluteUrl("/terminos")} className="footer-credit">Términos</a>
+                <a href={absoluteUrl("/privacidad")} className="footer-credit">Privacidad</a>
+              </>
             ) : null}
           </div>
         </footer>

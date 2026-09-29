@@ -539,3 +539,11 @@
   .lp-btn { transition: none; }
   .lp-btn:hover { transform: none; }
 }
+
+/* ---------- juridiska sidor (/terminos, /privacidad) ---------- */
+
+.lp-legal h2 { font-size: var(--t-2); margin: var(--s-8) 0 var(--s-3); }
+.lp-legal ul { list-style: disc; margin: 0 0 var(--s-4); padding-left: 1.25rem; color: var(--ink-muted); max-width: 62ch; }
+.lp-legal li { margin-bottom: var(--s-2); }
+.lp-legal a { color: var(--accent); overflow-wrap: anywhere; }
+.lp-legal-date { color: var(--ink); }

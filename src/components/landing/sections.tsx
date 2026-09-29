@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FAQS, FEATURES, PRICE_BAND, REGISTRO_CTA, STEPS, TIERS } from "./content";
 import { PhoneMock } from "./phone-mock";
 import { SalesCta } from "./cta";
@@ -220,6 +221,8 @@ export function LandingFooter({ contact }: { contact: SalesContact }) {
           <a href="#incluye">Qué incluye</a>
           <a href="#precio">Precio</a>
           <a href="#preguntas">Preguntas</a>
+          <Link href="/terminos">Términos</Link>
+          <Link href="/privacidad">Privacidad</Link>
           {contact.display ? <span className="lp-footer-phone">{contact.display}</span> : null}
         </span>
       </div>
