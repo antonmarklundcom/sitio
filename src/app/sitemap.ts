@@ -24,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     { url: absoluteUrl("/registro"), changeFrequency: "monthly", priority: 0.8 },
+    { url: absoluteUrl("/terminos"), changeFrequency: "yearly", priority: 0.3 },
+    { url: absoluteUrl("/privacidad"), changeFrequency: "yearly", priority: 0.3 },
     ...slugs.map((s) => ({
       url: absoluteUrl(`/${s.slug}`),
       lastModified: s.updatedAt ?? new Date(),
