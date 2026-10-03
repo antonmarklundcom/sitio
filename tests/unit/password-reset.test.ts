@@ -115,7 +115,7 @@ describe("reset email transport", () => {
     await sendEmail(message);
     expect(fetchMock).toHaveBeenCalledWith("https://api.cloudflare.com/client/v4/accounts/acc123/email/sending/send", expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ from: { email: "sender@example.test", name: "sitio.com.py" }, ...message }),
+      body: JSON.stringify({ from: { address: "sender@example.test", name: "sitio.com.py" }, ...message }),
     }));
     fetchMock.mockResolvedValue({ ok: false, status: 422 });
     await expect(sendEmail(message)).rejects.toThrow("HTTP 422");

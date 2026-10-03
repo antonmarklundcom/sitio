@@ -103,7 +103,7 @@ describe("sendLeadEmail", () => {
     vi.stubGlobal("fetch", fetchMock);
     await sendLeadEmail("owner@example.test", lead, "Café Sol");
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.from).toEqual({ email: "avisos@example.test", name: "Café Sol vía sitio.com.py" });
+    expect(body.from).toEqual({ address: "avisos@example.test", name: "Café Sol vía sitio.com.py" });
     expect(body.to).toBe("owner@example.test");
     fetchMock.mockRejectedValue(new Error("network"));
     await expect(sendLeadEmail("owner@example.test", lead, "Café Sol")).resolves.toBeUndefined();
