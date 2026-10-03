@@ -34,11 +34,17 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
 - ~~Batch 4 review leftovers R3-39…R3-42~~ — fixed in batch 5
   (`docs/log/R3-5.md`). The three small R3-42 remnants (redirect tag
   revalidation, photo-cap race, admin `?ok=`) were fixed 2026-10-03. (R3-5)
-- **A new consulta/turno doesn't notify the owner.** It shows up in
-  `/mi-sitio` → Consultas, but nothing pushes it to the owner's phone until
-  WhatsApp Cloud API exists (PR-17). The visitor gets a WhatsApp link after
-  submitting, so an urgent customer can still write directly. (growth-1)
+- ~~**A new consulta/turno doesn't notify the owner.**~~ — crm-1 (2026-10-03):
+  Web Push to the owner's phone (needs `VAPID_*`) and an optional email via
+  Cloudflare (`businesses.notify_email`). iPhone needs "Agregar a pantalla de
+  inicio" before push works. (growth-1)
 - **Instagram import (idea 14) not built.** Needs a Meta app with app review,
   the same process as PR-17. (growth-1)
 - **The lead-form limits live in process memory** (5/10 min per IP, 60/day
   per site), like every other rate limit — see the single-process note. (growth-1)
+- **Cloudflare Email Sending is beta.** Field names in `buildCloudflarePayload`
+  follow the REST docs (`from.address`, `reply_to`) as of 2026-10-03; not yet
+  verified with a real send from sitio.com.py. (crm-1)
+- **WhatsApp ref codes only exist after a click on the live site.** The owner
+  types "ref K7Q2" from the chat into /mi-sitio/clientes; chats that started
+  without the code (saved number, old link) can still be added by hand. (crm-1)
