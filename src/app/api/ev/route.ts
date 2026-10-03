@@ -7,6 +7,7 @@ import {
   clientIp,
   ctaLocation,
   dayKeyAsuncion,
+  eventRefCode,
   isEventType,
   referrerHost,
   visitorHash,
@@ -85,6 +86,7 @@ export async function POST(req: Request) {
     path,
     ctaLoc: ctaLocation(body.l),
     referrerHost: referrerHost(body.r, ownHost),
+    refCode: eventRefCode(type, body.c),
     deviceType,
     visitorHash: visitorHash(ip, userAgent, dayKeyAsuncion()),
   });

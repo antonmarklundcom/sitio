@@ -1,8 +1,9 @@
 import "server-only";
 import { and, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import { db } from "./index";
-import { analyticsDaily, analyticsEvents } from "./schema";
-import { dayKeyAsuncion } from "@/lib/analytics";
+import { analyticsDaily, analyticsEvents, siteLeads } from "./schema";
+import { dayKeyAsuncion, windowStartAsuncion } from "@/lib/analytics";
+import { classifyLeadSource, LEAD_SOURCES, type LeadSource } from "@/lib/lead-source";
 import { ensureRollupFresh } from "@/lib/rollup";
 
 export type DailyPoint = {
@@ -144,4 +145,77 @@ export async function getCtaBreakdown(businessId: number): Promise<CtaCount[]> {
     .orderBy(desc(sql`count(*)`));
 
   return rows.map((r) => ({ type: r.type as CtaCount["type"], loc: r.loc, clicks: Number(r.clicks) }));
+}
+
+export type SourceRow = {
+  source: LeadSource;
+  views: number;
+  waClicks: number;
+  leads: number;
+};
+
+type EventGroup = { host: string | null; type: string; n: number };
+type LeadGroup = { source: string | null; n: number };
+
+/**
+ * Ren aggregering (testbar utan databas): klassar varje referrer_host till en
+ * källa och summerar. Leads utan källa (äldre än crm-1) räknas som "directo".
+ * Sorterad på visningar, sedan klick, sedan konsultationer; tomma källor utelämnas.
+ */
+export function buildSourceBreakdown(events: EventGroup[], leads: LeadGroup[]): SourceRow[] {
+  const map = new Map<LeadSource, SourceRow>();
+  const row = (source: LeadSource) => {
+    let r = map.get(source);
+    if (!r) map.set(source, (r = { source, views: 0, waClicks: 0, leads: 0 }));
+    return r;
+  };
+  for (const e of events) {
+    const r = row(classifyLeadSource(e.host));
+    if (e.type === "page_view") r.views += e.n;
+    else if (e.type === "whatsapp_click") r.waClicks += e.n;
+  }
+  for (const l of leads) {
+    const src = classifyLeadSource(l.source);
+    // site_leads.source är redan en LeadSource; klassningen normaliserar bara okända värden.
+    row(l.source && (LEAD_SOURCES as readonly string[]).includes(l.source) ? (l.source as LeadSource) : src).leads += l.n;
+  }
+  return [...map.values()].sort((a, b) => b.views - a.views || b.waClicks - a.waClicks || b.leads - a.leads);
+}
+
+/**
+ * Fuentes (crm-1): besök, WhatsApp-klick och konsultationer per källa de
+ * senaste `days` dygnen. Fönstret följer R3-41 (windowStartAsuncion, idag +
+ * dygnen före). Händelserna grupperas i SQL på referrer_host + type (täcks av
+ * i_biz_type_created) och klassas i JS. Bots räknas inte.
+ */
+export async function getSourceBreakdown(businessId: number, days = 30): Promise<SourceRow[]> {
+  const from = new Date(`${windowStartAsuncion(days)}T00:00:00Z`);
+  const [events, leads] = await Promise.all([
+    db
+      .select({
+        host: analyticsEvents.referrerHost,
+        type: analyticsEvents.type,
+        n: sql<number>`count(*)`,
+      })
+      .from(analyticsEvents)
+      .where(
+        and(
+          eq(analyticsEvents.businessId, businessId),
+          inArray(analyticsEvents.type, ["page_view", "whatsapp_click"]),
+          ne(analyticsEvents.deviceType, "bot"),
+          gte(analyticsEvents.createdAt, from),
+        ),
+      )
+      .groupBy(analyticsEvents.referrerHost, analyticsEvents.type),
+    db
+      .select({ source: siteLeads.source, n: sql<number>`count(*)` })
+      .from(siteLeads)
+      .where(and(eq(siteLeads.businessId, businessId), gte(siteLeads.createdAt, from)))
+      .groupBy(siteLeads.source),
+  ]);
+
+  return buildSourceBreakdown(
+    events.map((e) => ({ host: e.host, type: e.type, n: Number(e.n) })),
+    leads.map((l) => ({ source: l.source, n: Number(l.n) })),
+  );
 }

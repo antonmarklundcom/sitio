@@ -3,6 +3,7 @@ import { createHash, createHmac } from "node:crypto";
 import { clientIpFrom } from "./client-ip";
 import { env } from "./env";
 import { PY_TIMEZONE } from "./hours";
+import { isRefCode } from "./ref-code";
 
 /**
  * Analytics-ingest: klassning och hashning. Ingen PII lagras — varken IP,
@@ -35,6 +36,14 @@ export function ctaLocation(v: unknown): string | null {
   if (typeof v !== "string") return null;
   const loc = v.trim().toLowerCase();
   return /^[a-z0-9_-]{1,32}$/.test(loc) ? loc : null;
+}
+
+/**
+ * Beaconens `c` (ref-kod). Sparas bara för whatsapp_click och bara om den är en
+ * giltig kod — allt annat blir null, aldrig ett fel (/api/ev svarar alltid 204).
+ */
+export function eventRefCode(type: EventType, c: unknown): string | null {
+  return type === "whatsapp_click" && isRefCode(c) ? c : null;
 }
 
 export type DeviceType = "mobile" | "desktop" | "bot" | "unknown";

@@ -10,21 +10,52 @@
  */
 
 import { OPEN_NOW_CORE } from "@/lib/open-now-script";
+import { REF_ALPHABET, REF_LENGTH } from "@/lib/ref-code";
 
 export const JS_FLAG = `document.documentElement.classList.add('js')`;
 
-const ANALYTICS = `(function(){
+export const ANALYTICS = `(function(){
 window.dataLayer=window.dataLayer||[];
 var bid=document.currentScript&&document.currentScript.dataset.bid;
-function send(ev,loc){
+function send(ev,loc,code){
   window.dataLayer.push({event:ev,ev_loc:loc,page_path:location.pathname,site:location.hostname});
   try{
-    navigator.sendBeacon('/api/ev',new Blob([JSON.stringify({b:bid,t:ev,l:loc,p:location.pathname,r:document.referrer})],{type:'application/json'}));
+    navigator.sendBeacon('/api/ev',new Blob([JSON.stringify({b:bid,t:ev,l:loc,p:location.pathname,r:document.referrer,c:code||undefined})],{type:'application/json'}));
   }catch(e){}
+}
+/* Ref-kod på WhatsApp-klick: skrivs in i href:ens text-param synkront, före
+   navigeringen. Ett nytt klick ersätter den gamla koden — de staplas aldrig.
+   Misslyckas URL-tolkningen skickas klicket ändå, bara utan kod. */
+var RA='${REF_ALPHABET}',RL=${REF_LENGTH};
+function refCode(){
+  var out='',i,n;
+  try{
+    var a=new Uint8Array(RL);
+    window.crypto.getRandomValues(a);
+    for(i=0;i<RL;i++)out+=RA.charAt(a[i]%RA.length);
+    return out;
+  }catch(e){}
+  out='';
+  for(i=0;i<RL;i++){n=Math.floor(Math.random()*RA.length);out+=RA.charAt(n)}
+  return out;
+}
+function tagWa(a){
+  try{
+    if(!a||String(a.tagName).toLowerCase()!=='a'||!a.href)return '';
+    var u=new URL(a.href);
+    if(!/^(wa\\.me|api\\.whatsapp\\.com)$/i.test(u.hostname))return '';
+    var code=refCode();
+    var txt=(u.searchParams.get('text')||'').replace(/\\s*\\(ref [^)]*\\)/g,'');
+    u.searchParams.set('text',(txt+' (ref '+code+')').replace(/^\\s+/,''));
+    a.href=u.toString();
+    return code;
+  }catch(e){return ''}
 }
 document.addEventListener('click',function(e){
   var t=e.target.closest('[data-ev]');
-  if(t)send(t.dataset.ev,t.dataset.evLoc||'');
+  if(!t)return;
+  var code=t.dataset.ev==='whatsapp_click'?tagWa(t):'';
+  send(t.dataset.ev,t.dataset.evLoc||'',code);
 },true);
 /* Vy-event (menu_view, gallery_view, products_view): en meny läses, den klickas inte, så ett
    klickevent hade mätt noll. Skickas EN gång per sidvisning och först när
