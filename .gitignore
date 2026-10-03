@@ -47,3 +47,6 @@ next-env.d.ts
 /public/uploads
 .preview/
 .smoke/
+
+# Sub-agenternas tillfälliga worktrees
+.claude/worktrees/

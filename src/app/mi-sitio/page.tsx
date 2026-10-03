@@ -34,6 +34,8 @@ import {
 } from "./product-actions";
 import { OwnerEditForm, OwnerPhotos } from "@/components/mi-sitio/owner-forms";
 import { OwnerStats } from "@/components/mi-sitio/owner-stats";
+import { OwnerSources } from "@/components/mi-sitio/owner-sources";
+import { OwnerNotify } from "@/components/mi-sitio/owner-notify";
 import { OwnerPlan } from "@/components/mi-sitio/owner-plan";
 import { getCurrentSubscription } from "@/db/billing-queries";
 import { PLAN_LABELS, toDayString, todayAsuncion } from "@/lib/billing";
@@ -177,7 +179,15 @@ export default async function MiSitioPage({
         siteQuery={readOnly ? `?sitio=${businessId}` : ""}
       />
 
+      <OwnerNotify
+        vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? ""}
+        notifyEmail={business.notifyEmail ?? null}
+        readOnly={readOnly}
+      />
+
       <OwnerStats analytics={analytics} reportHref={reportPath(businessId, business.slug)} />
+
+      <OwnerSources businessId={businessId} />
 
       {subscription ? (
         <OwnerPlan
