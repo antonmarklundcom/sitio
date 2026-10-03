@@ -29,6 +29,9 @@ export const CONTENT_SECURITY_POLICY = [
   "font-src 'self' data:",
   // Beaconen (/api/ev), uppladdningar och serveråtgärder — alla egen origin.
   "connect-src 'self'",
+  // Avisos (crm-1): service workern och manifestet är egen origin.
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -68,7 +71,17 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Service workern får aldrig cachas hårt: en ny version ska nå telefonen.
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
+    ];
   },
 };
 

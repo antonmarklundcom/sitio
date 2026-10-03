@@ -1,0 +1,15 @@
+{
+  "name": "Mi sitio",
+  "short_name": "Mi sitio",
+  "description": "Tu panel y los avisos de nuevas consultas.",
+  "lang": "es-PY",
+  "start_url": "/mi-sitio",
+  "scope": "/mi-sitio/",
+  "display": "standalone",
+  "background_color": "#fbfaf8",
+  "theme_color": "#0f6f4f",
+  "icons": [
+    { "src": "/mi-sitio-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/mi-sitio-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
