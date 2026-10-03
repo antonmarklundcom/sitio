@@ -37,8 +37,10 @@ Alla finns dokumenterade i [`.env.example`](.env.example). De kritiska:
 
 | Variabel | Roll |
 |---|---|
-| `RESEND_API_KEY` | Valfri. Resend för lösenordsåterställning; utan nyckel loggas mejlet bara i utveckling. Krävs för utskick i produktion. |
-| `RESEND_FROM` | Valfri verifierad avsändaradress; krävs när Resend används. |
+| `CLOUDFLARE_ACCOUNT_ID` | Valfri. Cloudflare Email Service (Email Sending) för lösenordsåterställning och nya consultas till ägare; utan konfiguration loggas mejlet bara i utveckling. Krävs för utskick i produktion. |
+| `CLOUDFLARE_EMAIL_TOKEN` | Valfri hemlig API-token med Email Sending: Edit. Aldrig `NEXT_PUBLIC_`. |
+| `EMAIL_FROM` | Valfri verifierad avsändaradress (t.ex. avisos@sitio.com.py); krävs tillsammans med de två ovan. |
+| `EMAIL_FROM_NAME` | Valfritt avsändarnamn, standard `sitio.com.py`. |
 | `VENDERCRM_URL`, `VENDERCRM_API_KEY` | Valfria. När båda finns pushar nattens radar varje sajt som *blir* hot lead till VenderCRM (`POST /api/v1/leads`, R3-22). Utan dem händer ingenting. |
 | `DATABASE_URL` | MySQL. Lokalt: Remote MySQL-värden. På Hostinger: **localhost**-varianten. |
 | `NEXT_PUBLIC_BASE_URL` | **Enda** stället där domänen finns. Domänbyte = env-ändring, aldrig refaktorering. |

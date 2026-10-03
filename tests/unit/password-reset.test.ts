@@ -87,9 +87,9 @@ describe("validatePassword", () => {
 describe("reset email transport", () => {
   const message = { to: "admin@example.test", subject: "Restablecé tu contraseña", text: "Development message", html: "<p>Development message</p>" };
 
-  it("logs the message in development without calling Resend when unconfigured", async () => {
+  it("logs the message in development without calling Cloudflare when unconfigured", async () => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "");
     const log = vi.spyOn(console, "info").mockImplementation(() => {});
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -100,21 +100,22 @@ describe("reset email transport", () => {
 
   it("fails clearly without logging the message in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "");
     const log = vi.spyOn(console, "info").mockImplementation(() => {});
-    await expect(sendEmail(message)).rejects.toThrow("RESEND_API_KEY");
+    await expect(sendEmail(message)).rejects.toThrow("CLOUDFLARE_EMAIL_TOKEN");
     expect(log).not.toHaveBeenCalled();
   });
 
   it("posts the email and handles a rejected provider response", async () => {
-    vi.stubEnv("RESEND_API_KEY", "test-only-placeholder");
-    vi.stubEnv("RESEND_FROM", "sender@example.test");
+    vi.stubEnv("CLOUDFLARE_ACCOUNT_ID", "acc123");
+    vi.stubEnv("CLOUDFLARE_EMAIL_TOKEN", "test-only-placeholder");
+    vi.stubEnv("EMAIL_FROM", "sender@example.test");
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
     vi.stubGlobal("fetch", fetchMock);
     await sendEmail(message);
-    expect(fetchMock).toHaveBeenCalledWith("https://api.resend.com/emails", expect.objectContaining({
+    expect(fetchMock).toHaveBeenCalledWith("https://api.cloudflare.com/client/v4/accounts/acc123/email/sending/send", expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ from: "sender@example.test", ...message }),
+      body: JSON.stringify({ from: { email: "sender@example.test", name: "sitio.com.py" }, ...message }),
     }));
     fetchMock.mockResolvedValue({ ok: false, status: 422 });
     await expect(sendEmail(message)).rejects.toThrow("HTTP 422");

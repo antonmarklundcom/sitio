@@ -12,10 +12,10 @@ describe("pickHeaders", () => {
 
 describe("envPresence", () => {
   it("ger bara sant/falskt, aldrig värdet", () => {
-    const secret = "re_supersecretvalue";
-    const out = envPresence({ RESEND_API_KEY: secret, CRON_SECRET: "   ", VENDERCRM_URL: "" });
+    const secret = "cf_supersecretvalue";
+    const out = envPresence({ CLOUDFLARE_EMAIL_TOKEN: secret, CRON_SECRET: "   ", VENDERCRM_URL: "" });
     expect(out.map((e) => e.name)).toEqual([...DIAG_ENV]);
-    expect(out.find((e) => e.name === "RESEND_API_KEY")?.set).toBe(true);
+    expect(out.find((e) => e.name === "CLOUDFLARE_EMAIL_TOKEN")?.set).toBe(true);
     expect(out.find((e) => e.name === "CRON_SECRET")?.set).toBe(false);
     expect(out.find((e) => e.name === "VENDERCRM_URL")?.set).toBe(false);
     expect(JSON.stringify(out)).not.toContain(secret);

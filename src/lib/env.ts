@@ -23,11 +23,17 @@ function int(name: string, fallback: number): number {
 }
 
 export const env = {
-  get resendApiKey() {
-    return process.env.RESEND_API_KEY ?? "";
+  get cloudflareAccountId() {
+    return process.env.CLOUDFLARE_ACCOUNT_ID ?? "";
   },
-  get resendFrom() {
-    return process.env.RESEND_FROM ?? "";
+  get cloudflareEmailToken() {
+    return process.env.CLOUDFLARE_EMAIL_TOKEN ?? "";
+  },
+  get emailFrom() {
+    return process.env.EMAIL_FROM ?? "";
+  },
+  get emailFromName() {
+    return process.env.EMAIL_FROM_NAME || "sitio.com.py";
   },
   get databaseUrl() {
     return required("DATABASE_URL");

@@ -32,8 +32,9 @@ export function pickHeaders(headers: Headers): { name: string; value: string | n
  * NEXT_PUBLIC_SALES_WHATSAPP läses så som bygget bakade in den.
  */
 export const DIAG_ENV = [
-  "RESEND_API_KEY",
-  "RESEND_FROM",
+  "CLOUDFLARE_ACCOUNT_ID",
+  "CLOUDFLARE_EMAIL_TOKEN",
+  "EMAIL_FROM",
   "NEXT_PUBLIC_SALES_WHATSAPP",
   "VENDERCRM_URL",
   "VENDERCRM_API_KEY",
