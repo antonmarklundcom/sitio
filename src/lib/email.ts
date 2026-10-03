@@ -17,12 +17,14 @@ export type Email = {
  */
 export function buildCloudflarePayload(message: Email, from: string, defaultName: string) {
   return {
-    from: { email: from, name: message.fromName?.trim() || defaultName },
+    // Fältnamnen enligt Cloudflares REST-dokumentation: `address` (inte
+    // `email`) i avsändarobjektet och `reply_to` i snake_case.
+    from: { address: from, name: message.fromName?.trim() || defaultName },
     to: message.to,
     subject: message.subject,
     text: message.text,
     html: message.html,
-    ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+    ...(message.replyTo ? { reply_to: message.replyTo } : {}),
   };
 }
 

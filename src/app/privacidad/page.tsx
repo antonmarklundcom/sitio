@@ -51,7 +51,7 @@ export default function PrivacidadPage() {
       <p>
         Los datos se guardan en servidores de Hostinger. Tienen acceso el equipo de sitio.com.py
         y, en el caso de las consultas de visitantes, el dueño del negocio correspondiente.
-        Usamos proveedores para enviar correos (Resend) y, si se usa la mejora de textos,
+        Usamos proveedores para enviar correos (Cloudflare) y, si se usa la mejora de textos,
         Anthropic, solo para esa función.
       </p>
 

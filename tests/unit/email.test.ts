@@ -29,9 +29,9 @@ function configure() {
 describe("buildCloudflarePayload", () => {
   const base = { to: "a@example.test", subject: "S", text: "T", html: "<p>T</p>" };
 
-  it("usa standardnamnet och utelämnar replyTo när det saknas", () => {
+  it("usa standardnamnet och utelämnar reply_to när det saknas", () => {
     expect(buildCloudflarePayload(base, "avisos@example.test", "sitio.com.py")).toEqual({
-      from: { email: "avisos@example.test", name: "sitio.com.py" },
+      from: { address: "avisos@example.test", name: "sitio.com.py" },
       ...base,
     });
   });
@@ -39,7 +39,7 @@ describe("buildCloudflarePayload", () => {
   it("tar fromName och replyTo per meddelande", () => {
     const p = buildCloudflarePayload({ ...base, fromName: "Café Sol vía sitio.com.py", replyTo: "r@example.test" }, "avisos@example.test", "x");
     expect(p.from.name).toBe("Café Sol vía sitio.com.py");
-    expect(p.replyTo).toBe("r@example.test");
+    expect(p).toMatchObject({ reply_to: "r@example.test" });
   });
 });
 
