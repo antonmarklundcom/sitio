@@ -237,7 +237,7 @@ export function BillingPanel({
                 id="receipt"
                 name="receipt"
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                accept="image/jpeg,image/png,image/webp"
                 className="w-full rounded-lg border border-admin-line bg-admin-surface-2 px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-admin-surface file:px-2 file:py-1 file:text-admin-text"
               />
             </Field>

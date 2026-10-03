@@ -120,8 +120,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: msg(
-          "Formatet stöds inte. Använd JPEG, PNG, WEBP eller HEIC.",
-          "Ese formato no anda. Mandá JPEG, PNG, WEBP o HEIC.",
+          "Formatet stöds inte. Använd JPEG, PNG eller WEBP.",
+          "Ese formato no anda. Mandá JPEG, PNG o WEBP.",
         ),
       },
       { status: 415 },

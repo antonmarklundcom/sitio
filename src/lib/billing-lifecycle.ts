@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray, lt } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lt, ne, or } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, subscriptions } from "@/db/schema";
 import { logActivity } from "./auth";
@@ -36,10 +36,16 @@ export async function runBillingLifecycle(actorUserId?: number | null): Promise<
       expiresAt: subscriptions.expiresAt,
     })
     .from(subscriptions)
+    .innerJoin(businesses, eq(businesses.id, subscriptions.businessId))
     .where(
       and(
         inArray(subscriptions.status, ["trial", "active", "grace"]),
         lt(subscriptions.expiresAt, new Date(`${today}T00:00:00Z`)),
+        // En provperiod för en sajt som aldrig publicerats åldras inte: den
+        // startar om vid första publiceringen (startTrialAtPublish). Annars
+        // kunde ett utkast som legat i kön en månad publiceras rakt in i
+        // respit eller utgånget.
+        or(ne(subscriptions.status, "trial"), isNotNull(businesses.publishedAt)),
       ),
     )
     .limit(1000);

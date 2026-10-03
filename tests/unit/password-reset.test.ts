@@ -156,10 +156,16 @@ describe("account password action redirects", () => {
 
   it("updates the hash, logs the change and redirects to the account success route", async () => {
     const { set, values } = await setupAccount();
+    const session: Record<string, unknown> = { save: vi.fn() };
+    accountMocks.getSession.mockResolvedValue(session);
     await expect(changePasswordAction(form("CorrectCurrent-2026"))).rejects.toThrow("REDIRECT:/admin/cuenta?guardada=1");
-    expect(await bcrypt.compare("OtraClave-2026", set.mock.calls[0][0].passwordHash)).toBe(true);
+    const newHash = set.mock.calls[0][0].passwordHash;
+    expect(await bcrypt.compare("OtraClave-2026", newHash)).toBe(true);
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ actorUserId: 42, action: "contrasena_cambiada" }));
-    expect(accountMocks.getSession).not.toHaveBeenCalled();
+    // Den här webbläsaren får en cookie med den nya lösenordsversionen;
+    // alla andra sessioner (gammal pv) faller ut.
+    expect(session.pv).toBe(passwordVersion(newHash));
+    expect(session.save).toHaveBeenCalledOnce();
   });
 
   it("redirects to login only when the session is absent", async () => {

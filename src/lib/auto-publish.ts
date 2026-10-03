@@ -2,7 +2,7 @@ import "server-only";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { businesses, media, subscriptions } from "@/db/schema";
+import { businesses, media, payments, subscriptions } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
 import { revalidateRedirectsTo } from "@/db/site-queries";
 import { getGrowthSettings } from "@/db/growth-queries";
@@ -26,12 +26,23 @@ export async function startTrialAtPublish(businessId: number, actorUserId: numbe
     .where(eq(subscriptions.businessId, businessId))
     .orderBy(desc(subscriptions.expiresAt), desc(subscriptions.id))
     .limit(1);
-  if (!sub || sub.status !== "trial") return;
+  if (!sub) return;
+  // Ett utkast vars provperiod hann åldras före crm-1:s livscykelfix står som
+  // grace/expired utan att någon betalat. Utan bekräftad betalning är det
+  // fortfarande en provperiod; en betald prenumeration rörs aldrig.
+  if (sub.status !== "trial") {
+    if (sub.status !== "grace" && sub.status !== "expired") return;
+    const [paid] = await db
+      .select({ n: count() })
+      .from(payments)
+      .where(and(eq(payments.businessId, businessId), eq(payments.status, "confirmed")));
+    if (Number(paid?.n ?? 0) > 0) return;
+  }
   const length = Math.max(1, daysUntil(sub.expiresAt, sub.startsAt));
   const today = todayAsuncion();
   const startsAt = parseDay(today);
   const expiresAt = addDays(today, length);
-  await db.update(subscriptions).set({ startsAt, expiresAt }).where(eq(subscriptions.id, sub.id));
+  await db.update(subscriptions).set({ startsAt, expiresAt, status: "trial" }).where(eq(subscriptions.id, sub.id));
   await logActivity({
     actorUserId,
     businessId,

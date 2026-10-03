@@ -134,7 +134,7 @@ export async function registerPaymentAction(
       return { error: "El comprobante supera los 10 MB.", fieldErrors: { receipt: "Máximo 10 MB." } };
     }
     if (receipt.error === "mime") {
-      return { error: "El formato no es compatible.", fieldErrors: { receipt: "Usá JPEG, PNG, WEBP o HEIC." } };
+      return { error: "El formato no es compatible.", fieldErrors: { receipt: "Usá JPEG, PNG o WEBP." } };
     }
     return { error: "No se pudo leer la imagen del comprobante.", fieldErrors: { receipt: "¿El archivo está dañado?" } };
   }

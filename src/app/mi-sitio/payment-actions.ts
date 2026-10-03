@@ -56,7 +56,7 @@ export async function reportPaymentAction(
   );
   if ("error" in receipt) {
     if (receipt.error === "size") return { error: "El comprobante pesa más de 10 MB." };
-    if (receipt.error === "mime") return { error: "Ese formato no anda. Mandá una foto JPEG, PNG, WEBP o HEIC." };
+    if (receipt.error === "mime") return { error: "Ese formato no anda. Mandá una foto JPEG, PNG o WEBP." };
     return { error: "No pudimos leer la foto del comprobante. ¿Probás con otra?" };
   }
 

@@ -68,12 +68,15 @@ export async function establishSession(data: {
   role: Role;
   name: string;
   businessId?: number;
+  /** passwordVersion() för superadmin, se SessionData.pv. */
+  pv?: string;
 }): Promise<void> {
   const session = await getSession();
   session.userId = data.userId;
   session.role = data.role;
   session.name = data.name;
   session.businessId = data.businessId;
+  session.pv = data.pv;
   await session.save();
 
   await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, data.userId));

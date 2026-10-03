@@ -31,3 +31,12 @@ export function pruneRateLimits(): void {
     if (bucket.resetAt <= now) buckets.delete(key);
   }
 }
+
+/**
+ * Som rateLimit men räknar inte upp: för tak som bara ska räkna misslyckanden
+ * (kolla först med den här, räkna med rateLimit() först när försöket föll).
+ */
+export function rateLimitExceeded(key: string, limit: number): boolean {
+  const bucket = buckets.get(key);
+  return Boolean(bucket && bucket.resetAt > Date.now() && bucket.count >= limit);
+}

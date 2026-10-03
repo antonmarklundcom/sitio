@@ -5,8 +5,8 @@ import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { logActivity, requireRole } from "@/lib/auth";
-import { validatePassword } from "@/lib/password-reset";
+import { establishSession, logActivity, requireRole } from "@/lib/auth";
+import { passwordVersion, validatePassword } from "@/lib/password-reset";
 
 export async function changePasswordAction(formData: FormData): Promise<void> {
   const session = await requireRole("superadmin");
@@ -27,6 +27,9 @@ export async function changePasswordAction(formData: FormData): Promise<void> {
   ));
   if (!result.affectedRows) redirect("/admin/cuenta?error=current");
   await logActivity({ actorUserId: user.id, action: "contrasena_cambiada" });
+  // Nya hashen ger en ny lösenordsversion: alla andra inloggningar faller ut,
+  // den här webbläsaren får en färsk cookie och stannar inne.
+  await establishSession({ userId: user.id, role: "superadmin", name: user.name, pv: passwordVersion(passwordHash) });
   redirect("/admin/cuenta?guardada=1");
 }
 

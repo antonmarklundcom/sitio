@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, users } from "@/db/schema";
 import { env } from "./env";
+import { passwordVersion } from "./password-reset";
 
 export type Role = "superadmin" | "owner";
 
@@ -15,6 +16,13 @@ export type SessionData = {
   name?: string;
   /** businessId för owner-sessioner; superadmin har ingen tenant-bindning. */
   businessId?: number;
+  /**
+   * Superadmin: passwordVersion() av lösenordshashen vid inloggningen. Ett
+   * byte eller en återställning av lösenordet gör alla äldre cookies ogiltiga
+   * — annars överlevde en stulen cookie just den åtgärd som skulle stänga ute
+   * angriparen.
+   */
+  pv?: string;
 };
 
 export const SESSION_COOKIE = "sitio_session";
@@ -46,14 +54,14 @@ export async function getSession(): Promise<IronSession<SessionData>> {
  * ska vara aktivt med samma roll, och en owner ska fortfarande äga sitt
  * business. En fråga per request (React cache), inte per anrop.
  */
-const sessionStillValid = cache(async (userId: number, role: Role, businessId: number | undefined): Promise<boolean> => {
+const sessionStillValid = cache(async (userId: number, role: Role, businessId: number | undefined, pv: string | undefined): Promise<boolean> => {
   const [user] = await db
-    .select({ status: users.status, role: users.role })
+    .select({ status: users.status, role: users.role, passwordHash: users.passwordHash })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
   if (!user || user.status !== "active" || user.role !== role) return false;
-  if (role !== "owner") return true;
+  if (role !== "owner") return pv === passwordVersion(user.passwordHash);
   if (!businessId) return false;
   const [business] = await db
     .select({ id: businesses.id })
@@ -66,7 +74,7 @@ const sessionStillValid = cache(async (userId: number, role: Role, businessId: n
 export async function currentUser(): Promise<SessionData | null> {
   const session = await getSession();
   if (!session.userId || !session.role) return null;
-  if (!(await sessionStillValid(session.userId, session.role, session.businessId))) return null;
+  if (!(await sessionStillValid(session.userId, session.role, session.businessId, session.pv))) return null;
   return {
     userId: session.userId,
     role: session.role,

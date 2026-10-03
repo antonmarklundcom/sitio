@@ -4,7 +4,10 @@
  * dra in hela sharp-binären i klientbundlen.
  */
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
-export const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"] as const;
+// Inte HEIC/HEIF: sharp:s förbyggda binär saknar HEVC-avkodare (bara AVIF),
+// så varje iPhone-foto i HEIC gav "No pudimos leer esa foto". Står HEIC inte
+// i `accept` konverterar iOS själv bilden till JPEG vid uppladdningen.
+export const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
 export const ACCEPT_ATTR = ALLOWED_MIME.join(",");
 
 /** Fotogränser per plan. Gallery-modulen höjer taket. */
