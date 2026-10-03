@@ -78,8 +78,15 @@ export async function autoPublishAfterIntake(businessId: number): Promise<void> 
     if (!business || business.status !== "pending_review") return;
 
     const polish = await polishBusiness(business);
+    // AI-anropet tar sekunder. Skrivningen gäller bara om raden är orörd sedan
+    // ögonblicksbilden: annars skrev putsen över det du hann ändra i admin.
+    const untouched = and(
+      eq(businesses.id, businessId),
+      eq(businesses.status, "pending_review"),
+      eq(businesses.updatedAt, business.updatedAt),
+    );
     if (polish.ok) {
-      await db
+      const [res] = await db
         .update(businesses)
         .set({
           description: polish.result.description,
@@ -88,7 +95,11 @@ export async function autoPublishAfterIntake(businessId: number): Promise<void> 
           servicesJson: polish.result.services,
           aiPolishedAt: new Date(),
         })
-        .where(eq(businesses.id, businessId));
+        .where(untouched);
+      if (!res.affectedRows) {
+        await logActivity({ businessId, action: "autopublicacion_cancelada", meta: { reason: "editado_durante_ia" } });
+        return;
+      }
       await logActivity({ businessId, action: "ai_polish_applied", meta: { auto: true, model: polish.usage.model, warnings: polish.warnings } });
     } else {
       const raw = (business.rawDescription ?? "").trim();
@@ -96,7 +107,7 @@ export async function autoPublishAfterIntake(businessId: number): Promise<void> 
       await db
         .update(businesses)
         .set({ description: description || null, seoDescription: business.seoDescription || (description ? seoFrom(description) : null) })
-        .where(eq(businesses.id, businessId));
+        .where(untouched);
       await logActivity({ businessId, action: "autopublicacion_sin_ia", meta: { reason: polish.error.slice(0, 200) } });
     }
 

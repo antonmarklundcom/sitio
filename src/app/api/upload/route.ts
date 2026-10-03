@@ -7,6 +7,7 @@ import { currentUser } from "@/lib/session";
 import { getIntakeBusinessId } from "@/db/intake-queries";
 import { tokenFingerprint } from "@/lib/intake";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFrom } from "@/lib/client-ip";
 import { logActivity } from "@/lib/auth";
 import { deleteMediaFiles, processImage } from "@/lib/media";
 import { ALLOWED_MIME, MAX_UPLOAD_BYTES } from "@/lib/media-shared";
@@ -23,6 +24,16 @@ function isKind(v: string): v is Kind {
 }
 
 export async function POST(req: Request) {
+  // Före formData(): den buffrar hela kroppen innan någon behörighet är
+  // kontrollerad, så en anonym jättekropp åt minne i vår enda Node-process.
+  // Content-Length stoppar ärliga klienter direkt; IP-taket resten.
+  const declared = Number(req.headers.get("content-length") ?? "");
+  if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES + 512 * 1024) {
+    return NextResponse.json({ error: "La foto pesa más de 10 MB." }, { status: 413 });
+  }
+  if (!rateLimit(`upload-ip:${clientIpFrom(req.headers)}`, 60, 600_000).ok) {
+    return NextResponse.json({ error: "Demasiadas subidas. Esperá unos minutos." }, { status: 429 });
+  }
   const form = await req.formData();
   // En intake-token går före sessionen (R3-33): en owner som fortfarande är
   // inloggad på telefonen och fyller i intaken för sitt andra företag ska få

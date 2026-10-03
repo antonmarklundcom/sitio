@@ -32,7 +32,7 @@ function expiryTone(days: number): "ok" | "warn" | "danger" {
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   await requireRole("superadmin");
   const sp = await searchParams;
@@ -62,6 +62,7 @@ export default async function PaymentsPage({
       </div>
 
       {sp.ok ? <Notice tone="ok">{sp.ok}</Notice> : null}
+      {sp.error ? <Notice tone="danger">{sp.error}</Notice> : null}
 
       <Card>
         <SectionTitle hint="Un pago registrado no extiende nada hasta que lo confirmás. La confirmación extiende el período y publica el sitio si estaba en pausa por falta de pago.">

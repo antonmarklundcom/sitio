@@ -98,6 +98,12 @@ export async function processImage(params: {
   const base = sharp(buffer, { failOn: "error" }).rotate();
   const meta = await base.metadata();
   if (!meta.width || !meta.height) throw new Error("Kunde inte läsa bildens dimensioner.");
+  // metadata() visar måtten FÖRE rotate(): EXIF-orientering 5–8 (stående
+  // iPhone-foto) har bredd och höjd omkastade. De lagrade måtten blir
+  // <img width height> på sajten, och fel axel gav fel bildförhållande.
+  const turned = (meta.orientation ?? 1) >= 5;
+  const width = turned ? meta.height : meta.width;
+  const height = turned ? meta.width : meta.height;
 
   const variants: ProcessedMedia["variants"] = {};
   let totalBytes = 0;
@@ -116,16 +122,16 @@ export async function processImage(params: {
     totalBytes = out.length;
     mime = "image/png";
   } else {
-    for (const width of PHOTO_WIDTHS) {
-      if (meta.width < width && width !== PHOTO_WIDTHS[0]) continue; // förstora aldrig
+    for (const target of PHOTO_WIDTHS) {
+      if (width < target && target !== PHOTO_WIDTHS[0]) continue; // förstora aldrig
       const out = await base
         .clone()
-        .resize({ width, withoutEnlargement: true })
+        .resize({ width: target, withoutEnlargement: true })
         .webp({ quality: 78 })
         .toBuffer();
-      const fileName = `${hash}-w${width}.webp`;
+      const fileName = `${hash}-w${target}.webp`;
       await writeFile(path.join(dir, fileName), out);
-      variants[`w${width}` as keyof ProcessedMedia["variants"]] = fileName;
+      variants[`w${target}` as keyof ProcessedMedia["variants"]] = fileName;
       totalBytes += out.length;
     }
   }
@@ -133,8 +139,8 @@ export async function processImage(params: {
   return {
     fileKey: `${businessId}/${hash}`,
     mime,
-    width: meta.width,
-    height: meta.height,
+    width,
+    height,
     bytes: totalBytes,
     variants,
   };

@@ -390,6 +390,10 @@ export type QueueItem = {
  */
 export async function listMessageQueue(today: string = todayAsuncion()): Promise<QueueItem[]> {
   const cutoff = new Date(`${toDayString(addDays(today, 30))}T00:00:00Z`);
+  // Undre gräns i SQL: förfallna > 30 dagar jagas inte, och utan gränsen åt
+  // gamla pausade kunder upp 300-taket före de 30/15/7-dagarspåminnelser som
+  // faktiskt ska skickas.
+  const floor = new Date(`${toDayString(addDays(today, -31))}T00:00:00Z`);
   const subs = await db
     .select({
       subscriptionId: subscriptions.id,
@@ -408,6 +412,7 @@ export async function listMessageQueue(today: string = todayAsuncion()): Promise
         inArray(subscriptions.status, ["trial", "active", "grace", "expired"]),
         inArray(businesses.status, ["published", "paused"]),
         lte(subscriptions.expiresAt, cutoff),
+        gte(subscriptions.expiresAt, floor),
       ),
     )
     .orderBy(asc(subscriptions.expiresAt))

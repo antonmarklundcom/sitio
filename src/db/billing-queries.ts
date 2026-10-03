@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "./index";
 import { analyticsDaily, businesses, media, payments, subscriptions } from "./schema";
-import { EXPIRING_SOON_DAYS, addDays, toDayString } from "@/lib/billing";
+import { EXPIRING_SOON_DAYS, addDays, toDayString, todayAsuncion } from "@/lib/billing";
 import type { Payment, Subscription } from "./schema";
 
 /** Senaste prenumerationen för en sajt — den vi förlänger och fakturerar mot. */
@@ -94,7 +94,7 @@ export type ExpiringRow = {
  * förnyelsemeddelandet och ska aldrig behöva ett extra klick.
  */
 export async function listExpiringSoon(days = EXPIRING_SOON_DAYS): Promise<ExpiringRow[]> {
-  const cutoff = toDayString(addDays(new Date(), days));
+  const cutoff = toDayString(addDays(todayAsuncion(), days));
 
   const rows = await db
     .select({
@@ -122,7 +122,7 @@ export async function listExpiringSoon(days = EXPIRING_SOON_DAYS): Promise<Expir
 
   if (rows.length === 0) return [];
 
-  const since = new Date(`${toDayString(addDays(new Date(), -365))}T00:00:00Z`);
+  const since = new Date(`${toDayString(addDays(todayAsuncion(), -365))}T00:00:00Z`);
   const stats = await db
     .select({
       businessId: analyticsDaily.businessId,
@@ -152,7 +152,7 @@ export async function listExpiringSoon(days = EXPIRING_SOON_DAYS): Promise<Expir
 
 /** Årsstatistik för en enskild sajt — förnyelselänken på detaljsidan. */
 export async function getYearStats(businessId: number): Promise<{ views365: number; waClicks365: number }> {
-  const since = new Date(`${toDayString(addDays(new Date(), -365))}T00:00:00Z`);
+  const since = new Date(`${toDayString(addDays(todayAsuncion(), -365))}T00:00:00Z`);
   const [row] = await db
     .select({
       views: sql<number>`coalesce(sum(${analyticsDaily.views}), 0)`,

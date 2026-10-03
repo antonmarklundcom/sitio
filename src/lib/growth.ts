@@ -76,7 +76,9 @@ export const siteLeadSchema = z
       .string()
       .trim()
       .default("")
-      .refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Elegí un día."),
+      // Rundtur genom Date: "2026-10-39" gav Invalid Date och en 500 vid insert,
+      // "2026-11-31" blev tyst 1 december i databasen.
+      .refine((v) => v === "" || isRealDay(v), "Elegí un día."),
     time: z
       .string()
       .trim()
@@ -92,6 +94,13 @@ export const siteLeadSchema = z
     }
   });
 export type SiteLeadInput = z.infer<typeof siteLeadSchema>;
+
+/** YYYY-MM-DD som faktiskt finns i kalendern. */
+export function isRealDay(v: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
 
 /** Ett turnodatum får inte ligga bakåt i tiden eller mer än 90 dagar fram. */
 export function turnoDayProblem(day: string, today: string): string | null {

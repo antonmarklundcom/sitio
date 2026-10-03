@@ -258,7 +258,17 @@ export async function rejectPaymentAction(formData: FormData): Promise<void> {
   const payment = await loadPayment(paymentId);
   if (!payment) throw new Error("El pago no existe.");
 
-  await db.update(payments).set({ status: "rejected" }).where(eq(payments.id, paymentId));
+  // Bara en rapporterad betalning kan avvisas. En bekräftad har redan
+  // förlängt prenumerationen, återpublicerat sajten och delat ut bonus och
+  // provision — att vända den till "rejected" lämnade allt det kvar.
+  if (payment.status !== "reported") {
+    redirect(`${back}?error=${encodeURIComponent("Ese pago ya no está pendiente.")}`);
+  }
+  const [res] = await db
+    .update(payments)
+    .set({ status: "rejected" })
+    .where(and(eq(payments.id, paymentId), eq(payments.status, "reported")));
+  if (!res.affectedRows) redirect(`${back}?error=${encodeURIComponent("Ese pago ya no está pendiente.")}`);
   await logActivity({
     actorUserId: user.userId,
     businessId: payment.businessId,

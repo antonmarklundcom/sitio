@@ -136,3 +136,17 @@ describe("meddelandekön", () => {
     expect(previousMonth("2028-03-01").end).toBe("2028-02-29");
   });
 });
+
+describe("isRealDay", () => {
+  it("accepts real calendar days and rejects impossible ones", async () => {
+    const { isRealDay, siteLeadSchema } = await import("@/lib/growth");
+    expect(isRealDay("2026-10-31")).toBe(true);
+    expect(isRealDay("2028-02-29")).toBe(true);
+    expect(isRealDay("2026-10-39")).toBe(false);
+    expect(isRealDay("2026-11-31")).toBe(false);
+    expect(isRealDay("2026-10-00")).toBe(false);
+    expect(isRealDay("2027-02-29")).toBe(false);
+    const parsed = siteLeadSchema.safeParse({ kind: "turno", name: "Ana", phone: "0981123456", day: "2026-11-31" });
+    expect(parsed.success).toBe(false);
+  });
+});
