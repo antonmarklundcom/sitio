@@ -1,6 +1,7 @@
-import { displayPhone, waLink } from "@/lib/format";
-import { PLAN_UPGRADE_KEY, dayEs, leadReplyMessage, type UpsellService } from "@/lib/growth";
-import { toDayString } from "@/lib/billing";
+import Link from "next/link";
+import { displayPhone } from "@/lib/format";
+import { PLAN_UPGRADE_KEY, type UpsellService } from "@/lib/growth";
+import { statusLabel } from "@/lib/crm";
 import type { SiteLead } from "@/db/schema";
 
 /**
@@ -19,75 +20,56 @@ function dateTimeEs(value: Date): string {
   }).format(value);
 }
 
-const STATUS_LABEL: Record<string, string> = { nuevo: "Nueva", contactado: "Respondida", cerrado: "Cerrada" };
-
+/**
+ * Kortet på /mi-sitio: räknare, de tre senaste och en länk till hela CRM:et
+ * (/mi-sitio/clientes, crm-1). Ankaret #consultas finns kvar för länkar och push.
+ */
 export function OwnerInbox({
-  leads,
-  businessName,
-  readOnly,
-  setStatus,
+  fresh,
+  due,
+  total,
+  latest,
+  siteQuery = "",
 }: {
-  leads: SiteLead[];
-  businessName: string;
-  readOnly: boolean;
-  setStatus: (formData: FormData) => Promise<void>;
+  fresh: number;
+  due: number;
+  total: number;
+  latest: SiteLead[];
+  siteQuery?: string;
 }) {
-  const fresh = leads.filter((l) => l.status === "nuevo").length;
   return (
     <div className="panel-card" id="consultas">
       <h2>
-        Consultas {fresh > 0 ? <span className="panel-badge">{fresh === 1 ? "1 nueva" : `${fresh} nuevas`}</span> : null}
+        Mis clientes {fresh > 0 ? <span className="panel-badge">{fresh === 1 ? "1 nueva" : `${fresh} nuevas`}</span> : null}
       </h2>
-      {leads.length === 0 ? (
+      {total === 0 ? (
         <p className="hint">
           Cuando alguien deje su número en tu página, aparece acá con un botón para responderle por WhatsApp.
         </p>
       ) : (
-        <ul className="panel-leads">
-          {leads.map((lead) => {
-            const day = lead.requestedDay ? toDayString(lead.requestedDay) : null;
-            const reply = waLink(
-              lead.phone,
-              leadReplyMessage(
-                { name: lead.name, kind: lead.kind === "turno" ? "turno" : "consulta", serviceName: lead.serviceName, requestedDay: day, requestedTime: lead.requestedTime },
-                businessName,
-              ),
-            );
-            return (
+        <>
+          <p>
+            {fresh === 1 ? "1 consulta nueva" : `${fresh} consultas nuevas`} · {due === 1 ? "1 para hoy" : `${due} para hoy`}
+          </p>
+          <ul className="panel-leads">
+            {latest.map((lead) => (
               <li key={lead.id} className={`panel-lead panel-lead--${lead.status}`}>
                 <div className="panel-lead-head">
                   <strong>{lead.name}</strong>
                   <span className="hint">
-                    {lead.kind === "turno" ? "Turno" : "Consulta"} · {dateTimeEs(new Date(lead.createdAt))} · {STATUS_LABEL[lead.status]}
+                    {dateTimeEs(new Date(lead.createdAt))} · {statusLabel(lead.status)} · {displayPhone(lead.phone)}
                   </span>
                 </div>
-                {lead.kind === "turno" ? (
-                  <p>
-                    {lead.serviceName ? `${lead.serviceName} · ` : ""}
-                    {day ? dayEs(day) : ""}
-                    {lead.requestedTime ? ` a las ${lead.requestedTime}` : ""}
-                  </p>
-                ) : null}
-                {lead.message ? <p className="panel-lead-msg">{lead.message}</p> : null}
-                <div className="panel-lead-actions">
-                  <a href={reply} target="_blank" rel="noreferrer" className="panel-btn panel-btn--small">
-                    Responder por WhatsApp · {displayPhone(lead.phone)}
-                  </a>
-                  {readOnly ? null : (
-                    <form action={setStatus}>
-                      <input type="hidden" name="leadId" value={lead.id} />
-                      <input type="hidden" name="status" value={lead.status === "nuevo" ? "contactado" : lead.status === "contactado" ? "cerrado" : "nuevo"} />
-                      <button type="submit" className="panel-btn panel-btn--ghost panel-btn--small">
-                        {lead.status === "nuevo" ? "Marcar respondida" : lead.status === "contactado" ? "Cerrar" : "Reabrir"}
-                      </button>
-                    </form>
-                  )}
-                </div>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        </>
       )}
+      <p>
+        <Link href={`/mi-sitio/clientes${siteQuery}`} className="panel-btn panel-btn--small">
+          Ver todos mis clientes
+        </Link>
+      </p>
     </div>
   );
 }

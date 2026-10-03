@@ -36,7 +36,7 @@ import { OwnerEditForm, OwnerPhotos } from "@/components/mi-sitio/owner-forms";
 import { OwnerStats } from "@/components/mi-sitio/owner-stats";
 import { OwnerPlan } from "@/components/mi-sitio/owner-plan";
 import { getCurrentSubscription } from "@/db/billing-queries";
-import { PLAN_LABELS, toDayString } from "@/lib/billing";
+import { PLAN_LABELS, toDayString, todayAsuncion } from "@/lib/billing";
 import { reportPaymentAction } from "./payment-actions";
 import { reportPath } from "@/lib/year-report";
 import { getPages } from "@/db/page-queries";
@@ -54,14 +54,14 @@ import {
   getGrowthSettings,
   getReferralStats,
   getUpsellCatalog,
-  listSiteLeads,
   openServiceRequestKeys,
 } from "@/db/growth-queries";
 import { recommendedServiceKey, referralShareMessage, siteOptions } from "@/lib/growth";
 import { waLink } from "@/lib/format";
 import { OwnerInbox, OwnerReferral, OwnerServices } from "@/components/mi-sitio/owner-growth";
 import { OwnerSiteOptions } from "@/components/mi-sitio/owner-site-options";
-import { requestServiceAction, saveSiteOptionsAction, setLeadStatusAction } from "./growth-actions";
+import { requestServiceAction, saveSiteOptionsAction } from "./growth-actions";
+import { inboxSummary } from "@/db/crm-queries";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Mi sitio", robots: { index: false, follow: false } };
@@ -136,8 +136,8 @@ export default async function MiSitioPage({
   const liveUrl = absoluteUrl(`/${business.slug}`);
 
   // Tillväxtpaketet (growth-1).
-  const [leads, growth, catalog, openKeys, referralCode, referralStats] = await Promise.all([
-    listSiteLeads(businessId),
+  const [inbox, growth, catalog, openKeys, referralCode, referralStats] = await Promise.all([
+    inboxSummary(businessId, todayAsuncion()),
     getGrowthSettings(),
     getUpsellCatalog(),
     openServiceRequestKeys(businessId),
@@ -169,7 +169,13 @@ export default async function MiSitioPage({
         contenido. Tu WhatsApp es {displayPhone(business.whatsappPhone)}.
       </p>
 
-      <OwnerInbox leads={leads} businessName={business.name} readOnly={readOnly} setStatus={setLeadStatusAction} />
+      <OwnerInbox
+        fresh={inbox.fresh}
+        due={inbox.due}
+        total={inbox.total}
+        latest={inbox.latest}
+        siteQuery={readOnly ? `?sitio=${businessId}` : ""}
+      />
 
       <OwnerStats analytics={analytics} reportHref={reportPath(businessId, business.slug)} />
 
