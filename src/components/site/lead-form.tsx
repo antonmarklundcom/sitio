@@ -32,11 +32,21 @@ export function LeadForm({ businessId, booking, services }: Props) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.currentTarget).entries());
     setStatus({ state: "sending" });
+    // Varifrån besökaren kom (längdbegränsat; servern klassar källan).
+    let src_u = "";
+    try {
+      src_u = new URLSearchParams(location.search).get("utm_source") ?? "";
+    } catch {}
+    const src = {
+      src_r: (document.referrer || "").slice(0, 500),
+      src_u: src_u.slice(0, 60),
+      src_p: location.pathname.slice(0, 120),
+    };
     try {
       const res = await fetch("/api/consulta", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...data, b: businessId, kind }),
+        body: JSON.stringify({ ...data, ...src, b: businessId, kind }),
       });
       const body = (await res.json().catch(() => ({}))) as Status & { ok?: boolean };
       if (res.ok && body.ok) setStatus({ state: "done", wa: body.wa });
