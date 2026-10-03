@@ -134,6 +134,10 @@ export const businesses = mysqlTable(
     referralRewardedAt: datetime("referral_rewarded_at"),
     // Autopublicerad utan granskning: ligger i "Revisar"-kön tills du tittat.
     needsReview: boolean("needs_review").notNull().default(false),
+    // ---------- crm-1 ----------
+    // Vart mejlaviseringen om en ny consulta går. Inte inloggningen (owners
+    // loggar in med telefon) och därför inte users.email. Null = inget mejl.
+    notifyEmail: varchar("notify_email", { length: 190 }),
     ...timestamps,
   },
   (t) => [
@@ -358,6 +362,10 @@ export const analyticsEvents = mysqlTable(
     // sektionens id för ett vy-event. R3-18; null för äldre event.
     ctaLoc: varchar("cta_loc", { length: 32 }),
     referrerHost: varchar("referrer_host", { length: 120 }),
+    // Kort kod som beaconen lägger i WhatsApp-knappens förifyllda text
+    // (crm-1). Ägaren skriver in den i /mi-sitio/clientes och chatten blir en
+    // lead med källa och sida. Null för allt utom whatsapp_click.
+    refCode: varchar("ref_code", { length: 8 }),
     deviceType: mysqlEnum("device_type", ["mobile", "desktop", "bot", "unknown"])
       .notNull()
       .default("unknown"),
@@ -367,6 +375,7 @@ export const analyticsEvents = mysqlTable(
   (t) => [
     index("i_biz_created").on(t.businessId, t.createdAt),
     index("i_biz_type_created").on(t.businessId, t.type, t.createdAt),
+    index("i_biz_ref").on(t.businessId, t.refCode),
   ],
 );
 
@@ -428,17 +437,59 @@ export const siteLeads = mysqlTable(
   {
     id: id(),
     businessId: fk("business_id").notNull(),
-    kind: mysqlEnum("kind", ["consulta", "turno"]).notNull().default("consulta"),
+    // whatsapp = ägaren registrerade en chatt (ev. via ref-koden), manual =
+    // ägaren lade till kunden själv (crm-1).
+    kind: mysqlEnum("kind", ["consulta", "turno", "whatsapp", "manual"]).notNull().default("consulta"),
     name: varchar("name", { length: 80 }).notNull(),
     phone: varchar("phone", { length: 20 }).notNull(), // E.164
     message: varchar("message", { length: 600 }),
     serviceName: varchar("service_name", { length: 120 }),
     requestedDay: date("requested_day"),
     requestedTime: varchar("requested_time", { length: 5 }), // "HH:MM"
-    status: mysqlEnum("status", ["nuevo", "contactado", "cerrado"]).notNull().default("nuevo"),
+    // Pipelinen (crm-1): nuevo → contactado → cliente | perdido. "cerrado" är
+    // growth-1:s gamla slutläge och visas som "Cerrada" tills ägaren väljer.
+    status: mysqlEnum("status", ["nuevo", "contactado", "cliente", "perdido", "cerrado"]).notNull().default("nuevo"),
+    notes: text("notes"),
+    followUpDay: date("follow_up_day"),
+    valueGs: bigint("value_gs", { mode: "number" }), // vad kunden köpte för, ägarens egen siffra
+    contactedAt: datetime("contacted_at"),
+    // Varifrån besökaren kom: google | instagram | facebook | tiktok | whatsapp | directo | otro
+    // (classifyLeadSource i src/lib/lead-source.ts), sidan formuläret satt på,
+    // och ref-koden från WhatsApp-knappen när leaden registrerades med den.
+    source: varchar("source", { length: 40 }),
+    sourcePath: varchar("source_path", { length: 120 }),
+    refCode: varchar("ref_code", { length: 8 }),
     ...timestamps,
   },
-  (t) => [index("i_biz_status").on(t.businessId, t.status), index("i_biz_created").on(t.businessId, t.createdAt)],
+  (t) => [
+    index("i_biz_status").on(t.businessId, t.status),
+    index("i_biz_created").on(t.businessId, t.createdAt),
+    index("i_biz_followup").on(t.businessId, t.followUpDay),
+    index("i_biz_phone").on(t.businessId, t.phone),
+  ],
+);
+
+/**
+ * Web Push-prenumerationer (crm-1): ägarens telefon får en notis när en
+ * consulta eller turno kommer in. Gratis, ingen Meta. En rad per enhet;
+ * endpoint är lång, därför unik på dess sha256.
+ */
+export const pushSubscriptions = mysqlTable(
+  "push_subscriptions",
+  {
+    id: id(),
+    userId: fk("user_id").notNull(),
+    businessId: fk("business_id").notNull(),
+    endpointHash: char("endpoint_hash", { length: 64 }).notNull(),
+    endpoint: text("endpoint").notNull(),
+    p256dh: varchar("p256dh", { length: 200 }).notNull(),
+    auth: varchar("auth", { length: 64 }).notNull(),
+    userAgent: varchar("user_agent", { length: 160 }),
+    failures: tinyint("failures", { unsigned: true }).notNull().default(0),
+    lastOkAt: datetime("last_ok_at"),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("u_endpoint").on(t.endpointHash), index("i_biz").on(t.businessId)],
 );
 
 /** Säljare på provision. Loggar inte in — de får en tokenad rapportlänk. */
@@ -516,4 +567,5 @@ export type Media = typeof media.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type SiteLead = typeof siteLeads.$inferSelect;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type Partner = typeof partners.$inferSelect;

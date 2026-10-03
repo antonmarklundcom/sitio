@@ -49,7 +49,7 @@ export function OwnerInbox({
             const reply = waLink(
               lead.phone,
               leadReplyMessage(
-                { name: lead.name, kind: lead.kind, serviceName: lead.serviceName, requestedDay: day, requestedTime: lead.requestedTime },
+                { name: lead.name, kind: lead.kind === "turno" ? "turno" : "consulta", serviceName: lead.serviceName, requestedDay: day, requestedTime: lead.requestedTime },
                 businessName,
               ),
             );

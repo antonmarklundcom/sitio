@@ -1,4 +1,7 @@
+import { after } from "next/server";
 import { eq, and } from "drizzle-orm";
+import { classifyLeadSource } from "@/lib/lead-source";
+import { notifyNewLead } from "@/lib/lead-notify";
 import { db } from "@/db";
 import { businessModules, businesses, siteLeads } from "@/db/schema";
 import { clientIpFrom } from "@/lib/client-ip";
@@ -87,8 +90,15 @@ export async function POST(req: Request) {
     return json({ error: "No pudimos recibir tu consulta ahora. Escribinos por WhatsApp." }, 429);
   }
 
-  await db.insert(siteLeads).values({
+  // Källa (crm-1): formuläret skickar referrer, utm_source och sökvägen.
+  // Allt är besökarens påstående — det styr bara en etikett i ägarens CRM.
+  const sourcePath = str("src_p")?.slice(0, 120) || null;
+  const source = classifyLeadSource(str("src_r")?.slice(0, 500), str("src_u")?.slice(0, 60));
+
+  const [inserted] = await db.insert(siteLeads).values({
     businessId,
+    source,
+    sourcePath: sourcePath && sourcePath.startsWith("/") ? sourcePath : null,
     kind: lead.kind,
     name: lead.name,
     phone: lead.phone,
@@ -97,6 +107,20 @@ export async function POST(req: Request) {
     requestedDay: lead.kind === "turno" && lead.day ? new Date(`${lead.day}T00:00:00Z`) : null,
     requestedTime: lead.kind === "turno" && lead.time ? lead.time : null,
   });
+
+  // Efter svaret: besökaren ska inte vänta på push-tjänsten eller mejlet.
+  after(() =>
+    notifyNewLead({
+      businessId,
+      leadId: inserted.insertId,
+      kind: lead.kind,
+      name: lead.name,
+      message: lead.message || null,
+      serviceName: lead.kind === "turno" && lead.service ? lead.service : null,
+      requestedDay: lead.kind === "turno" && lead.day ? lead.day : null,
+      requestedTime: lead.kind === "turno" && lead.time ? lead.time : null,
+    }),
+  );
 
   return json({ ok: true, wa: waLink(business.whatsappPhone, visitorWhatsappMessage(lead)) });
 }
