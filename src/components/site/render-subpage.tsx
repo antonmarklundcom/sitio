@@ -106,8 +106,8 @@ export function RenderSubPage({
           {page.type === "galeria" ? (
             <SitePhotos business={business} photos={photos} eyebrow="Fotos" title="Galería" />
           ) : null}
-          {page.type === "menu" ? <SiteMenu menu={menu} title="La carta" /> : null}
-          {page.type === "productos" ? <SiteProducts products={products} title="Catálogo" /> : null}
+          {page.type === "menu" ? <SiteMenu menu={menu} title="La carta" hideHeading /> : null}
+          {page.type === "productos" ? <SiteProducts products={products} title="Catálogo" hideHeading /> : null}
           {page.type === "contacto" ? (
             <SiteWhereWhen
               business={business}

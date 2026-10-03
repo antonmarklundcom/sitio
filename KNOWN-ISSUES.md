@@ -32,8 +32,8 @@ the code on 2026-09-22 (batch 3, `docs/log/R3-3.md`).
   One env var fixes it once `/admin/diagnostico` shows which source carries
   the real IP (R3-27, batch 4).
 - ~~Batch 4 review leftovers R3-39…R3-42~~ — fixed in batch 5
-  (`docs/log/R3-5.md`). Three small R3-42 remnants (redirect tag
-  revalidation, photo-cap race, admin `?ok=`) are inbox lines. (R3-5)
+  (`docs/log/R3-5.md`). The three small R3-42 remnants (redirect tag
+  revalidation, photo-cap race, admin `?ok=`) were fixed 2026-10-03. (R3-5)
 - **A new consulta/turno doesn't notify the owner.** It shows up in
   `/mi-sitio` → Consultas, but nothing pushes it to the owner's phone until
   WhatsApp Cloud API exists (PR-17). The visitor gets a WhatsApp link after

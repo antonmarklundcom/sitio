@@ -163,9 +163,10 @@ async function saveItem(editor: EditorContext | null, _prev: MenuFormState, form
   if (itemIdRaw && !existing) return { error: "Ese plato ya no existe." };
 
   if (existing) {
+    const moving = existing.sectionId !== sectionId;
     // Flyttas rätten till en annan sektion gäller den sektionens tak (R3-42):
     // annars kunde en sektion fyllas förbi 40 genom att flytta in rätter.
-    if (existing.sectionId !== sectionId) {
+    if (moving) {
       const inTarget = await db
         .select({ id: menuItems.id })
         .from(menuItems)
@@ -182,6 +183,14 @@ async function saveItem(editor: EditorContext | null, _prev: MenuFormState, form
         description: values.description || null,
         priceGs: values.priceGs,
         isAvailable: values.isAvailable,
+        // En flyttad rätt hamnar sist i sin nya sektion; den gamla sortOrder
+        // hörde till förra sektionen och kunde lägga den mitt i listan.
+        ...(moving && {
+          sortOrder: await nextSort(
+            menuItems,
+            and(eq(menuItems.businessId, ctx.business.id), eq(menuItems.sectionId, sectionId))!,
+          ),
+        }),
       })
       .where(eq(menuItems.id, existing.id));
     await afterWrite(ctx, "owner_menu_item_updated", { itemId: existing.id });

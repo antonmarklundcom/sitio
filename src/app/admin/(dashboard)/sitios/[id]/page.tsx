@@ -87,6 +87,7 @@ export default async function EditBusinessPage({
     verified?: string;
     error?: string;
     ownerWarning?: string;
+    ok?: string;
   }>;
 }) {
   await requireRole("superadmin");
@@ -152,6 +153,8 @@ export default async function EditBusinessPage({
       </div>
 
       {sp.error ? <Notice tone="danger">{sp.error}</Notice> : null}
+      {/* Betalningsflödet skickar tillbaka hit med ?ok= (bekräftat/avvisat). */}
+      {sp.ok ? <Notice tone="ok">{sp.ok}</Notice> : null}
       {sp.created ? <Notice tone="ok">El borrador está creado. Completalo y publicalo cuando esté listo.</Notice> : null}
       {sp.status ? <Notice tone="ok">El estado está actualizado.</Notice> : null}
       {sp.ownerWarning ? <Notice tone="warn">{sp.ownerWarning}</Notice> : null}

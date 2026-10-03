@@ -1,5 +1,5 @@
 import "server-only";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { and, asc, eq, ne } from "drizzle-orm";
 import { db } from "./index";
 import { businesses, businessModules, media, slugRedirects } from "./schema";
@@ -95,4 +95,19 @@ export function getRedirectTarget(oldSlug: string) {
     ["slug-redirect", oldSlug],
     { tags: [`redirect:${oldSlug}`], revalidate: 3600 },
   )();
+}
+
+/**
+ * Gamla slugs pekar om bara medan målet är publicerat, och målet läses ur
+ * cachen ovan. Ändras sajtens status eller slug måste därför varje gammal
+ * slug som pekar på den invalideras — annars pekar /gammal-slug i upp till en
+ * timme på en pausad sajt, eller 404:ar fast sajten är uppe igen.
+ */
+export async function revalidateRedirectsTo(currentSlug: string) {
+  const rows = await db
+    .select({ oldSlug: slugRedirects.oldSlug })
+    .from(slugRedirects)
+    .innerJoin(businesses, eq(businesses.id, slugRedirects.businessId))
+    .where(eq(businesses.slug, currentSlug));
+  for (const { oldSlug } of rows) revalidateTag(`redirect:${oldSlug}`);
 }

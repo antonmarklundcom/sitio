@@ -14,11 +14,14 @@ export function SiteProducts({
   eyebrow = "Catálogo",
   title,
   intro,
+  hideHeading = false,
 }: {
   products: ProductRow[];
   eyebrow?: string;
   title: string;
   intro?: string;
+  /** På en undersida vars rubrik redan säger "Carta" eller "Catálogo". */
+  hideHeading?: boolean;
 }) {
   if (products.length === 0) return null;
 
@@ -28,8 +31,16 @@ export function SiteProducts({
     // secciones pueden coexistir en la misma página.
     <section id="catalogo" className="site-products" data-ev-view="products_view">
       <div className="wrap">
-        <span className="eyebrow">{eyebrow}</span>
-        <h2 className="reveal">{title}</h2>
+        {hideHeading ? (
+          // Sidans h1 säger redan samma sak; h2:an finns kvar för skärmläsarens
+          // rubrikordning (h1 → h2 → h3) men syns inte.
+          <h2 className="sr-only">{title}</h2>
+        ) : (
+          <>
+            <span className="eyebrow">{eyebrow}</span>
+            <h2 className="reveal">{title}</h2>
+          </>
+        )}
         {intro ? <p className="site-products-intro">{intro}</p> : null}
 
         <ul className="site-products-grid">

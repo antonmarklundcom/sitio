@@ -6,12 +6,14 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { activityLog, businesses, payments, subscriptions } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
+import { revalidateRedirectsTo } from "@/db/site-queries";
 import { getCurrentSubscription } from "@/db/billing-queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import { storeReceipt } from "@/lib/receipt";
 import { paymentFormSchema, subscriptionFormSchema, toDayString } from "@/lib/billing";
 import { extendedExpiry, runBillingLifecycle } from "@/lib/billing-lifecycle";
 import { applyGrowthOnPaymentConfirmed } from "@/db/growth-queries";
+import { safeNext } from "@/lib/safe-next";
 
 export type BillingFormState = { error?: string; fieldErrors?: Record<string, string>; ok?: string };
 
@@ -187,7 +189,7 @@ async function pausedForNonPayment(businessId: number): Promise<boolean> {
 export async function confirmPaymentAction(formData: FormData): Promise<void> {
   const user = await requireRole("superadmin");
   const paymentId = Number(formData.get("paymentId"));
-  const back = String(formData.get("back") ?? "/admin/pagos");
+  const back = safeNext(formData.get("back"), "admin", "/admin/pagos");
 
   const payment = await loadPayment(paymentId);
   if (!payment) throw new Error("El pago no existe.");
@@ -228,6 +230,7 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
   if (business && reactivate) {
     await db.update(businesses).set({ status: "published" }).where(eq(businesses.id, business.id));
     revalidateTag(`biz:${business.slug}`);
+    await revalidateRedirectsTo(business.slug);
     revalidatePath("/sitemap.xml");
   }
 
@@ -250,7 +253,7 @@ export async function confirmPaymentAction(formData: FormData): Promise<void> {
 export async function rejectPaymentAction(formData: FormData): Promise<void> {
   const user = await requireRole("superadmin");
   const paymentId = Number(formData.get("paymentId"));
-  const back = String(formData.get("back") ?? "/admin/pagos");
+  const back = safeNext(formData.get("back"), "admin", "/admin/pagos");
 
   const payment = await loadPayment(paymentId);
   if (!payment) throw new Error("El pago no existe.");
@@ -276,7 +279,10 @@ export async function runLifecycleAction(): Promise<void> {
   const user = await requireRole("superadmin");
   const result = await runBillingLifecycle(user.userId);
 
-  for (const slug of result.pausedBusinesses) revalidateTag(`biz:${slug}`);
+  for (const slug of result.pausedBusinesses) {
+    revalidateTag(`biz:${slug}`);
+    await revalidateRedirectsTo(slug);
+  }
   if (result.pausedBusinesses.length > 0) revalidatePath("/sitemap.xml");
 
   revalidatePath("/admin/pagos");

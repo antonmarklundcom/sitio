@@ -7,6 +7,7 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, media, slugRedirects } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
+import { revalidateRedirectsTo } from "@/db/site-queries";
 import { logActivity, requireRole } from "@/lib/auth";
 import { ensureOwnerAccount } from "@/lib/owner";
 import {
@@ -151,6 +152,10 @@ export async function updateBusinessAction(
       meta: { from: existing.slug, to: values.slug },
     });
     revalidateTag(`biz:${existing.slug}`);
+    // Den nya slugen kan ha varit en gammal omdirigering (raden raderades
+    // ovan), och alla äldre slugs ska nu peka på den nya.
+    revalidateTag(`redirect:${values.slug}`);
+    await revalidateRedirectsTo(values.slug);
   }
 
   await logActivity({ actorUserId: user.userId, businessId, action: "business_updated" });
@@ -230,6 +235,7 @@ export async function changeStatusAction(formData: FormData): Promise<void> {
   });
 
   revalidateTag(`biz:${business.slug}`);
+  await revalidateRedirectsTo(business.slug);
   revalidatePath("/admin");
   revalidatePath(`/admin/sitios/${businessId}`);
   revalidatePath("/sitemap.xml");

@@ -130,28 +130,27 @@ export async function POST(req: Request) {
 
   // Fototak: höjs av gallery-modulen. Gränsen räknas ut i photoLimitFor() så att
   // owner-panelens "12/20" och det här avslaget alltid kommer från samma regel.
+  const photoScope = and(eq(media.businessId, businessId), eq(media.kind, "photo"));
+  // Kunden kan inte slå på galleriet själv — det är upsellen. Att be henne
+  // göra det hade varit ett återvändsgränd-fel; hon ska veta vem hon
+  // frågar i stället.
+  const photoCapReached = (limit: number) =>
+    NextResponse.json(
+      {
+        error: msg(
+          `Max ${limit} foton. Ta bort en bild först, eller slå på gallery-modulen.`,
+          `Llegaste al máximo de ${limit} fotos. Borrá una para subir otra, o escribinos para ampliar tu plan.`,
+        ),
+      },
+      { status: 409 },
+    );
+  let photoLimit = 0;
   if (kindRaw === "photo") {
-    const limit = await photoLimitFor(businessId);
+    photoLimit = await photoLimitFor(businessId);
 
-    const [{ n }] = await db
-      .select({ n: sql<number>`count(*)` })
-      .from(media)
-      .where(and(eq(media.businessId, businessId), eq(media.kind, "photo")));
+    const [{ n }] = await db.select({ n: sql<number>`count(*)` }).from(media).where(photoScope);
 
-    if (Number(n) >= limit) {
-      // Kunden kan inte slå på galleriet själv — det är upsellen. Att be henne
-      // göra det hade varit ett återvändsgränd-fel; hon ska veta vem hon
-      // frågar i stället.
-      return NextResponse.json(
-        {
-          error: msg(
-            `Max ${limit} foton. Ta bort en bild först, eller slå på gallery-modulen.`,
-            `Llegaste al máximo de ${limit} fotos. Borrá una para subir otra, o escribinos para ampliar tu plan.`,
-          ),
-        },
-        { status: 409 },
-      );
-    }
+    if (Number(n) >= photoLimit) return photoCapReached(photoLimit);
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -199,6 +198,21 @@ export async function POST(req: Request) {
     .from(media)
     .where(and(eq(media.businessId, businessId), eq(media.fileKey, processed.fileKey)))
     .limit(1);
+
+  // Kontrollen ovan räknar före insert, så två samtidiga uppladdningar kunde
+  // båda passera vid 19/20. Efter insert räknas bara rader med lägre eller
+  // samma id: den som kom först behåller sin plats, den andra tas bort igen.
+  if (kindRaw === "photo") {
+    const [{ n }] = await db
+      .select({ n: sql<number>`count(*)` })
+      .from(media)
+      .where(and(photoScope, sql`${media.id} <= ${created.id}`));
+    if (Number(n) > photoLimit) {
+      await db.delete(media).where(eq(media.id, created.id));
+      await deleteMediaFiles(businessId, created.variantsJson ?? {});
+      return photoCapReached(photoLimit);
+    }
+  }
 
   if (kindRaw === "logo") {
     await db.update(businesses).set({ logoMediaId: created.id }).where(eq(businesses.id, businessId));

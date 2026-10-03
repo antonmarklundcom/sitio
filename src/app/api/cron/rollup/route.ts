@@ -7,6 +7,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { runBillingLifecycle } from "@/lib/billing-lifecycle";
 import { runRollup } from "@/lib/rollup";
 import { runRadar } from "@/db/lead-queries";
+import { revalidateRedirectsTo } from "@/db/site-queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,7 +56,10 @@ async function handle(req: Request) {
 
   // Pausade sajter måste ur ISR-cachen direkt, annars fortsätter noden servera
   // en sajt som inte längre är betald.
-  for (const slug of lifecycle.pausedBusinesses) revalidateTag(`biz:${slug}`);
+  for (const slug of lifecycle.pausedBusinesses) {
+    revalidateTag(`biz:${slug}`);
+    await revalidateRedirectsTo(slug);
+  }
   if (lifecycle.pausedBusinesses.length > 0) {
     revalidatePath("/sitemap.xml");
     revalidatePath("/admin");

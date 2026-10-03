@@ -4,6 +4,7 @@ import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, media, subscriptions } from "@/db/schema";
 import { getBusinessById } from "@/db/queries";
+import { revalidateRedirectsTo } from "@/db/site-queries";
 import { getGrowthSettings } from "@/db/growth-queries";
 import { logActivity } from "./auth";
 import { polishBusiness } from "./ai-polish";
@@ -115,6 +116,7 @@ export async function autoPublishAfterIntake(businessId: number): Promise<void> 
     await logActivity({ businessId, action: "status_published", meta: { from: "pending_review", to: "published", auto: true } });
 
     revalidateTag(`biz:${business.slug}`);
+    await revalidateRedirectsTo(business.slug);
     revalidatePath("/sitemap.xml");
     revalidatePath("/admin");
     revalidatePath("/admin/crecimiento");

@@ -16,19 +16,30 @@ export function SiteMenu({
   eyebrow = "La carta",
   title,
   intro,
+  hideHeading = false,
 }: {
   menu: MenuSectionRow[];
   eyebrow?: string;
   title: string;
   intro?: string;
+  /** På en undersida vars rubrik redan säger "Carta" eller "Catálogo". */
+  hideHeading?: boolean;
 }) {
   if (menu.length === 0) return null;
 
   return (
     <section id="carta" className="site-menu" data-ev-view="menu_view">
       <div className="wrap">
-        <span className="eyebrow">{eyebrow}</span>
-        <h2 className="reveal">{title}</h2>
+        {hideHeading ? (
+          // Sidans h1 säger redan samma sak; h2:an finns kvar för skärmläsarens
+          // rubrikordning (h1 → h2 → h3) men syns inte.
+          <h2 className="sr-only">{title}</h2>
+        ) : (
+          <>
+            <span className="eyebrow">{eyebrow}</span>
+            <h2 className="reveal">{title}</h2>
+          </>
+        )}
         {intro ? <p className="site-menu-intro">{intro}</p> : null}
 
         {menu.map((section) => (
