@@ -46,7 +46,11 @@ function tagWa(a){
     if(!/^(wa\\.me|api\\.whatsapp\\.com)$/i.test(u.hostname))return '';
     var code=refCode();
     var txt=(u.searchParams.get('text')||'').replace(/\\s*\\(ref [^)]*\\)/g,'');
-    u.searchParams.set('text',(txt+' (ref '+code+')').replace(/^\\s+/,''));
+    /* encodeURIComponent och inte searchParams.set: den senare kodar
+       mellanslag som '+', och wa.me ska få %20. */
+    u.searchParams.delete('text');
+    var rest=u.searchParams.toString();
+    u.search='?'+(rest?rest+'&':'')+'text='+encodeURIComponent((txt+' (ref '+code+')').replace(/^\\s+/,''));
     a.href=u.toString();
     return code;
   }catch(e){return ''}
