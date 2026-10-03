@@ -19,7 +19,7 @@ import { pushLead, venderCrmConfig } from "@/lib/vendercrm";
  * sessionen via ownerContext(), aldrig ur formuläret.
  */
 
-const LEAD_STATUSES = ["nuevo", "contactado", "cerrado"] as const;
+const LEAD_STATUSES = ["nuevo", "contactado", "cliente", "perdido", "cerrado"] as const;
 
 export async function setLeadStatusAction(formData: FormData): Promise<void> {
   const ctx = await ownerContext();
@@ -32,6 +32,7 @@ export async function setLeadStatusAction(formData: FormData): Promise<void> {
     .set({ status: status as (typeof LEAD_STATUSES)[number] })
     .where(and(eq(siteLeads.id, leadId), eq(siteLeads.businessId, ctx.business.id)));
   revalidatePath("/mi-sitio");
+  revalidatePath("/mi-sitio/clientes");
 }
 
 export type SiteOptionsState = { ok?: string; error?: string; fieldErrors?: Record<string, string> };

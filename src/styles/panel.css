@@ -248,3 +248,27 @@
 .panel-service p { margin: 0; font-size: 0.9rem; }
 .panel-service .panel-badge { margin-left: 0; justify-self: start; }
 .panel-service-price { font-weight: 600; }
+
+/* ---------- Mis clientes (crm-1) ---------- */
+.panel input[type="date"] {
+  width: 100%; font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem 0.75rem; font-size: 17px;
+}
+.panel-stats--3 { grid-template-columns: repeat(3, 1fr); }
+.panel-stats--3 .panel-stat b { font-size: 1.15rem; overflow-wrap: anywhere; }
+.panel-card--due { border-color: var(--accent); }
+.panel-due { color: var(--danger); font-weight: 600; }
+.panel-chip { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); }
+.panel-fold > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.panel-fold[open] > summary { margin-bottom: 0.5rem; }
+.panel-tabs { display: flex; gap: 0.4rem; overflow-x: auto; margin-bottom: 0.75rem; padding-bottom: 0.25rem; }
+.panel-tab { flex: none; min-height: 44px; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0 0.9rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 0.9rem; }
+.panel-tab--on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.panel-tab-n { font-variant-numeric: tabular-nums; opacity: 0.8; }
+.panel-search { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+.panel-search input[type="text"] { flex: 1; min-width: 0; }
+.panel-pager { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+.panel-lead-edit { margin-top: 0.7rem; }
+.panel-lead-edit > summary { cursor: pointer; font-size: 0.9rem; color: var(--accent); min-height: 44px; display: flex; align-items: center; }
+.panel-lead--cliente { border-color: var(--ok); }
+.panel-lead--perdido { opacity: 0.65; }
